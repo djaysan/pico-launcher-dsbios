@@ -3,8 +3,10 @@
 
 Formato (ver arm9/source/romBrowser/FileType/BmpHeader.h y BmpFileCover.cpp):
 BMP de 128x96, 8bpp indexado, sin compresion, DIB de 40 bytes, clrUsed=256.
-El launcher solo muestra los 106x96 de la izquierda, asi que el arte se encaja
-ahi (proporcion conservada, relleno negro) y las columnas 106-127 quedan negras.
+El launcher solo muestra los 106x96 de la izquierda, asi que el arte se estira
+a exactamente 106x96 (misma convencion que los packs de covers de la comunidad:
+sin barras negras visibles; la leve distorsion no se nota en pantalla) y las
+columnas 106-127 quedan negras (zona invisible).
 
 Uso: python3 tools/img2cover.py entrada.png salida.bmp
 """
@@ -19,10 +21,10 @@ VISIBLE_W = 106
 
 def convert(src_path: str, dst_path: str) -> None:
     im = Image.open(src_path).convert("RGB")
-    im.thumbnail((VISIBLE_W, H), Image.LANCZOS)
+    art = im.resize((VISIBLE_W, H), Image.LANCZOS)
 
     canvas = Image.new("RGB", (W, H), (0, 0, 0))
-    canvas.paste(im, ((VISIBLE_W - im.width) // 2, (H - im.height) // 2))
+    canvas.paste(art, (0, 0))
 
     quant = canvas.quantize(colors=256, method=Image.MEDIANCUT, dither=Image.FLOYDSTEINBERG)
     pal = quant.getpalette()[: 256 * 3]
