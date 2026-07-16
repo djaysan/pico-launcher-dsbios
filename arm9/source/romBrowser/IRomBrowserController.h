@@ -11,6 +11,7 @@ class ICoverRepository;
 class IIconRepository;
 class IBannerRepository;
 class ICheatRepository;
+class IGameDataService;
 
 class IRomBrowserController
 {
@@ -21,6 +22,7 @@ public:
     virtual void NavigateToPath(const TCHAR* name) = 0;
     virtual void LaunchFile(const FileInfo& fileInfo) = 0;
     virtual void LaunchRandomGame() = 0;
+    virtual void ToggleFavorite(const FileInfo& fileInfo) = 0;
     virtual void ShowGameInfo(const FileInfo& fileInfo) = 0;
     virtual void HideGameInfo() = 0;
     virtual void ShowDisplaySettings() = 0;
@@ -41,6 +43,7 @@ public:
     virtual const IIconRepository& GetIconRepository() const = 0;
     virtual const IBannerRepository& GetBannerRepository() const = 0;
     virtual const ICheatRepository& GetCheatRepository() const = 0;
+    virtual IGameDataService* GetGameDataService() = 0;
 
     virtual const RomBrowserDisplaySettings& GetRomBrowserDisplaySettings() const = 0;
 

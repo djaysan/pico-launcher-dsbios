@@ -20,6 +20,18 @@ void RomBrowserItemViewModel::Activate()
     }
 }
 
+void RomBrowserItemViewModel::ToggleFavorite()
+{
+    if (_index >= 0)
+    {
+        const auto& item = _romBrowserController->GetRomBrowserViewModel()->GetFileInfoManager().GetItem(_index);
+        if (item.GetFileType()->GetClassification() == FileTypeClassification::Game)
+        {
+            _romBrowserController->ToggleFavorite(item);
+        }
+    }
+}
+
 void RomBrowserItemViewModel::ShowGameInfo()
 {
     if (_index >= 0)

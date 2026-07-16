@@ -42,6 +42,9 @@ public:
     const FileInfo& GetItem(int index) const { return *_items[index]; }
     u32 GetItemCount() const { return _itemCount; }
 
+    /// @brief Number of items with the Game classification.
+    u32 GetGameCount() const;
+
 private:
     struct ExtraFileInfo
     {

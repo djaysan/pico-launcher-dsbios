@@ -10,12 +10,16 @@
 #include "cheats/UsrCheatRepositoryFactory.h"
 #include "cheats/EmptyCheatRepository.h"
 #include "cheats/PicoLoaderCheatDataFactory.h"
+#include "services/gamedata/IGameDataService.h"
+#include "core/mini-printf.h"
+#include "rtcIpc.h"
 #include "RomBrowserController.h"
 
 RomBrowserController::RomBrowserController(
-    IAppSettingsService* appSettingsService, TaskQueueBase* ioTaskQueue,
-    TaskQueueBase* bgTaskQueue)
+    IAppSettingsService* appSettingsService, IGameDataService* gameDataService,
+    TaskQueueBase* ioTaskQueue, TaskQueueBase* bgTaskQueue)
     : _appSettingsService(appSettingsService)
+    , _gameDataService(gameDataService)
     , _ioTaskQueue(ioTaskQueue), _bgTaskQueue(bgTaskQueue)
     , _fileTypeProvider(appSettingsService->GetAppSettings()) { }
 
@@ -36,12 +40,7 @@ void RomBrowserController::LaunchRandomGame()
     if (!_romBrowserViewModel.IsValid())
         return;
     auto& fileInfoManager = _romBrowserViewModel->GetFileInfoManager();
-    u32 gameCount = 0;
-    for (u32 i = 0; i < fileInfoManager.GetItemCount(); i++)
-    {
-        if (fileInfoManager.GetItem(i).GetFileType()->GetClassification() == FileTypeClassification::Game)
-            gameCount++;
-    }
+    u32 gameCount = fileInfoManager.GetGameCount();
     if (gameCount == 0)
         return;
     u32 pick = gRandomGenerator->NextU32(gameCount);
@@ -57,6 +56,12 @@ void RomBrowserController::LaunchRandomGame()
         }
         pick--;
     }
+}
+
+void RomBrowserController::ToggleFavorite(const FileInfo& fileInfo)
+{
+    _gameDataService->ToggleFavorite(fileInfo.GetFileName());
+    _gameDataService->SaveAsync(_ioTaskQueue);
 }
 
 void RomBrowserController::ShowGameInfo(const FileInfo& fileInfo)
@@ -236,6 +241,15 @@ void RomBrowserController::HandleFolderLoadDoneTrigger()
 void RomBrowserController::HandleLaunchTrigger()
 {
     LOG_DEBUG("RomBrowserStateTrigger::Launch\n");
+    rtc_datetime_t dateTime;
+    rtc_readDateTime(&dateTime);
+    char lastPlayed[20];
+    // the rtc registers hold BCD values, which %x renders as decimal digits
+    mini_snprintf(lastPlayed, sizeof(lastPlayed), "20%02x-%02x-%02x %02x:%02x",
+        dateTime.date.year, dateTime.date.month, dateTime.date.monthDay,
+        dateTime.time.hour, dateTime.time.minute);
+    _gameDataService->RecordLaunch(_triggerFileInfo.GetFileName(), lastPlayed);
+    _gameDataService->SaveAsync(_ioTaskQueue);
     _ioTaskQueue->Enqueue([this] (const vu8& cancelRequested)
     {
         UpdateLastUsedFilepath();

@@ -3,6 +3,7 @@
 #include <memory>
 #include "services/settings/IAppSettingsService.h"
 #include "bgm/IBgmService.h"
+#include "services/gamedata/IGameDataService.h"
 #include "services/process/IProcess.h"
 #include "gui/SimplePaletteManager.h"
 #include "gui/AdvancedPaletteManager.h"
@@ -33,7 +34,7 @@
 class alignas(32) App : public IProcess
 {
 public:
-    App(IAppSettingsService& appSettingsService, IBgmService& bgmService);
+    App(IAppSettingsService& appSettingsService, IBgmService& bgmService, IGameDataService& gameDataService);
 
     void Run() override;
     void Exit() override;

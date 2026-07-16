@@ -11,6 +11,17 @@ FileInfoManager::FileInfoManager(std::unique_ptr<const FileInfo*[]> items, u32 i
     , _iconRepository(iconRepository)
     , _bannerRepository(bannerRepository) { }
 
+u32 FileInfoManager::GetGameCount() const
+{
+    u32 gameCount = 0;
+    for (u32 i = 0; i < _itemCount; i++)
+    {
+        if (_items[i]->GetFileType()->GetClassification() == FileTypeClassification::Game)
+            gameCount++;
+    }
+    return gameCount;
+}
+
 FileInfoManager::~FileInfoManager()
 {
     for (u32 i = 0; i < _itemCount; i++)

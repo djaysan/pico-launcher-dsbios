@@ -10,6 +10,7 @@
 class RomBrowserViewModel;
 class IRomBrowserViewFactory;
 class IFontRepository;
+class IGameDataService;
 struct MaterialColorScheme;
 
 class RomBrowserTopScreenView : public ViewContainer
@@ -19,6 +20,7 @@ class RomBrowserTopScreenView : public ViewContainer
 public:
     void InitVram(const VramContext& vramContext) override;
     void Update() override;
+    void Draw(GraphicsContext& graphicsContext) override;
     void VBlank() override;
 
     Rectangle GetBounds() const override
@@ -31,6 +33,8 @@ private:
     const IThemeFileIconFactory* _themeFileIconFactory;
     SharedPtr<BannerView> _fileInfoView;
     SharedPtr<Label2DView> _gameCountLabel;
+    SharedPtr<Label2DView> _launchInfoLabel;
+    IGameDataService* _gameDataService;
     std::unique_ptr<FileIcon> _selectedFileIcon;
     SharedPtr<FileCover> _selectedFileCover;
     int _lastSelectedItem = -1;
@@ -38,6 +42,11 @@ private:
     bool _coverGraphicsUploaded = false;
     bool _showCover;
     Point _coverPosition;
+    u32 _heartVramOffset = 0;
+    bool _selectedFavorite = false;
+    int _lastGameDataItem = -1;
+    u32 _lastGameDataVersion = 0;
+    const MaterialColorScheme* _materialColorScheme;
 
     RomBrowserTopScreenView(SharedPtr<RomBrowserViewModel> viewModel,
         const RomBrowserDisplayMode* displayMode,

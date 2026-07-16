@@ -1,16 +1,24 @@
 #include "common.h"
+#include <string.h>
 #include <libtwl/mem/memVram.h>
 #include <libtwl/gfx/gfx.h>
 #include <libtwl/gfx/gfxBackground.h>
 #include <libtwl/gfx/gfxPalette.h>
 #include <libtwl/gfx/gfxWindow.h>
+#include <libtwl/dma/dmaNitro.h>
 #include "core/mini-printf.h"
 #include "../viewModels/RomBrowserViewModel.h"
+#include "../IRomBrowserController.h"
+#include "services/gamedata/IGameDataService.h"
 #include "gui/GraphicsContext.h"
 #include "gui/IVramManager.h"
+#include "gui/VramContext.h"
+#include "gui/OamBuilder.h"
+#include "gui/palette/GradientPalette.h"
 #include "themes/material/MaterialColorScheme.h"
 #include "themes/IFontRepository.h"
 #include "../Theme/IRomBrowserViewFactory.h"
+#include "smallHeartIconFilled.h"
 #include "RomBrowserTopScreenView.h"
 
 RomBrowserTopScreenView::RomBrowserTopScreenView(
@@ -28,13 +36,7 @@ RomBrowserTopScreenView::RomBrowserTopScreenView(
 {
     AddChildTail(_fileInfoView.GetPointer());
 
-    const auto& fileInfoManager = _viewModel->GetFileInfoManager();
-    u32 gameCount = 0;
-    for (u32 i = 0; i < fileInfoManager.GetItemCount(); i++)
-    {
-        if (fileInfoManager.GetItem(i).GetFileType()->GetClassification() == FileTypeClassification::Game)
-            gameCount++;
-    }
+    u32 gameCount = _viewModel->GetFileInfoManager().GetGameCount();
     if (gameCount > 0)
     {
         char text[16];
@@ -48,11 +50,29 @@ RomBrowserTopScreenView::RomBrowserTopScreenView(
         _gameCountLabel->SetForegroundColor(materialColorScheme->onSurfaceVariant);
         AddChildTail(_gameCountLabel.GetPointer());
     }
+
+    _gameDataService = _viewModel->GetRomBrowserController()->GetGameDataService();
+    _materialColorScheme = materialColorScheme;
+    // launch info for the selected game ("3x 16/07"), right-aligned in the top
+    // strip, leaving 16px on the right for the favorite heart
+    _launchInfoLabel = Label2DView::CreateShared(96, 16, 15, fontRepository->GetFont(FontType::Medium7_5));
+    _launchInfoLabel->SetHorizontalAlignment(Alignment::End);
+    _launchInfoLabel->SetPosition(256 - 4 - 16 - 96, 2);
+    _launchInfoLabel->SetBackgroundColor(materialColorScheme->surfaceBright);
+    _launchInfoLabel->SetForegroundColor(materialColorScheme->onSurfaceVariant);
+    AddChildTail(_launchInfoLabel.GetPointer());
 }
 
 void RomBrowserTopScreenView::InitVram(const VramContext& vramContext)
 {
     ViewContainer::InitVram(vramContext);
+    const auto objVramManager = vramContext.GetObjVramManager();
+    if (objVramManager)
+    {
+        _heartVramOffset = objVramManager->Alloc(smallHeartIconFilledTilesLen);
+        dma_ntrCopy32(3, smallHeartIconFilledTiles,
+            objVramManager->GetVramAddress(_heartVramOffset), smallHeartIconFilledTilesLen);
+    }
     int tileIndex = 0;
     vu16* mapPtr = (vu16*)((u8*)GFX_BG_SUB + 0x3800);
     for (int y = 0; y < 12; y++)
@@ -114,7 +134,56 @@ void RomBrowserTopScreenView::Update()
             }
         }
     }
+
+    u32 gameDataVersion = _gameDataService->GetVersion();
+    if (selectedItem != _lastGameDataItem || gameDataVersion != _lastGameDataVersion)
+    {
+        _selectedFavorite = false;
+        char info[24];
+        info[0] = 0;
+        if (selectedItem >= 0)
+        {
+            const auto& item = _viewModel->GetFileInfoManager().GetItem(selectedItem);
+            const auto* entry = _gameDataService->GetEntry(item.GetFileName());
+            if (entry)
+            {
+                _selectedFavorite = entry->favorite;
+                if (entry->launchCount > 0)
+                {
+                    const char* lastPlayed = entry->lastPlayed.GetString();
+                    if (strlen(lastPlayed) >= 10)
+                    {
+                        // stored as "YYYY-MM-DD HH:MM", shown as "3x 16/07"
+                        mini_snprintf(info, sizeof(info), "%ux %c%c/%c%c", entry->launchCount,
+                            lastPlayed[8], lastPlayed[9], lastPlayed[5], lastPlayed[6]);
+                    }
+                    else
+                    {
+                        mini_snprintf(info, sizeof(info), "%ux", entry->launchCount);
+                    }
+                }
+            }
+        }
+        _launchInfoLabel->SetText(info);
+        _lastGameDataItem = selectedItem;
+        _lastGameDataVersion = gameDataVersion;
+    }
     ViewContainer::Update();
+}
+
+void RomBrowserTopScreenView::Draw(GraphicsContext& graphicsContext)
+{
+    ViewContainer::Draw(graphicsContext);
+    if (_selectedFavorite)
+    {
+        auto oams = graphicsContext.GetOamManager().AllocOams(1);
+        u32 paletteRow = graphicsContext.GetPaletteManager().AllocRow(
+            GradientPalette(_materialColorScheme->surfaceBright, _materialColorScheme->primary), 2, 18);
+        OamBuilder::OamWithSize<16, 16>(256 - 4 - 16, 2, _heartVramOffset >> 7)
+            .WithPalette16(paletteRow)
+            .WithPriority(graphicsContext.GetPriority())
+            .Build(oams[0]);
+    }
 }
 
 void RomBrowserTopScreenView::VBlank()

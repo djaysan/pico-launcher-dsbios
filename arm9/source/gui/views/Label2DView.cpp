@@ -28,6 +28,9 @@ void Label2DView::Draw(GraphicsContext& graphicsContext)
 {
     if (!graphicsContext.IsVisible(GetBounds()))
         return;
+    // nothing to render for an empty label; skip the oam and palette row allocations
+    if (_stringWidth == 0 && _newStringWidth == 0)
+        return;
 
     u32 hCellCount = _actualWidth >> 5;
     u32 vCellCount = _actualHeight >> 4;

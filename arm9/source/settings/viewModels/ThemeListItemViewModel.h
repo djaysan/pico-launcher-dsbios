@@ -16,6 +16,8 @@ public:
 
     void ShowGameInfo() override { }
 
+    void ToggleFavorite() override { }
+
     void SetIndex(int index) override
     {
         _index = index;

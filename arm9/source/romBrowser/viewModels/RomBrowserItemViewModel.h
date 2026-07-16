@@ -11,6 +11,7 @@ public:
 
     void Activate() override;
     void ShowGameInfo() override;
+    void ToggleFavorite() override;
 
     void SetIndex(int index) override
     {

@@ -17,6 +17,7 @@ class RomBrowserController : public IRomBrowserController
 {
 public:
     RomBrowserController(IAppSettingsService* appSettingsService,
+        IGameDataService* gameDataService,
         TaskQueueBase* ioTaskQueue, TaskQueueBase* bgTaskQueue);
 
     void NavigateUp() override
@@ -27,6 +28,7 @@ public:
     void NavigateToPath(const TCHAR* name) override;
     void LaunchFile(const FileInfo& fileInfo) override;
     void LaunchRandomGame() override;
+    void ToggleFavorite(const FileInfo& fileInfo) override;
     void ShowGameInfo(const FileInfo& fileInfo) override;
     void HideGameInfo() override;
     void ShowDisplaySettings() override;
@@ -47,6 +49,7 @@ public:
     const IIconRepository& GetIconRepository() const override { return *_iconRepository; }
     const IBannerRepository& GetBannerRepository() const override { return *_bannerRepository; }
     const ICheatRepository& GetCheatRepository() const override { return *_cheatRepository; }
+    IGameDataService* GetGameDataService() override { return _gameDataService; }
 
     void SetRomBrowserDisplaySettings(const RomBrowserDisplaySettings& romBrowserDisplaySettings) override;
 
@@ -59,6 +62,7 @@ public:
 
 private:
     IAppSettingsService* _appSettingsService;
+    IGameDataService* _gameDataService;
     TaskQueueBase* _ioTaskQueue;
     TaskQueueBase* _bgTaskQueue;
 
