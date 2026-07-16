@@ -2,12 +2,18 @@
 #include "SdFolderSortType.h"
 #include "SdFolderSortDirection.h"
 
+class IGameDataService;
+
 class SdFolderFilterSortParams
 {
 public:
     SdFolderSortType sortType = SdFolderSortType::Name;
     SdFolderSortDirection sortDirection = SdFolderSortDirection::Ascending;
     bool includeHiddenFiles = false;
+    /// @brief When true only folders and favorite games are kept.
+    ///        Requires gameDataService.
+    bool favoritesOnly = false;
+    const IGameDataService* gameDataService = nullptr;
 
     SdFolderFilterSortParams() { }
 

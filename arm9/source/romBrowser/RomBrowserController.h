@@ -29,6 +29,8 @@ public:
     void LaunchFile(const FileInfo& fileInfo) override;
     void LaunchRandomGame() override;
     void ToggleFavorite(const FileInfo& fileInfo) override;
+    void ToggleFavoritesFilter() override;
+    bool IsFavoritesFilterEnabled() const override { return _favoritesFilter; }
     void ShowGameInfo(const FileInfo& fileInfo) override;
     void HideGameInfo() override;
     void ShowDisplaySettings() override;
@@ -65,6 +67,7 @@ private:
     IGameDataService* _gameDataService;
     TaskQueueBase* _ioTaskQueue;
     TaskQueueBase* _bgTaskQueue;
+    bool _favoritesFilter = false;
 
     std::unique_ptr<SdFolder> _sdFolder;
     SharedPtr<RomBrowserViewModel> _romBrowserViewModel;

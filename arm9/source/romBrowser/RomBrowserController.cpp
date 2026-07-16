@@ -62,6 +62,17 @@ void RomBrowserController::ToggleFavorite(const FileInfo& fileInfo)
 {
     _gameDataService->ToggleFavorite(fileInfo.GetFileName());
     _gameDataService->SaveAsync(_ioTaskQueue);
+    if (_favoritesFilter)
+    {
+        // an unfavorited game must drop out of the filtered view
+        _stateMachine.Fire(RomBrowserStateTrigger::ChangeDisplayMode);
+    }
+}
+
+void RomBrowserController::ToggleFavoritesFilter()
+{
+    _favoritesFilter = !_favoritesFilter;
+    _stateMachine.Fire(RomBrowserStateTrigger::ChangeDisplayMode);
 }
 
 void RomBrowserController::ShowGameInfo(const FileInfo& fileInfo)

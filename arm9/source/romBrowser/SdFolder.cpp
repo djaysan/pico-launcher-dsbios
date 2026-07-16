@@ -1,6 +1,7 @@
 #include "common.h"
 #include <string.h>
 #include <algorithm>
+#include "services/gamedata/IGameDataService.h"
 #include "SdFolder.h"
 
 SdFolder::SdFolder(FileInfo** files, int fileCount)
@@ -23,11 +24,19 @@ std::unique_ptr<const FileInfo*[]> SdFolder::FilterAndSort(
         const FileInfo* file = _files[i];
         bool isHidden = file->GetFileName()[0] == '.' || file->IsHidden();
         auto classification = file->GetFileType()->GetClassification();
-        if (classification != FileTypeClassification::Unknown &&
-            (!isHidden || filterSortParams.includeHiddenFiles))
+        if (classification == FileTypeClassification::Unknown ||
+            (isHidden && !filterSortParams.includeHiddenFiles))
         {
-            sortedFilteredFiles[filteredCount++] = file;
+            continue;
         }
+        if (filterSortParams.favoritesOnly && filterSortParams.gameDataService &&
+            classification != FileTypeClassification::Folder)
+        {
+            const auto* entry = filterSortParams.gameDataService->GetEntry(file->GetFileName());
+            if (!entry || !entry->favorite)
+                continue;
+        }
+        sortedFilteredFiles[filteredCount++] = file;
     }
     std::sort(sortedFilteredFiles.get(), sortedFilteredFiles.get() + filteredCount,
         [filterSortParams] (const FileInfo*& a, const FileInfo*& b)

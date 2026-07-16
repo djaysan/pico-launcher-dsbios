@@ -23,6 +23,8 @@ public:
     virtual void LaunchFile(const FileInfo& fileInfo) = 0;
     virtual void LaunchRandomGame() = 0;
     virtual void ToggleFavorite(const FileInfo& fileInfo) = 0;
+    virtual void ToggleFavoritesFilter() = 0;
+    virtual bool IsFavoritesFilterEnabled() const = 0;
     virtual void ShowGameInfo(const FileInfo& fileInfo) = 0;
     virtual void HideGameInfo() = 0;
     virtual void ShowDisplaySettings() = 0;
