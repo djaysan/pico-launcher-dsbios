@@ -3,11 +3,14 @@
 #include "gui/views/ViewContainer.h"
 #include "BannerView.h"
 #include "gui/views/LabelView.h"
+#include "gui/views/Label2DView.h"
 #include "../FileType/FileIcon.h"
 #include "../DisplayMode/RomBrowserDisplayMode.h"
 
 class RomBrowserViewModel;
 class IRomBrowserViewFactory;
+class IFontRepository;
+struct MaterialColorScheme;
 
 class RomBrowserTopScreenView : public ViewContainer
 {
@@ -27,6 +30,7 @@ private:
     SharedPtr<RomBrowserViewModel> _viewModel;
     const IThemeFileIconFactory* _themeFileIconFactory;
     SharedPtr<BannerView> _fileInfoView;
+    SharedPtr<Label2DView> _gameCountLabel;
     std::unique_ptr<FileIcon> _selectedFileIcon;
     SharedPtr<FileCover> _selectedFileCover;
     int _lastSelectedItem = -1;
@@ -38,5 +42,7 @@ private:
     RomBrowserTopScreenView(SharedPtr<RomBrowserViewModel> viewModel,
         const RomBrowserDisplayMode* displayMode,
         const IThemeFileIconFactory* themeFileIconFactory,
-        const IRomBrowserViewFactory* romBrowserViewFactory);
+        const IRomBrowserViewFactory* romBrowserViewFactory,
+        const IFontRepository* fontRepository,
+        const MaterialColorScheme* materialColorScheme);
 };

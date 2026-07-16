@@ -4,10 +4,12 @@
 #include <libtwl/gfx/gfxBackground.h>
 #include <libtwl/gfx/gfxPalette.h>
 #include <libtwl/gfx/gfxWindow.h>
+#include "core/mini-printf.h"
 #include "../viewModels/RomBrowserViewModel.h"
 #include "gui/GraphicsContext.h"
 #include "gui/IVramManager.h"
 #include "themes/material/MaterialColorScheme.h"
+#include "themes/IFontRepository.h"
 #include "../Theme/IRomBrowserViewFactory.h"
 #include "RomBrowserTopScreenView.h"
 
@@ -15,7 +17,9 @@ RomBrowserTopScreenView::RomBrowserTopScreenView(
     SharedPtr<RomBrowserViewModel> viewModel,
     const RomBrowserDisplayMode* displayMode,
     const IThemeFileIconFactory* themeFileIconFactory,
-    const IRomBrowserViewFactory* romBrowserViewFactory)
+    const IRomBrowserViewFactory* romBrowserViewFactory,
+    const IFontRepository* fontRepository,
+    const MaterialColorScheme* materialColorScheme)
     : _viewModel(std::move(viewModel))
     , _themeFileIconFactory(themeFileIconFactory)
     , _fileInfoView(romBrowserViewFactory->CreateFileInfoView())
@@ -23,6 +27,27 @@ RomBrowserTopScreenView::RomBrowserTopScreenView(
     , _coverPosition(romBrowserViewFactory->GetTopCoverPosition())
 {
     AddChildTail(_fileInfoView.GetPointer());
+
+    const auto& fileInfoManager = _viewModel->GetFileInfoManager();
+    u32 gameCount = 0;
+    for (u32 i = 0; i < fileInfoManager.GetItemCount(); i++)
+    {
+        if (fileInfoManager.GetItem(i).GetFileType()->GetClassification() == FileTypeClassification::Game)
+            gameCount++;
+    }
+    if (gameCount > 0)
+    {
+        char text[16];
+        mini_snprintf(text, sizeof(text), "%u game%s", gameCount, gameCount == 1 ? "" : "s");
+        _gameCountLabel = Label2DView::CreateShared(96, 16, 15, fontRepository->GetFont(FontType::Medium7_5));
+        _gameCountLabel->SetText(text);
+        // top strip y 0-16: free of theme elements in both themes' defaults
+        // (cover starts at y=18, banner text at y>=118, filename at y>=168)
+        _gameCountLabel->SetPosition(4, 2);
+        _gameCountLabel->SetBackgroundColor(materialColorScheme->surfaceBright);
+        _gameCountLabel->SetForegroundColor(materialColorScheme->onSurfaceVariant);
+        AddChildTail(_gameCountLabel.GetPointer());
+    }
 }
 
 void RomBrowserTopScreenView::InitVram(const VramContext& vramContext)
