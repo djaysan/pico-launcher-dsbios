@@ -14,14 +14,15 @@
 #define KEY_FAVORITE          "favorite"
 #define KEY_LAUNCH_COUNT      "launchCount"
 #define KEY_LAST_PLAYED       "lastPlayed"
+#define KEY_PATH              "path"
 
 // ArduinoJson silently drops data when its pool is exhausted, so the pool is
 // sized from the entry count (write) or file size (read) instead of a fixed
 // JSON_RESERVED_SIZE like settings.json uses.
-// ~160 bytes/entry = object node + favorite/launchCount/lastPlayed keys and
-// values + up to 96 chars of fileName key.
+// ~420 bytes/entry = object node + favorite/launchCount/lastPlayed/path keys
+// and values + up to 96 chars of fileName key + up to 256 chars of path.
 #define JSON_POOL_BASE_SIZE       4096
-#define JSON_POOL_PER_ENTRY       160
+#define JSON_POOL_PER_ENTRY       420
 #define JSON_POOL_READ_MAX        (96 * 1024)
 
 static u32 writePoolSize(u32 entryCount)
@@ -77,11 +78,12 @@ void JsonGameDataService::ToggleFavorite(const char* fileName)
     _version++;
 }
 
-void JsonGameDataService::RecordLaunch(const char* fileName, const char* lastPlayedDateTime)
+void JsonGameDataService::RecordLaunch(const char* fileName, const char* fullPath, const char* lastPlayedDateTime)
 {
     auto& entry = GetOrCreateEntry(fileName);
     entry.launchCount++;
     entry.lastPlayed = lastPlayedDateTime;
+    entry.path = fullPath;
     _version++;
 }
 
@@ -105,6 +107,8 @@ void JsonGameDataService::SaveAsync(TaskQueueBase* ioTaskQueue)
             game[KEY_LAUNCH_COUNT] = entry.launchCount;
         if (entry.lastPlayed.GetString()[0] != 0)
             game[KEY_LAST_PLAYED] = entry.lastPlayed.GetString();
+        if (entry.path.GetString()[0] != 0)
+            game[KEY_PATH] = entry.path.GetString();
     }
     if (json.overflowed())
     {
@@ -167,5 +171,6 @@ void JsonGameDataService::Load()
         entry.favorite = item.value()[KEY_FAVORITE] | false;
         entry.launchCount = item.value()[KEY_LAUNCH_COUNT] | 0u;
         entry.lastPlayed = item.value()[KEY_LAST_PLAYED] | "";
+        entry.path = item.value()[KEY_PATH] | "";
     }
 }

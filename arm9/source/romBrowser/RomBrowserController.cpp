@@ -91,6 +91,16 @@ void RomBrowserController::ShowDisplaySettings()
     _stateMachine.Fire(RomBrowserStateTrigger::ShowDisplaySettings);
 }
 
+void RomBrowserController::ShowRecents()
+{
+    _stateMachine.Fire(RomBrowserStateTrigger::ShowRecents);
+}
+
+void RomBrowserController::HideRecents()
+{
+    _stateMachine.Fire(RomBrowserStateTrigger::HideRecents);
+}
+
 void RomBrowserController::HideDisplaySettings()
 {
     if (_saveSettingsPending)
@@ -259,7 +269,17 @@ void RomBrowserController::HandleLaunchTrigger()
     mini_snprintf(lastPlayed, sizeof(lastPlayed), "20%02x-%02x-%02x %02x:%02x",
         dateTime.date.year, dateTime.date.month, dateTime.date.monthDay,
         dateTime.time.hour, dateTime.time.minute);
-    _gameDataService->RecordLaunch(_triggerFileInfo.GetFileName(), lastPlayed);
+    // same full-path construction as UpdateLastUsedFilepath, but into a local
+    // buffer: _navigatePath belongs to the navigation flow
+    TCHAR fullPath[256];
+    f_getcwd(fullPath, sizeof(fullPath) / sizeof(fullPath[0]));
+    int idx = strlcat(fullPath, "/", sizeof(fullPath));
+    if (fullPath[idx - 2] == '/')
+    {
+        fullPath[idx - 1] = 0;
+    }
+    strlcat(fullPath, _triggerFileInfo.GetFileName(), sizeof(fullPath));
+    _gameDataService->RecordLaunch(_triggerFileInfo.GetFileName(), fullPath, lastPlayed);
     _gameDataService->SaveAsync(_ioTaskQueue);
     _ioTaskQueue->Enqueue([this] (const vu8& cancelRequested)
     {

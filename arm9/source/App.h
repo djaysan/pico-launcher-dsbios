@@ -115,6 +115,8 @@ private:
     void HandleHideGameInfoTrigger();
     void HandleShowDisplaySettingsTrigger();
     void HandleHideDisplaySettingsTrigger();
+    void HandleShowRecentsTrigger();
+    void HandleHideRecentsTrigger();
     void HandleNavigateTrigger();
     void HandleFolderLoadDoneTrigger();
     void HandleChangeDisplayModeTrigger(RomBrowserState newState);

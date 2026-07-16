@@ -21,6 +21,7 @@
 #include "romBrowser/Theme/Material/MaterialThemeFileIconFactory.h"
 #include "romBrowser/views/NdsGameDetailsBottomSheetView.h"
 #include "romBrowser/views/cheats/CheatsBottomSheetView.h"
+#include "romBrowser/views/recents/RecentsBottomSheetView.h"
 #include "romBrowser/views/DisplaySettingsBottomSheetView.h"
 #include "bgm/AudioStreamPlayer.h"
 #include "bgm/BgmService.h"
@@ -274,6 +275,16 @@ void App::HandleTrigger(RomBrowserStateTrigger trigger, RomBrowserState newState
             HandleHideDisplaySettingsTrigger();
             break;
         }
+        case RomBrowserStateTrigger::ShowRecents:
+        {
+            HandleShowRecentsTrigger();
+            break;
+        }
+        case RomBrowserStateTrigger::HideRecents:
+        {
+            HandleHideRecentsTrigger();
+            break;
+        }
         case RomBrowserStateTrigger::Navigate:
         {
             HandleNavigateTrigger();
@@ -327,8 +338,26 @@ void App::HandleHideDisplaySettingsTrigger()
         _romBrowserBottomScreenView->Focus(_focusManager);
 }
 
+void App::HandleShowRecentsTrigger()
+{
+    auto recentsViewModel = SharedPtr<RecentsViewModel>::MakeShared(&_romBrowserController);
+    auto recentsDialog = RecentsBottomSheetView::CreateShared(
+        std::move(recentsViewModel), &_theme->GetMaterialColorScheme(), _theme->GetFontRepository(), &_focusManager);
+    _dialogPresenter.ShowDialog(std::move(recentsDialog));
+}
+
+void App::HandleHideRecentsTrigger()
+{
+    _dialogPresenter.CloseDialog();
+    if (!_dialogPresenter.GetOldFocus())
+        _romBrowserBottomScreenView->Focus(_focusManager);
+}
+
 void App::HandleNavigateTrigger()
 {
+    // navigation can also start from inside the recents sheet
+    if (_romBrowserController.GetStateMachine().GetPreviousState() == RomBrowserState::Recents)
+        _dialogPresenter.CloseDialog();
     if (!_romBrowserBottomScreenView->IsAppBarFocused(_focusManager))
         _focusManager.Unfocus();
 }

@@ -23,6 +23,11 @@ public:
         _romBrowserController->ToggleFavoritesFilter();
     }
 
+    void ShowRecents()
+    {
+        _romBrowserController->ShowRecents();
+    }
+
     constexpr RomBrowserLayout GetRomBrowserLayout() const
     {
         return _romBrowserController->GetRomBrowserDisplaySettings().layout;

@@ -35,6 +35,8 @@ public:
     void HideGameInfo() override;
     void ShowDisplaySettings() override;
     void HideDisplaySettings() override;
+    void ShowRecents() override;
+    void HideRecents() override;
     void GotoSettingsScreen() override;
 
     void Update() override;

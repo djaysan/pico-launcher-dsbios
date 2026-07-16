@@ -14,7 +14,12 @@ public:
     virtual const GameDataEntry* GetEntry(const char* fileName) const = 0;
 
     virtual void ToggleFavorite(const char* fileName) = 0;
-    virtual void RecordLaunch(const char* fileName, const char* lastPlayedDateTime) = 0;
+    virtual void RecordLaunch(const char* fileName, const char* fullPath, const char* lastPlayedDateTime) = 0;
+
+    /// @brief Unordered access to all entries, for building derived lists
+    ///        (e.g. recents). Indices are only valid until the next mutation.
+    virtual u32 GetEntryCount() const = 0;
+    virtual const GameDataEntry& GetEntryByIndex(u32 index) const = 0;
 
     /// @brief Incremented on every mutation; cheap to poll for UI refresh.
     virtual u32 GetVersion() const = 0;

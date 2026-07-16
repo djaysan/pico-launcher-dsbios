@@ -9,7 +9,9 @@ public:
 
     const GameDataEntry* GetEntry(const char* fileName) const override;
     void ToggleFavorite(const char* fileName) override;
-    void RecordLaunch(const char* fileName, const char* lastPlayedDateTime) override;
+    void RecordLaunch(const char* fileName, const char* fullPath, const char* lastPlayedDateTime) override;
+    u32 GetEntryCount() const override { return _entryCount; }
+    const GameDataEntry& GetEntryByIndex(u32 index) const override { return _entries[index]; }
     u32 GetVersion() const override { return _version; }
     void SaveAsync(TaskQueueBase* ioTaskQueue) override;
 
