@@ -26,6 +26,7 @@ public:
 
     void NavigateToPath(const TCHAR* name) override;
     void LaunchFile(const FileInfo& fileInfo) override;
+    void LaunchRandomGame() override;
     void ShowGameInfo(const FileInfo& fileInfo) override;
     void HideGameInfo() override;
     void ShowDisplaySettings() override;

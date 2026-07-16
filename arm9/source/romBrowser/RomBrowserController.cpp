@@ -31,6 +31,34 @@ void RomBrowserController::LaunchFile(const FileInfo& fileInfo)
     _stateMachine.Fire(RomBrowserStateTrigger::Launch);
 }
 
+void RomBrowserController::LaunchRandomGame()
+{
+    if (!_romBrowserViewModel.IsValid())
+        return;
+    auto& fileInfoManager = _romBrowserViewModel->GetFileInfoManager();
+    u32 gameCount = 0;
+    for (u32 i = 0; i < fileInfoManager.GetItemCount(); i++)
+    {
+        if (fileInfoManager.GetItem(i).GetFileType()->GetClassification() == FileTypeClassification::Game)
+            gameCount++;
+    }
+    if (gameCount == 0)
+        return;
+    u32 pick = gRandomGenerator->NextU32(gameCount);
+    for (u32 i = 0; i < fileInfoManager.GetItemCount(); i++)
+    {
+        const auto& item = fileInfoManager.GetItem(i);
+        if (item.GetFileType()->GetClassification() != FileTypeClassification::Game)
+            continue;
+        if (pick == 0)
+        {
+            LaunchFile(item);
+            return;
+        }
+        pick--;
+    }
+}
+
 void RomBrowserController::ShowGameInfo(const FileInfo& fileInfo)
 {
     _triggerFileInfo = FileInfo(fileInfo);

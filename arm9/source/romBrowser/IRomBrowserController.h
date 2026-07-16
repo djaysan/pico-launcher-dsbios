@@ -20,6 +20,7 @@ public:
     virtual void NavigateUp() = 0;
     virtual void NavigateToPath(const TCHAR* name) = 0;
     virtual void LaunchFile(const FileInfo& fileInfo) = 0;
+    virtual void LaunchRandomGame() = 0;
     virtual void ShowGameInfo(const FileInfo& fileInfo) = 0;
     virtual void HideGameInfo() = 0;
     virtual void ShowDisplaySettings() = 0;

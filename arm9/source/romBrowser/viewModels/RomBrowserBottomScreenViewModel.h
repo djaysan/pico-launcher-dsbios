@@ -39,6 +39,11 @@ public:
         _romBrowserController->NavigateUp();
     }
 
+    void LaunchRandomGame()
+    {
+        _romBrowserController->LaunchRandomGame();
+    }
+
 private:
     IRomBrowserController* _romBrowserController;
     RomBrowserAppBarViewModel _romBrowserAppBarViewModel;
