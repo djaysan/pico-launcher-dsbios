@@ -117,6 +117,8 @@ private:
     void HandleHideDisplaySettingsTrigger();
     void HandleShowRecentsTrigger();
     void HandleHideRecentsTrigger();
+    void HandleShowStatisticsTrigger();
+    void HandleHideStatisticsTrigger();
     void HandleNavigateTrigger();
     void HandleFolderLoadDoneTrigger();
     void HandleChangeDisplayModeTrigger(RomBrowserState newState);

@@ -117,6 +117,11 @@ bool RomBrowserBottomScreenView::HandleInput(const InputProvider& inputProvider,
         _viewModel->LaunchRandomGame();
         return true;
     }
+    if (inputProvider.Triggered(InputKey::Start))
+    {
+        _viewModel->ShowStatistics();
+        return true;
+    }
     return View::HandleInput(inputProvider, focusManager);
 }
 

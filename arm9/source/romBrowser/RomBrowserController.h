@@ -37,6 +37,8 @@ public:
     void HideDisplaySettings() override;
     void ShowRecents() override;
     void HideRecents() override;
+    void ShowStatistics() override;
+    void HideStatistics() override;
     void GotoSettingsScreen() override;
 
     void Update() override;

@@ -31,6 +31,8 @@ public:
     virtual void HideDisplaySettings() = 0;
     virtual void ShowRecents() = 0;
     virtual void HideRecents() = 0;
+    virtual void ShowStatistics() = 0;
+    virtual void HideStatistics() = 0;
     virtual void GotoSettingsScreen() = 0;
 
     virtual void Update() = 0;

@@ -101,6 +101,16 @@ void RomBrowserController::HideRecents()
     _stateMachine.Fire(RomBrowserStateTrigger::HideRecents);
 }
 
+void RomBrowserController::ShowStatistics()
+{
+    _stateMachine.Fire(RomBrowserStateTrigger::ShowStatistics);
+}
+
+void RomBrowserController::HideStatistics()
+{
+    _stateMachine.Fire(RomBrowserStateTrigger::HideStatistics);
+}
+
 void RomBrowserController::HideDisplaySettings()
 {
     if (_saveSettingsPending)

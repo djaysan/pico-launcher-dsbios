@@ -126,9 +126,10 @@ void RecentsBottomSheetView::Focus(FocusManager& focusManager)
     }
     else
     {
-        // an empty sheet must still capture key input (B to close); without
-        // this, focus would stay on the app bar hidden behind the scrim
-        focusManager.Focus(SharedFromThis());
+        // an empty sheet must still capture key input (B to close). Focus a
+        // CHILD of the sheet: FocusManager::Update skips parent-less focused
+        // views, so focusing the sheet itself would never deliver keys.
+        focusManager.Focus(_titleLabel->SharedFromThis());
     }
 }
 

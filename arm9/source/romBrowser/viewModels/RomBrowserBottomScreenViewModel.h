@@ -21,6 +21,7 @@ public:
             || state == RomBrowserState::GameInfo
             || state == RomBrowserState::DisplaySettings
             || state == RomBrowserState::Recents
+            || state == RomBrowserState::Statistics
             || state == RomBrowserState::Launching
             || state == RomBrowserState::GoingToSettingsScreen;
     }
@@ -43,6 +44,11 @@ public:
     void LaunchRandomGame()
     {
         _romBrowserController->LaunchRandomGame();
+    }
+
+    void ShowStatistics()
+    {
+        _romBrowserController->ShowStatistics();
     }
 
 private:

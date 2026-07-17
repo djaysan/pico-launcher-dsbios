@@ -22,6 +22,7 @@
 #include "romBrowser/views/NdsGameDetailsBottomSheetView.h"
 #include "romBrowser/views/cheats/CheatsBottomSheetView.h"
 #include "romBrowser/views/recents/RecentsBottomSheetView.h"
+#include "romBrowser/views/statistics/StatisticsBottomSheetView.h"
 #include "romBrowser/views/DisplaySettingsBottomSheetView.h"
 #include "bgm/AudioStreamPlayer.h"
 #include "bgm/BgmService.h"
@@ -285,6 +286,16 @@ void App::HandleTrigger(RomBrowserStateTrigger trigger, RomBrowserState newState
             HandleHideRecentsTrigger();
             break;
         }
+        case RomBrowserStateTrigger::ShowStatistics:
+        {
+            HandleShowStatisticsTrigger();
+            break;
+        }
+        case RomBrowserStateTrigger::HideStatistics:
+        {
+            HandleHideStatisticsTrigger();
+            break;
+        }
         case RomBrowserStateTrigger::Navigate:
         {
             HandleNavigateTrigger();
@@ -347,6 +358,21 @@ void App::HandleShowRecentsTrigger()
 }
 
 void App::HandleHideRecentsTrigger()
+{
+    _dialogPresenter.CloseDialog();
+    if (!_dialogPresenter.GetOldFocus())
+        _romBrowserBottomScreenView->Focus(_focusManager);
+}
+
+void App::HandleShowStatisticsTrigger()
+{
+    auto statisticsViewModel = SharedPtr<StatisticsViewModel>::MakeShared(&_romBrowserController);
+    auto statisticsDialog = StatisticsBottomSheetView::CreateShared(
+        std::move(statisticsViewModel), &_theme->GetMaterialColorScheme(), _theme->GetFontRepository());
+    _dialogPresenter.ShowDialog(std::move(statisticsDialog));
+}
+
+void App::HandleHideStatisticsTrigger()
 {
     _dialogPresenter.CloseDialog();
     if (!_dialogPresenter.GetOldFocus())
