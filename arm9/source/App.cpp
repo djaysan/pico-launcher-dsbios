@@ -50,7 +50,7 @@ App::App(IAppSettingsService& appSettingsService, IBgmService& bgmService, IGame
     , _inputRepeater(&_inputProvider,
         InputKey::DpadLeft | InputKey::DpadRight | InputKey::DpadUp | InputKey::DpadDown | InputKey::L | InputKey::R,
         25, 8)
-    , _romBrowserController(&appSettingsService, &gameDataService, &_ioTaskQueue, &_bgTaskQueue)
+    , _romBrowserController(&appSettingsService, &gameDataService, &bgmService, &_ioTaskQueue, &_bgTaskQueue)
     , _displaySettingsBottomSheetViewModel(&_romBrowserController)
     , _romBrowserBottomScreenViewModel(&_romBrowserController)
     , _dialogPresenter(&_focusManager, &_mainObjDialogVram) { }

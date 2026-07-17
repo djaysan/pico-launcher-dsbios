@@ -17,7 +17,7 @@ class RomBrowserController : public IRomBrowserController
 {
 public:
     RomBrowserController(IAppSettingsService* appSettingsService,
-        IGameDataService* gameDataService,
+        IGameDataService* gameDataService, IBgmService* bgmService,
         TaskQueueBase* ioTaskQueue, TaskQueueBase* bgTaskQueue);
 
     void NavigateUp() override
@@ -74,6 +74,7 @@ public:
 private:
     IAppSettingsService* _appSettingsService;
     IGameDataService* _gameDataService;
+    IBgmService* _bgmService;
     TaskQueueBase* _ioTaskQueue;
     TaskQueueBase* _bgTaskQueue;
     bool _favoritesFilter = false;

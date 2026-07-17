@@ -12,6 +12,7 @@ class IIconRepository;
 class IBannerRepository;
 class ICheatRepository;
 class IGameDataService;
+class IBgmService;
 
 class IRomBrowserController
 {

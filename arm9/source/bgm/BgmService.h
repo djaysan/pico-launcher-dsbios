@@ -19,10 +19,13 @@ public:
 
     bool StartBgm(const TCHAR* filePath) override;
     void StartBgmFromConfig() override;
+    void UpdateBgmForFolder(const TCHAR* folderBgmPath) override;
     void StopBgm() override;
 
 private:
     std::unique_ptr<IAudioStreamPlayer> _audioStreamPlayer;
     IAppSettingsService& _appSettingsService;
     RandomGenerator& _randomGenerator;
+    bool _playingFolderBgm = false;
+    TCHAR _currentFolderBgmPath[256] = {};
 };

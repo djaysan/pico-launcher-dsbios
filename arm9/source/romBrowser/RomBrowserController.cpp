@@ -11,15 +11,17 @@
 #include "cheats/EmptyCheatRepository.h"
 #include "cheats/PicoLoaderCheatDataFactory.h"
 #include "services/gamedata/IGameDataService.h"
+#include "bgm/IBgmService.h"
 #include "core/mini-printf.h"
 #include "rtcIpc.h"
 #include "RomBrowserController.h"
 
 RomBrowserController::RomBrowserController(
     IAppSettingsService* appSettingsService, IGameDataService* gameDataService,
-    TaskQueueBase* ioTaskQueue, TaskQueueBase* bgTaskQueue)
+    IBgmService* bgmService, TaskQueueBase* ioTaskQueue, TaskQueueBase* bgTaskQueue)
     : _appSettingsService(appSettingsService)
     , _gameDataService(gameDataService)
+    , _bgmService(bgmService)
     , _ioTaskQueue(ioTaskQueue), _bgTaskQueue(bgTaskQueue)
     , _fileTypeProvider(appSettingsService->GetAppSettings()) { }
 
@@ -336,6 +338,25 @@ void RomBrowserController::HandleNavigateTrigger()
         _newSdFolder = sdFolderFactory.CreateFromPath(".");
         u64 endTick = gTickCounter.GetValue();
         LOG_DEBUG("Loading files in folder took: %d us\n", (u32)TickCounter::TicksToMicroSeconds(endTick - startTick));
+
+        // folders can bring their own music via a bgm.bcstm inside them
+        FILINFO bgmFileInfo;
+        if (f_stat("bgm.bcstm", &bgmFileInfo) == FR_OK && !(bgmFileInfo.fattrib & AM_DIR))
+        {
+            TCHAR bgmPath[256];
+            f_getcwd(bgmPath, sizeof(bgmPath) / sizeof(bgmPath[0]));
+            int idx = strlcat(bgmPath, "/", sizeof(bgmPath));
+            if (bgmPath[idx - 2] == '/')
+            {
+                bgmPath[idx - 1] = 0;
+            }
+            strlcat(bgmPath, "bgm.bcstm", sizeof(bgmPath));
+            _bgmService->UpdateBgmForFolder(bgmPath);
+        }
+        else
+        {
+            _bgmService->UpdateBgmForFolder(nullptr);
+        }
         return TaskResult<void>::Completed();
     });
 }
