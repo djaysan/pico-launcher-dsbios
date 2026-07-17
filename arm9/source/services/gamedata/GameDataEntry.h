@@ -6,6 +6,9 @@
 struct GameDataEntry
 {
     String<char, 96> fileName;
+    /// @brief Internal game code (NDS/GBA header), empty when the file has
+    ///        none. Lookups prefer it: it survives renames and moves.
+    String<char, 8> gameCode;
     u32 launchCount = 0;
     bool favorite = false;
     /// @brief "YYYY-MM-DD HH:MM", empty when never launched. Lexicographic

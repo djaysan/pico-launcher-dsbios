@@ -29,9 +29,11 @@ void RomBrowserController::NavigateToPath(const TCHAR* name)
     _stateMachine.Fire(RomBrowserStateTrigger::Navigate);
 }
 
-void RomBrowserController::LaunchFile(const FileInfo& fileInfo)
+void RomBrowserController::LaunchFile(const FileInfo& fileInfo, const char* gameCode)
 {
     _triggerFileInfo = FileInfo(fileInfo);
+    StringUtil::Copy(_triggerGameCode, gameCode ? gameCode : "",
+        sizeof(_triggerGameCode) / sizeof(_triggerGameCode[0]));
     _stateMachine.Fire(RomBrowserStateTrigger::Launch);
 }
 
@@ -51,16 +53,25 @@ void RomBrowserController::LaunchRandomGame()
             continue;
         if (pick == 0)
         {
-            LaunchFile(item);
+            // an off-screen random pick usually has no file info loaded yet;
+            // the launch then records by name only, which self-heals later
+            const char* gameCode = nullptr;
+            if (fileInfoManager.IsFileInfoLoaded(i))
+            {
+                const auto* info = fileInfoManager.GetInternalFileInfo(i);
+                if (info)
+                    gameCode = info->GetGameCode();
+            }
+            LaunchFile(item, gameCode);
             return;
         }
         pick--;
     }
 }
 
-void RomBrowserController::ToggleFavorite(const FileInfo& fileInfo)
+void RomBrowserController::ToggleFavorite(const FileInfo& fileInfo, const char* gameCode)
 {
-    _gameDataService->ToggleFavorite(fileInfo.GetFileName());
+    _gameDataService->ToggleFavorite(fileInfo.GetFileName(), gameCode);
     _gameDataService->SaveAsync(_ioTaskQueue);
     if (_favoritesFilter)
     {
@@ -121,6 +132,16 @@ void RomBrowserController::RequestDeleteSelected()
 
     StringUtil::Copy(_deleteRomFileName, item.GetFileName(),
         sizeof(_deleteRomFileName) / sizeof(_deleteRomFileName[0]));
+    const char* gameCode = nullptr;
+    auto& fileInfoManager = _romBrowserViewModel->GetFileInfoManager();
+    if (fileInfoManager.IsFileInfoLoaded(selectedItem))
+    {
+        const auto* info = fileInfoManager.GetInternalFileInfo(selectedItem);
+        if (info)
+            gameCode = info->GetGameCode();
+    }
+    StringUtil::Copy(_deleteGameCode, gameCode ? gameCode : "",
+        sizeof(_deleteGameCode) / sizeof(_deleteGameCode[0]));
     // "<name minus extension>.sav" is the save convention used by the loader
     // and the emulators next to their roms
     StringUtil::Copy(_deleteSaveFileName, _deleteRomFileName,
@@ -191,6 +212,10 @@ void RomBrowserController::Update()
     if (_deleteCompleted)
     {
         _deleteCompleted = false;
+        // the deleted game's favorite/stats entry goes with it
+        _gameDataService->RemoveEntry(_deleteRomFileName,
+            _deleteGameCode[0] != 0 ? _deleteGameCode : nullptr);
+        _gameDataService->SaveAsync(_ioTaskQueue);
         // reload the current folder so the deleted file disappears
         NavigateToPath(".");
     }
@@ -343,7 +368,8 @@ void RomBrowserController::HandleLaunchTrigger()
         fullPath[idx - 1] = 0;
     }
     strlcat(fullPath, _triggerFileInfo.GetFileName(), sizeof(fullPath));
-    _gameDataService->RecordLaunch(_triggerFileInfo.GetFileName(), fullPath, lastPlayed);
+    _gameDataService->RecordLaunch(_triggerFileInfo.GetFileName(),
+        _triggerGameCode[0] != 0 ? _triggerGameCode : nullptr, fullPath, lastPlayed);
     _gameDataService->SaveAsync(_ioTaskQueue);
     _ioTaskQueue->Enqueue([this] (const vu8& cancelRequested)
     {

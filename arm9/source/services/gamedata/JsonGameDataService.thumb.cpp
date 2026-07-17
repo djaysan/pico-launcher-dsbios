@@ -11,6 +11,7 @@
 
 #define GAME_DATA_FILE_PATH   "/_pico/gamedata.json"
 #define KEY_GAMES             "games"
+#define KEY_GAME_CODE         "gameCode"
 #define KEY_FAVORITE          "favorite"
 #define KEY_LAUNCH_COUNT      "launchCount"
 #define KEY_LAST_PLAYED       "lastPlayed"
@@ -30,6 +31,20 @@ static u32 writePoolSize(u32 entryCount)
     return JSON_POOL_BASE_SIZE + entryCount * JSON_POOL_PER_ENTRY;
 }
 
+// homebrew headers can hold garbage where retail games keep their code; only
+// printable codes are usable as identity (and safe inside the json file)
+static bool isUsableGameCode(const char* gameCode)
+{
+    if (!gameCode || gameCode[0] == 0)
+        return false;
+    for (const char* c = gameCode; *c != 0; c++)
+    {
+        if (*c < 0x20 || *c >= 0x7F)
+            return false;
+    }
+    return true;
+}
+
 JsonGameDataService::JsonGameDataService()
 {
     Load();
@@ -45,15 +60,50 @@ GameDataEntry* JsonGameDataService::Find(const char* fileName)
     return nullptr;
 }
 
-const GameDataEntry* JsonGameDataService::GetEntry(const char* fileName) const
+GameDataEntry* JsonGameDataService::FindByCode(const char* gameCode)
 {
-    return const_cast<JsonGameDataService*>(this)->Find(fileName);
+    for (u32 i = 0; i < _entryCount; i++)
+    {
+        if (_entries[i].gameCode.GetString()[0] != 0 &&
+            !strcasecmp(_entries[i].gameCode.GetString(), gameCode))
+        {
+            return &_entries[i];
+        }
+    }
+    return nullptr;
 }
 
-GameDataEntry& JsonGameDataService::GetOrCreateEntry(const char* fileName)
+const GameDataEntry* JsonGameDataService::GetEntry(const char* fileName, const char* gameCode) const
 {
+    auto* self = const_cast<JsonGameDataService*>(this);
+    if (isUsableGameCode(gameCode))
+    {
+        if (auto* byCode = self->FindByCode(gameCode))
+            return byCode;
+    }
+    return self->Find(fileName);
+}
+
+GameDataEntry& JsonGameDataService::GetOrCreateEntry(const char* fileName, const char* gameCode)
+{
+    bool hasCode = isUsableGameCode(gameCode);
+    if (hasCode)
+    {
+        if (auto* byCode = FindByCode(gameCode))
+        {
+            // self-heal: the file may have been renamed since the entry was
+            // written; the code is its stable identity
+            byCode->fileName = fileName;
+            return *byCode;
+        }
+    }
     if (auto* existing = Find(fileName))
+    {
+        // upgrade a legacy name-keyed entry as soon as its code is known
+        if (hasCode)
+            existing->gameCode = gameCode;
         return *existing;
+    }
 
     if (_entryCount == _entryCapacity)
     {
@@ -68,22 +118,37 @@ GameDataEntry& JsonGameDataService::GetOrCreateEntry(const char* fileName)
     auto& entry = _entries[_entryCount++];
     entry = GameDataEntry();
     entry.fileName = fileName;
+    if (hasCode)
+        entry.gameCode = gameCode;
     return entry;
 }
 
-void JsonGameDataService::ToggleFavorite(const char* fileName)
+void JsonGameDataService::ToggleFavorite(const char* fileName, const char* gameCode)
 {
-    auto& entry = GetOrCreateEntry(fileName);
+    auto& entry = GetOrCreateEntry(fileName, gameCode);
     entry.favorite = !entry.favorite;
     _version++;
 }
 
-void JsonGameDataService::RecordLaunch(const char* fileName, const char* fullPath, const char* lastPlayedDateTime)
+void JsonGameDataService::RecordLaunch(const char* fileName, const char* gameCode,
+    const char* fullPath, const char* lastPlayedDateTime)
 {
-    auto& entry = GetOrCreateEntry(fileName);
+    auto& entry = GetOrCreateEntry(fileName, gameCode);
     entry.launchCount++;
     entry.lastPlayed = lastPlayedDateTime;
     entry.path = fullPath;
+    _version++;
+}
+
+void JsonGameDataService::RemoveEntry(const char* fileName, const char* gameCode)
+{
+    GameDataEntry* entry = isUsableGameCode(gameCode) ? FindByCode(gameCode) : nullptr;
+    if (!entry)
+        entry = Find(fileName);
+    if (!entry)
+        return;
+    _entryCount--;
+    *entry = _entries[_entryCount];
     _version++;
 }
 
@@ -101,6 +166,8 @@ void JsonGameDataService::SaveAsync(TaskQueueBase* ioTaskQueue)
         if (!entry.favorite && entry.launchCount == 0)
             continue;
         auto game = games[entry.fileName.GetString()].to<JsonObject>();
+        if (entry.gameCode.GetString()[0] != 0)
+            game[KEY_GAME_CODE] = entry.gameCode.GetString();
         if (entry.favorite)
             game[KEY_FAVORITE] = true;
         if (entry.launchCount > 0)
@@ -167,7 +234,7 @@ void JsonGameDataService::Load()
         return;
     for (auto item : games)
     {
-        auto& entry = GetOrCreateEntry(item.key().c_str());
+        auto& entry = GetOrCreateEntry(item.key().c_str(), item.value()[KEY_GAME_CODE] | "");
         entry.favorite = item.value()[KEY_FAVORITE] | false;
         entry.launchCount = item.value()[KEY_LAUNCH_COUNT] | 0u;
         entry.lastPlayed = item.value()[KEY_LAST_PLAYED] | "";

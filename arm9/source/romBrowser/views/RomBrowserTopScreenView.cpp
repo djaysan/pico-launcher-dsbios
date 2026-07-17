@@ -136,7 +136,9 @@ void RomBrowserTopScreenView::Update()
     }
 
     u32 gameDataVersion = _gameDataService->GetVersion();
-    if (selectedItem != _lastGameDataItem || gameDataVersion != _lastGameDataVersion)
+    bool infoLoaded = selectedItem >= 0 && _viewModel->GetFileInfoManager().IsFileInfoLoaded(selectedItem);
+    if (selectedItem != _lastGameDataItem || gameDataVersion != _lastGameDataVersion ||
+        infoLoaded != _lastGameDataInfoLoaded)
     {
         _selectedFavorite = false;
         char info[24];
@@ -144,7 +146,14 @@ void RomBrowserTopScreenView::Update()
         if (selectedItem >= 0)
         {
             const auto& item = _viewModel->GetFileInfoManager().GetItem(selectedItem);
-            const auto* entry = _gameDataService->GetEntry(item.GetFileName());
+            const char* gameCode = nullptr;
+            if (infoLoaded)
+            {
+                const auto* internalInfo = _viewModel->GetFileInfoManager().GetInternalFileInfo(selectedItem);
+                if (internalInfo)
+                    gameCode = internalInfo->GetGameCode();
+            }
+            const auto* entry = _gameDataService->GetEntry(item.GetFileName(), gameCode);
             if (entry)
             {
                 _selectedFavorite = entry->favorite;
@@ -167,6 +176,7 @@ void RomBrowserTopScreenView::Update()
         _launchInfoLabel->SetText(info);
         _lastGameDataItem = selectedItem;
         _lastGameDataVersion = gameDataVersion;
+        _lastGameDataInfoLoaded = infoLoaded;
     }
     ViewContainer::Update();
 }

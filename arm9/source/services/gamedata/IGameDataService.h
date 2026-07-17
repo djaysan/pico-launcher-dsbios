@@ -8,13 +8,18 @@ class IGameDataService
 public:
     virtual ~IGameDataService() = 0;
 
-    /// @brief Returns the entry for the given file name, or nullptr when none
-    ///        exists. The pointer is only valid until the next mutation
+    /// @brief Returns the entry for the given game, or nullptr when none
+    ///        exists. Lookup is by game code first (when given), then by file
+    ///        name. The pointer is only valid until the next mutation
     ///        (compare GetVersion to detect those).
-    virtual const GameDataEntry* GetEntry(const char* fileName) const = 0;
+    virtual const GameDataEntry* GetEntry(const char* fileName, const char* gameCode = nullptr) const = 0;
 
-    virtual void ToggleFavorite(const char* fileName) = 0;
-    virtual void RecordLaunch(const char* fileName, const char* fullPath, const char* lastPlayedDateTime) = 0;
+    /// @brief Mutations resolve the entry by code first and self-heal its
+    ///        stored file name, so renamed files keep their data.
+    virtual void ToggleFavorite(const char* fileName, const char* gameCode = nullptr) = 0;
+    virtual void RecordLaunch(const char* fileName, const char* gameCode,
+        const char* fullPath, const char* lastPlayedDateTime) = 0;
+    virtual void RemoveEntry(const char* fileName, const char* gameCode = nullptr) = 0;
 
     /// @brief Unordered access to all entries, for building derived lists
     ///        (e.g. recents). Indices are only valid until the next mutation.

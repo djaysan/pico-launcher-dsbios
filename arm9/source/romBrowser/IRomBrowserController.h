@@ -20,9 +20,11 @@ public:
 
     virtual void NavigateUp() = 0;
     virtual void NavigateToPath(const TCHAR* name) = 0;
-    virtual void LaunchFile(const FileInfo& fileInfo) = 0;
+    /// @brief gameCode is the file's internal game code when the caller has
+    ///        it loaded, or nullptr; it keys the game's persisted data.
+    virtual void LaunchFile(const FileInfo& fileInfo, const char* gameCode = nullptr) = 0;
     virtual void LaunchRandomGame() = 0;
-    virtual void ToggleFavorite(const FileInfo& fileInfo) = 0;
+    virtual void ToggleFavorite(const FileInfo& fileInfo, const char* gameCode = nullptr) = 0;
     virtual void ToggleFavoritesFilter() = 0;
     virtual bool IsFavoritesFilterEnabled() const = 0;
     virtual void ShowGameInfo(const FileInfo& fileInfo) = 0;

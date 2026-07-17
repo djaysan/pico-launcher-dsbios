@@ -46,6 +46,7 @@ private:
     bool _selectedFavorite = false;
     int _lastGameDataItem = -1;
     u32 _lastGameDataVersion = 0;
+    bool _lastGameDataInfoLoaded = false;
     const MaterialColorScheme* _materialColorScheme;
 
     RomBrowserTopScreenView(SharedPtr<RomBrowserViewModel> viewModel,

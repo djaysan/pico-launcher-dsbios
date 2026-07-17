@@ -2,6 +2,7 @@
 #include "IRomBrowserItemViewModel.h"
 
 class IRomBrowserController;
+class FileInfoManager;
 
 class RomBrowserItemViewModel : public IRomBrowserItemViewModel
 {
@@ -41,4 +42,6 @@ private:
     QueueTask<void> _queueTask;
 
     IRomBrowserController* _romBrowserController;
+
+    const char* GetGameCode(FileInfoManager& fileInfoManager) const;
 };
