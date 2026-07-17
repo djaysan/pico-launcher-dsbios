@@ -28,6 +28,11 @@ public:
         _romBrowserController->ShowRecents();
     }
 
+    void RequestDeleteSelected()
+    {
+        _romBrowserController->RequestDeleteSelected();
+    }
+
     constexpr RomBrowserLayout GetRomBrowserLayout() const
     {
         return _romBrowserController->GetRomBrowserDisplaySettings().layout;

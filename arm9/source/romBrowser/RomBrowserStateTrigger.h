@@ -15,5 +15,7 @@ enum class RomBrowserStateTrigger
     ShowRecents,
     HideRecents,
     ShowStatistics,
-    HideStatistics
+    HideStatistics,
+    ShowDeleteConfirm,
+    HideDeleteConfirm
 };

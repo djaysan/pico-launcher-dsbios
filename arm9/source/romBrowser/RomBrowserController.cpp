@@ -106,6 +106,54 @@ void RomBrowserController::ShowStatistics()
     _stateMachine.Fire(RomBrowserStateTrigger::ShowStatistics);
 }
 
+void RomBrowserController::RequestDeleteSelected()
+{
+    if (!_romBrowserViewModel.IsValid())
+        return;
+    int selectedItem = _romBrowserViewModel->GetSelectedItem();
+    if (selectedItem < 0)
+        return;
+    const auto& item = _romBrowserViewModel->GetFileInfoManager().GetItem(selectedItem);
+    // only games: deleting folders would need recursion, and deleting random
+    // support files from the launcher is asking for trouble
+    if (item.GetFileType()->GetClassification() != FileTypeClassification::Game)
+        return;
+
+    StringUtil::Copy(_deleteRomFileName, item.GetFileName(),
+        sizeof(_deleteRomFileName) / sizeof(_deleteRomFileName[0]));
+    // "<name minus extension>.sav" is the save convention used by the loader
+    // and the emulators next to their roms
+    StringUtil::Copy(_deleteSaveFileName, _deleteRomFileName,
+        sizeof(_deleteSaveFileName) / sizeof(_deleteSaveFileName[0]));
+    TCHAR* dot = strrchr(_deleteSaveFileName, '.');
+    if (dot)
+        *dot = 0;
+    strlcat(_deleteSaveFileName, ".sav", sizeof(_deleteSaveFileName));
+    FILINFO fileInfo;
+    _deleteHasSave = f_stat(_deleteSaveFileName, &fileInfo) == FR_OK;
+
+    _stateMachine.Fire(RomBrowserStateTrigger::ShowDeleteConfirm);
+}
+
+void RomBrowserController::CancelDelete()
+{
+    _stateMachine.Fire(RomBrowserStateTrigger::HideDeleteConfirm);
+}
+
+void RomBrowserController::ConfirmDelete()
+{
+    _ioTaskQueue->Enqueue([this] (const vu8& cancelRequested)
+    {
+        FRESULT result = f_unlink(_deleteRomFileName);
+        if (result != FR_OK)
+            LOG_ERROR("Couldn't delete file (%d)\n", result);
+        else if (_deleteHasSave)
+            f_unlink(_deleteSaveFileName);
+        _deleteCompleted = true;
+        return TaskResult<void>::Completed();
+    });
+}
+
 void RomBrowserController::HideStatistics()
 {
     _stateMachine.Fire(RomBrowserStateTrigger::HideStatistics);
@@ -140,6 +188,12 @@ void RomBrowserController::SetRomBrowserDisplaySettings(
 
 void RomBrowserController::Update()
 {
+    if (_deleteCompleted)
+    {
+        _deleteCompleted = false;
+        // reload the current folder so the deleted file disappears
+        NavigateToPath(".");
+    }
     _stateMachine.Update();
     if (_stateMachine.HasStateChanged())
     {

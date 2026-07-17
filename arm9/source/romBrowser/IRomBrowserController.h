@@ -33,6 +33,16 @@ public:
     virtual void HideRecents() = 0;
     virtual void ShowStatistics() = 0;
     virtual void HideStatistics() = 0;
+    virtual void RequestDeleteSelected() = 0;
+    virtual void CancelDelete() = 0;
+    virtual void ConfirmDelete() = 0;
+    /// @brief File that will be deleted. Deliberately a dedicated buffer, NOT
+    ///        _triggerFileInfo: the launch flows overwrite that one, and a
+    ///        delete must never act on anything but the file the user saw.
+    virtual const char* GetDeleteRomFileName() const = 0;
+    /// @brief Save file that will be deleted along with the game, empty when
+    ///        there is none. Valid while the delete confirmation is shown.
+    virtual const char* GetDeleteSaveFileName() const = 0;
     virtual void GotoSettingsScreen() = 0;
 
     virtual void Update() = 0;

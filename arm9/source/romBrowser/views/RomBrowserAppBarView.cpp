@@ -6,6 +6,7 @@
 #include "settingsIcon.h"
 #include "heartIcon.h"
 #include "recentIcon.h"
+#include "trashIcon.h"
 #include "hGridIcon.h"
 #include "vGridIcon.h"
 #include "bannerListIcon.h"
@@ -20,7 +21,7 @@ RomBrowserAppBarView::RomBrowserAppBarView(
     const IRomBrowserViewFactory* romBrowserViewFactory)
     : _viewModel(viewModel)
 {
-    _appBarView = displayMode.CreateAppBarView(romBrowserViewFactory, 1, 3);
+    _appBarView = displayMode.CreateAppBarView(romBrowserViewFactory, 1, 4);
     AddChildTail(_appBarView.GetPointer());
 
     _appBarView->SetButtonAction(APP_BAR_BUTTON_BACK, [] (IconButtonView* sender, void* arg)
@@ -34,6 +35,10 @@ RomBrowserAppBarView::RomBrowserAppBarView(
     _appBarView->SetButtonAction(APP_BAR_BUTTON_FAVORITE, [] (IconButtonView* sender, void* arg)
     {
         ((RomBrowserAppBarViewModel*)arg)->ToggleFavoritesFilter();
+    }, _viewModel);
+    _appBarView->SetButtonAction(APP_BAR_BUTTON_DELETE, [] (IconButtonView* sender, void* arg)
+    {
+        ((RomBrowserAppBarViewModel*)arg)->RequestDeleteSelected();
     }, _viewModel);
     _appBarView->SetButtonAction(APP_BAR_BUTTON_DISPLAY_SETTINGS, [] (IconButtonView* sender, void* arg)
     {
@@ -63,6 +68,10 @@ void RomBrowserAppBarView::InitVram(const VramContext& vramContext)
         u32 recentIconVramOffset = objVramManager->Alloc(recentIconTilesLen);
         dma_ntrCopy32(3, recentIconTiles, objVramManager->GetVramAddress(recentIconVramOffset), recentIconTilesLen);
         _appBarView->SetButtonIcon(APP_BAR_BUTTON_RECENT, recentIconVramOffset);
+
+        u32 trashIconVramOffset = objVramManager->Alloc(trashIconTilesLen);
+        dma_ntrCopy32(3, trashIconTiles, objVramManager->GetVramAddress(trashIconVramOffset), trashIconTilesLen);
+        _appBarView->SetButtonIcon(APP_BAR_BUTTON_DELETE, trashIconVramOffset);
 
         // u32 settingsIconVramOffset = objVramManager->Alloc(settingsIconTilesLen);
         // dma_ntrCopy32(3, settingsIconTiles, objVramManager->GetVramAddress(settingsIconVramOffset), settingsIconTilesLen);

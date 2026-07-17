@@ -39,6 +39,11 @@ public:
     void HideRecents() override;
     void ShowStatistics() override;
     void HideStatistics() override;
+    void RequestDeleteSelected() override;
+    void CancelDelete() override;
+    void ConfirmDelete() override;
+    const char* GetDeleteRomFileName() const override { return _deleteRomFileName; }
+    const char* GetDeleteSaveFileName() const override { return _deleteHasSave ? _deleteSaveFileName : ""; }
     void GotoSettingsScreen() override;
 
     void Update() override;
@@ -72,6 +77,10 @@ private:
     TaskQueueBase* _ioTaskQueue;
     TaskQueueBase* _bgTaskQueue;
     bool _favoritesFilter = false;
+    TCHAR _deleteRomFileName[256];
+    TCHAR _deleteSaveFileName[256];
+    bool _deleteHasSave = false;
+    volatile bool _deleteCompleted = false;
 
     std::unique_ptr<SdFolder> _sdFolder;
     SharedPtr<RomBrowserViewModel> _romBrowserViewModel;

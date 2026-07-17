@@ -23,6 +23,7 @@
 #include "romBrowser/views/cheats/CheatsBottomSheetView.h"
 #include "romBrowser/views/recents/RecentsBottomSheetView.h"
 #include "romBrowser/views/statistics/StatisticsBottomSheetView.h"
+#include "romBrowser/views/deleteconfirm/DeleteConfirmBottomSheetView.h"
 #include "romBrowser/views/DisplaySettingsBottomSheetView.h"
 #include "bgm/AudioStreamPlayer.h"
 #include "bgm/BgmService.h"
@@ -296,6 +297,16 @@ void App::HandleTrigger(RomBrowserStateTrigger trigger, RomBrowserState newState
             HandleHideStatisticsTrigger();
             break;
         }
+        case RomBrowserStateTrigger::ShowDeleteConfirm:
+        {
+            HandleShowDeleteConfirmTrigger();
+            break;
+        }
+        case RomBrowserStateTrigger::HideDeleteConfirm:
+        {
+            HandleHideDeleteConfirmTrigger();
+            break;
+        }
         case RomBrowserStateTrigger::Navigate:
         {
             HandleNavigateTrigger();
@@ -379,10 +390,26 @@ void App::HandleHideStatisticsTrigger()
         _romBrowserBottomScreenView->Focus(_focusManager);
 }
 
+void App::HandleShowDeleteConfirmTrigger()
+{
+    auto deleteConfirmViewModel = SharedPtr<DeleteConfirmViewModel>::MakeShared(&_romBrowserController);
+    auto deleteConfirmDialog = DeleteConfirmBottomSheetView::CreateShared(
+        std::move(deleteConfirmViewModel), &_theme->GetMaterialColorScheme(), _theme->GetFontRepository());
+    _dialogPresenter.ShowDialog(std::move(deleteConfirmDialog));
+}
+
+void App::HandleHideDeleteConfirmTrigger()
+{
+    _dialogPresenter.CloseDialog();
+    if (!_dialogPresenter.GetOldFocus())
+        _romBrowserBottomScreenView->Focus(_focusManager);
+}
+
 void App::HandleNavigateTrigger()
 {
-    // navigation can also start from inside the recents sheet
-    if (_romBrowserController.GetStateMachine().GetPreviousState() == RomBrowserState::Recents)
+    // navigation can also start from inside the recents or delete sheets
+    auto previousState = _romBrowserController.GetStateMachine().GetPreviousState();
+    if (previousState == RomBrowserState::Recents || previousState == RomBrowserState::DeleteConfirm)
         _dialogPresenter.CloseDialog();
     if (!_romBrowserBottomScreenView->IsAppBarFocused(_focusManager))
         _focusManager.Unfocus();
