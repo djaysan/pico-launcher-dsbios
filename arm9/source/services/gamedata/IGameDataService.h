@@ -21,6 +21,12 @@ public:
         const char* fullPath, const char* lastPlayedDateTime) = 0;
     virtual void RemoveEntry(const char* fileName, const char* gameCode = nullptr) = 0;
 
+    /// @brief Credits the session opened by the last RecordLaunch with the
+    ///        time elapsed until now (the next launcher boot). Sessions over
+    ///        6 hours are discarded: that is a power-off, not a play session.
+    /// @return True when play time was credited (the caller should save).
+    virtual bool CloseOpenSession(const char* nowDateTime) = 0;
+
     /// @brief Unordered access to all entries, for building derived lists
     ///        (e.g. recents). Indices are only valid until the next mutation.
     virtual u32 GetEntryCount() const = 0;

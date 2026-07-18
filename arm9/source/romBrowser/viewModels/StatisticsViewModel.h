@@ -28,6 +28,7 @@ public:
                 continue;
             _playedCount++;
             _totalLaunches += entry.launchCount;
+            _totalPlayMinutes += entry.playMinutes;
             for (u32 t = 0; t < STATISTICS_TOP_COUNT; t++)
             {
                 if (!top[t] || entry.launchCount > top[t]->launchCount)
@@ -53,6 +54,7 @@ public:
     u32 GetPlayedCount() const { return _playedCount; }
     u32 GetFavoriteCount() const { return _favoriteCount; }
     u32 GetTotalLaunches() const { return _totalLaunches; }
+    u32 GetTotalPlayMinutes() const { return _totalPlayMinutes; }
     u32 GetTopCount() const { return _topCount; }
     const GameDataEntry& GetTopEntry(u32 index) const { return _topEntries[index]; }
     const GameDataEntry& GetLastPlayed() const { return _lastPlayed; }
@@ -67,6 +69,7 @@ private:
     u32 _playedCount = 0;
     u32 _favoriteCount = 0;
     u32 _totalLaunches = 0;
+    u32 _totalPlayMinutes = 0;
     u32 _topCount = 0;
     GameDataEntry _topEntries[STATISTICS_TOP_COUNT];
     GameDataEntry _lastPlayed;

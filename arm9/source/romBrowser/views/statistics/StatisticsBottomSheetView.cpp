@@ -39,8 +39,18 @@ StatisticsBottomSheetView::StatisticsBottomSheetView(SharedPtr<StatisticsViewMod
             _viewModel->GetFavoriteCount(), _viewModel->GetFavoriteCount() == 1 ? "" : "s");
         AddLine(fontRepository, FontType::Regular10, text);
 
-        mini_snprintf(text, sizeof(text), "%u launch%s in total",
-            _viewModel->GetTotalLaunches(), _viewModel->GetTotalLaunches() == 1 ? "" : "es");
+        u32 playMinutes = _viewModel->GetTotalPlayMinutes();
+        if (playMinutes > 0)
+        {
+            mini_snprintf(text, sizeof(text), "%u launch%s, %uh %02um played",
+                _viewModel->GetTotalLaunches(), _viewModel->GetTotalLaunches() == 1 ? "" : "es",
+                playMinutes / 60, playMinutes % 60);
+        }
+        else
+        {
+            mini_snprintf(text, sizeof(text), "%u launch%s in total",
+                _viewModel->GetTotalLaunches(), _viewModel->GetTotalLaunches() == 1 ? "" : "es");
+        }
         AddLine(fontRepository, FontType::Regular10, text);
 
         for (u32 t = 0; t < _viewModel->GetTopCount(); t++)

@@ -14,8 +14,14 @@
 #define KEY_GAME_CODE         "gameCode"
 #define KEY_FAVORITE          "favorite"
 #define KEY_LAUNCH_COUNT      "launchCount"
+#define KEY_PLAY_MINUTES      "playMinutes"
 #define KEY_LAST_PLAYED       "lastPlayed"
 #define KEY_PATH              "path"
+#define KEY_SESSION_GAME      "sessionGame"
+#define KEY_SESSION_GAME_CODE "sessionGameCode"
+#define KEY_SESSION_START     "sessionStart"
+
+#define SESSION_MAX_MINUTES   (6 * 60)
 
 // ArduinoJson silently drops data when its pool is exhausted, so the pool is
 // sized from the entry count (write) or file size (read) instead of a fixed
@@ -29,6 +35,43 @@
 static u32 writePoolSize(u32 entryCount)
 {
     return JSON_POOL_BASE_SIZE + entryCount * JSON_POOL_PER_ENTRY;
+}
+
+/// @brief Parses "YYYY-MM-DD HH:MM" into absolute minutes (days-from-civil
+///        algorithm), so sessions crossing midnight or month ends work.
+static bool parseDateTime(const char* text, s64& totalMinutes)
+{
+    if (strlen(text) < 16)
+        return false;
+    auto number = [] (const char* p, int digits) -> int
+    {
+        int value = 0;
+        for (int i = 0; i < digits; i++)
+        {
+            if (p[i] < '0' || p[i] > '9')
+                return -1;
+            value = value * 10 + (p[i] - '0');
+        }
+        return value;
+    };
+    int year = number(text, 4);
+    int month = number(text + 5, 2);
+    int day = number(text + 8, 2);
+    int hour = number(text + 11, 2);
+    int minute = number(text + 14, 2);
+    if (year < 2000 || month < 1 || month > 12 || day < 1 || day > 31 ||
+        hour < 0 || hour > 23 || minute < 0 || minute > 59)
+    {
+        return false;
+    }
+    year -= month <= 2;
+    int era = year / 400;
+    u32 yearOfEra = year - era * 400;
+    u32 dayOfYear = (153 * (month + (month > 2 ? -3 : 9)) + 2) / 5 + day - 1;
+    u32 dayOfEra = yearOfEra * 365 + yearOfEra / 4 - yearOfEra / 100 + dayOfYear;
+    s64 days = (s64)era * 146097 + dayOfEra;
+    totalMinutes = days * 1440 + hour * 60 + minute;
+    return true;
 }
 
 // homebrew headers can hold garbage where retail games keep their code; only
@@ -137,7 +180,38 @@ void JsonGameDataService::RecordLaunch(const char* fileName, const char* gameCod
     entry.launchCount++;
     entry.lastPlayed = lastPlayedDateTime;
     entry.path = fullPath;
+    // a play session opens now and closes at the next launcher boot
+    _sessionGameFileName = fileName;
+    _sessionGameCode = isUsableGameCode(gameCode) ? gameCode : "";
+    _sessionStart = lastPlayedDateTime;
     _version++;
+}
+
+bool JsonGameDataService::CloseOpenSession(const char* nowDateTime)
+{
+    if (_sessionStart.GetString()[0] == 0)
+        return false;
+
+    s64 startMinutes = 0;
+    s64 nowMinutes = 0;
+    if (parseDateTime(_sessionStart.GetString(), startMinutes) &&
+        parseDateTime(nowDateTime, nowMinutes))
+    {
+        s64 minutes = nowMinutes - startMinutes;
+        // longer than the cap means the console was off, not playing
+        if (minutes >= 1 && minutes <= SESSION_MAX_MINUTES)
+        {
+            auto& entry = GetOrCreateEntry(_sessionGameFileName.GetString(),
+                _sessionGameCode.GetString());
+            entry.playMinutes += (u32)minutes;
+        }
+    }
+    _sessionStart = "";
+    _sessionGameFileName = "";
+    _sessionGameCode = "";
+    _version++;
+    // the cleared session (and any credited time) must be persisted
+    return true;
 }
 
 void JsonGameDataService::RemoveEntry(const char* fileName, const char* gameCode)
@@ -163,7 +237,7 @@ void JsonGameDataService::SaveAsync(TaskQueueBase* ioTaskQueue)
     {
         const auto& entry = _entries[i];
         // entries reset back to all-default state are pruned on write
-        if (!entry.favorite && entry.launchCount == 0)
+        if (!entry.favorite && entry.launchCount == 0 && entry.playMinutes == 0)
             continue;
         auto game = games[entry.fileName.GetString()].to<JsonObject>();
         if (entry.gameCode.GetString()[0] != 0)
@@ -172,10 +246,19 @@ void JsonGameDataService::SaveAsync(TaskQueueBase* ioTaskQueue)
             game[KEY_FAVORITE] = true;
         if (entry.launchCount > 0)
             game[KEY_LAUNCH_COUNT] = entry.launchCount;
+        if (entry.playMinutes > 0)
+            game[KEY_PLAY_MINUTES] = entry.playMinutes;
         if (entry.lastPlayed.GetString()[0] != 0)
             game[KEY_LAST_PLAYED] = entry.lastPlayed.GetString();
         if (entry.path.GetString()[0] != 0)
             game[KEY_PATH] = entry.path.GetString();
+    }
+    if (_sessionStart.GetString()[0] != 0)
+    {
+        json[KEY_SESSION_GAME] = _sessionGameFileName.GetString();
+        if (_sessionGameCode.GetString()[0] != 0)
+            json[KEY_SESSION_GAME_CODE] = _sessionGameCode.GetString();
+        json[KEY_SESSION_START] = _sessionStart.GetString();
     }
     if (json.overflowed())
     {
@@ -237,7 +320,11 @@ void JsonGameDataService::Load()
         auto& entry = GetOrCreateEntry(item.key().c_str(), item.value()[KEY_GAME_CODE] | "");
         entry.favorite = item.value()[KEY_FAVORITE] | false;
         entry.launchCount = item.value()[KEY_LAUNCH_COUNT] | 0u;
+        entry.playMinutes = item.value()[KEY_PLAY_MINUTES] | 0u;
         entry.lastPlayed = item.value()[KEY_LAST_PLAYED] | "";
         entry.path = item.value()[KEY_PATH] | "";
     }
+    _sessionGameFileName = json[KEY_SESSION_GAME] | "";
+    _sessionGameCode = json[KEY_SESSION_GAME_CODE] | "";
+    _sessionStart = json[KEY_SESSION_START] | "";
 }

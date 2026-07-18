@@ -80,6 +80,8 @@ private:
     bool _favoritesFilter = false;
     TCHAR _triggerGameCode[8];
     TCHAR _deleteGameCode[8];
+
+    void FormatNowDateTime(TCHAR* buffer, u32 bufferLength) const;
     TCHAR _deleteRomFileName[256];
     TCHAR _deleteSaveFileName[256];
     bool _deleteHasSave = false;

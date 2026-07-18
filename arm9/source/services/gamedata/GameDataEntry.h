@@ -10,6 +10,9 @@ struct GameDataEntry
     ///        none. Lookups prefer it: it survives renames and moves.
     String<char, 8> gameCode;
     u32 launchCount = 0;
+    /// @brief Accumulated play time. A session spans from launching the game
+    ///        until the next launcher boot, so it is an approximation.
+    u32 playMinutes = 0;
     bool favorite = false;
     /// @brief "YYYY-MM-DD HH:MM", empty when never launched. Lexicographic
     ///        order equals chronological order.

@@ -159,10 +159,20 @@ void RomBrowserTopScreenView::Update()
                 _selectedFavorite = entry->favorite;
                 if (entry->launchCount > 0)
                 {
-                    const char* lastPlayed = entry->lastPlayed.GetString();
-                    if (strlen(lastPlayed) >= 10)
+                    if (entry->playMinutes >= 60)
+                    {
+                        mini_snprintf(info, sizeof(info), "%ux %uh%02u", entry->launchCount,
+                            entry->playMinutes / 60, entry->playMinutes % 60);
+                    }
+                    else if (entry->playMinutes > 0)
+                    {
+                        mini_snprintf(info, sizeof(info), "%ux %um", entry->launchCount,
+                            entry->playMinutes);
+                    }
+                    else if (strlen(entry->lastPlayed.GetString()) >= 10)
                     {
                         // stored as "YYYY-MM-DD HH:MM", shown as "3x 16/07"
+                        const char* lastPlayed = entry->lastPlayed.GetString();
                         mini_snprintf(info, sizeof(info), "%ux %c%c/%c%c", entry->launchCount,
                             lastPlayed[8], lastPlayed[9], lastPlayed[5], lastPlayed[6]);
                     }

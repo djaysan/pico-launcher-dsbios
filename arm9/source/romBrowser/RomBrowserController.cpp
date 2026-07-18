@@ -158,6 +158,16 @@ void RomBrowserController::RequestDeleteSelected()
     _stateMachine.Fire(RomBrowserStateTrigger::ShowDeleteConfirm);
 }
 
+void RomBrowserController::FormatNowDateTime(TCHAR* buffer, u32 bufferLength) const
+{
+    rtc_datetime_t dateTime;
+    rtc_readDateTime(&dateTime);
+    // the rtc registers hold BCD values, which %x renders as decimal digits
+    mini_snprintf(buffer, bufferLength, "20%02x-%02x-%02x %02x:%02x",
+        dateTime.date.year, dateTime.date.month, dateTime.date.monthDay,
+        dateTime.time.hour, dateTime.time.minute);
+}
+
 void RomBrowserController::CancelDelete()
 {
     _stateMachine.Fire(RomBrowserStateTrigger::HideDeleteConfirm);
@@ -231,6 +241,13 @@ void RomBrowserController::Update()
         case RomBrowserState::Start:
         {
             LOG_DEBUG("RomBrowserState::Start\n");
+            // a launcher boot ends the play session the last launch opened
+            TCHAR now[20];
+            FormatNowDateTime(now, sizeof(now) / sizeof(now[0]));
+            if (_gameDataService->CloseOpenSession(now))
+            {
+                _gameDataService->SaveAsync(_ioTaskQueue);
+            }
             const auto& lastUsed = _appSettingsService->GetAppSettings().lastUsedFilePath;
             if (strlen(lastUsed.GetString()) != 0)
             {
@@ -372,13 +389,8 @@ void RomBrowserController::HandleFolderLoadDoneTrigger()
 void RomBrowserController::HandleLaunchTrigger()
 {
     LOG_DEBUG("RomBrowserStateTrigger::Launch\n");
-    rtc_datetime_t dateTime;
-    rtc_readDateTime(&dateTime);
     char lastPlayed[20];
-    // the rtc registers hold BCD values, which %x renders as decimal digits
-    mini_snprintf(lastPlayed, sizeof(lastPlayed), "20%02x-%02x-%02x %02x:%02x",
-        dateTime.date.year, dateTime.date.month, dateTime.date.monthDay,
-        dateTime.time.hour, dateTime.time.minute);
+    FormatNowDateTime(lastPlayed, sizeof(lastPlayed));
     // same full-path construction as UpdateLastUsedFilepath, but into a local
     // buffer: _navigatePath belongs to the navigation flow
     TCHAR fullPath[256];

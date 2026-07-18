@@ -12,6 +12,7 @@ public:
     void RecordLaunch(const char* fileName, const char* gameCode,
         const char* fullPath, const char* lastPlayedDateTime) override;
     void RemoveEntry(const char* fileName, const char* gameCode = nullptr) override;
+    bool CloseOpenSession(const char* nowDateTime) override;
     u32 GetEntryCount() const override { return _entryCount; }
     const GameDataEntry& GetEntryByIndex(u32 index) const override { return _entries[index]; }
     u32 GetVersion() const override { return _version; }
@@ -22,6 +23,9 @@ private:
     u32 _entryCount = 0;
     u32 _entryCapacity = 0;
     u32 _version = 0;
+    String<char, 96> _sessionGameFileName;
+    String<char, 8> _sessionGameCode;
+    String<char, 20> _sessionStart;
 
     GameDataEntry* Find(const char* fileName);
     GameDataEntry* FindByCode(const char* gameCode);
