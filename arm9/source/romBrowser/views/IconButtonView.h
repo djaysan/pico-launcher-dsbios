@@ -1,6 +1,7 @@
 #pragma once
 #include "gui/views/View.h"
 #include "gui/materialDesign.h"
+#include "core/math/Rgb.h"
 
 class MaterialColorScheme;
 class IVramManager;
@@ -42,6 +43,18 @@ public:
         _state = state;
     }
 
+    /// @brief Overrides the icon tint, e.g. to signal an active filter.
+    void SetIconColorOverride(const Rgb<8, 8, 8>& color)
+    {
+        _iconColorOverride = color;
+        _hasIconColorOverride = true;
+    }
+
+    void ClearIconColorOverride()
+    {
+        _hasIconColorOverride = false;
+    }
+
     bool HandleInput(const InputProvider& inputProvider, FocusManager& focusManager) override;
     void HandlePenDown(const Point& touchPoint, FocusManager& focusManager) override;
     void HandlePenMove(const Point& touchPoint, FocusManager& focusManager) override;
@@ -56,6 +69,11 @@ protected:
     State _state;
     const MaterialColorScheme* _materialColorScheme;
     bool _penDown = false;
+    Rgb<8, 8, 8> _iconColorOverride;
+    bool _hasIconColorOverride = false;
+
+    /// @brief Icon tint: the override when set, the scheme role otherwise.
+    Rgb<8, 8, 8> GetIconColor() const;
 
     IconButtonView(Type type, State state,
         md::sys::color backgroundColor, const MaterialColorScheme* materialColorScheme)

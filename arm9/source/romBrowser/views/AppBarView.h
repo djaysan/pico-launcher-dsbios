@@ -24,6 +24,16 @@ public:
         _buttons[button]->SetAction(action, arg);
     }
 
+    void SetButtonIconColorOverride(int button, const Rgb<8, 8, 8>& color)
+    {
+        _buttons[button]->SetIconColorOverride(color);
+    }
+
+    void ClearButtonIconColorOverride(int button)
+    {
+        _buttons[button]->ClearIconColorOverride();
+    }
+
     Rectangle GetBounds() const override;
     void Update() override;
     SharedPtr<View> MoveFocus(const SharedPtr<View>& currentFocus, FocusMoveDirection direction, View* source) override;

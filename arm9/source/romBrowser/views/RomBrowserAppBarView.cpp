@@ -46,6 +46,16 @@ RomBrowserAppBarView::RomBrowserAppBarView(
     }, _viewModel);
 }
 
+void RomBrowserAppBarView::Update()
+{
+    // the heart tells whether the favorites filter is active
+    if (_viewModel->IsFavoritesFilterEnabled())
+        _appBarView->SetButtonIconColorOverride(APP_BAR_BUTTON_FAVORITE, Rgb<8, 8, 8>(214, 40, 57));
+    else
+        _appBarView->ClearButtonIconColorOverride(APP_BAR_BUTTON_FAVORITE);
+    ViewContainer::Update();
+}
+
 void RomBrowserAppBarView::InitVram(const VramContext& vramContext)
 {
     ViewContainer::InitVram(vramContext);

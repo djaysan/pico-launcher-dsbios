@@ -1,5 +1,6 @@
 #include "common.h"
 #include "gui/input/InputProvider.h"
+#include "themes/material/MaterialColorScheme.h"
 #include "IconButtonView.h"
 
 bool IconButtonView::HandleInput(const InputProvider& inputProvider, FocusManager& focusManager)
@@ -96,6 +97,13 @@ md::sys::color IconButtonView::GetCircleBackgroundColor() const
             return md::sys::color::onSurfaceVariant;
         }
     }
+}
+
+Rgb<8, 8, 8> IconButtonView::GetIconColor() const
+{
+    return _hasIconColorOverride
+        ? _iconColorOverride
+        : _materialColorScheme->GetColor(GetForegroundColor());
 }
 
 md::sys::color IconButtonView::GetForegroundColor() const

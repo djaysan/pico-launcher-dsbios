@@ -23,6 +23,11 @@ public:
         _romBrowserController->ToggleFavoritesFilter();
     }
 
+    bool IsFavoritesFilterEnabled() const
+    {
+        return _romBrowserController->IsFavoritesFilterEnabled();
+    }
+
     void ShowRecents()
     {
         _romBrowserController->ShowRecents();

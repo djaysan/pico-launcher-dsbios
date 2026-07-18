@@ -34,7 +34,7 @@ void IconButton2DView::Draw(GraphicsContext& graphicsContext)
             .Build(selectorOam[0]);
 
         iconPaletteRow = graphicsContext.GetPaletteManager().AllocRow(
-            GradientPalette(selectorColor, fgColor), _position.y + 8, _position.y + 24);
+            GradientPalette(selectorColor, GetIconColor()), _position.y + 8, _position.y + 24);
     }
     else
     {
@@ -56,7 +56,7 @@ void IconButton2DView::Draw(GraphicsContext& graphicsContext)
             iconPaletteRow = graphicsContext.GetPaletteManager().AllocRow(
                 GradientPalette(
                     _materialColorScheme->GetColor(circleBgColor),
-                    _materialColorScheme->GetColor(GetForegroundColor())),
+                    GetIconColor()),
                 _position.y + 8, _position.y + 24);
         }
         else
@@ -64,7 +64,7 @@ void IconButton2DView::Draw(GraphicsContext& graphicsContext)
             iconPaletteRow = graphicsContext.GetPaletteManager().AllocRow(
                 GradientPalette(
                     _materialColorScheme->GetColor(_backgroundColor),
-                    _materialColorScheme->GetColor(GetForegroundColor())),
+                    GetIconColor()),
                 _position.y + 8, _position.y + 24);
         }
     }
