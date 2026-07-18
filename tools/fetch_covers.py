@@ -64,13 +64,14 @@ def pick(title: str, by_norm: dict[str, list[str]]) -> str | None:
     key = norm(title)
     candidates = by_norm.get(key)
     if not candidates:
-        close = difflib.get_close_matches(key, by_norm.keys(), n=1, cutoff=0.85)
-        if close:
-            candidates = by_norm[close[0]]
-    if not candidates:
+        # prefijo ANTES que fuzzy: difflib confunde numeraciones (Zero 1 vs Zero 4)
         prefixes = [k for k in by_norm if key.startswith(k + " ") or k.startswith(key + " ")]
         if prefixes:
             candidates = by_norm[max(prefixes, key=len)]
+    if not candidates:
+        close = difflib.get_close_matches(key, by_norm.keys(), n=1, cutoff=0.85)
+        if close:
+            candidates = by_norm[close[0]]
     if not candidates:
         return None
     for p in REGION_PREF:
