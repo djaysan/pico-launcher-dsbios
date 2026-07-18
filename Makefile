@@ -12,9 +12,9 @@ export LIBTWL           ?= $(shell pwd)/libs/libtwl
 
 NAME		:= 	LAUNCHER
 
-GAME_TITLE	:= rasalopa DS Launcher
+GAME_TITLE	:= Pico Launcher
 GAME_AUTHOR	:= LNH team
-GAME_ICON	:= icon.png
+GAME_ICON	:= icon.bmp
 
 # DLDI and internal SD slot of DSi
 # --------------------------------
