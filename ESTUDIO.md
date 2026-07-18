@@ -1,6 +1,7 @@
 # Pico Launcher — Mapa de estudio
 
 > Generado el 15-jul-2026 a partir de un análisis del código fuente (commit `d31a15c`, rama `develop`).
+> Actualizado el 17-jul-2026 con la sección 7: lo construido en la rama `enhanced`.
 > Objetivo: entender cómo está construido el launcher y dónde encajan las mejoras del proyecto "Pico Enhanced".
 
 ## 1. Cómo compilar
@@ -112,3 +113,77 @@ Hallazgos que confirman que varias de "nuestras" ideas ya estaban planeadas upst
 - GBARunner3: activo y funciona en DSpico, pero la comparación va al revés de lo que suele decirse: en general tiene **mejor** audio/compatibilidad que GBARunner2, aunque sigue en beta y algunos juegos van mejor en el 2 — tener ambos sigue siendo el consejo correcto.
 - Editor web de temas: existe ("DS Pico Theme Creator") + biblioteca comunitaria en themes.flashcarts.net/pico.
 - Cheats: sí (Loader API v3). **Soft reset e in-game reset: NO existen aún** (las guías lo dicen explícitamente) — ojo con esa expectativa.
+
+## 7. Pico Enhanced — lo construido (rama `enhanced`, jul-2026)
+
+### Features
+
+| # | Feature | Entrada | Archivos clave |
+|---|---|---|---|
+| 1 | Contador de juegos de la carpeta | automático, franja superior izq. | `RomBrowserTopScreenView` |
+| 2 | "Sorpréndeme" (juego aleatorio) | **SELECT** | `RomBrowserController::LaunchRandomGame` |
+| 3 | Favoritos | **X** sobre un juego; corazón en pantalla sup. | `RomBrowserItemInputHandler`, gamedata |
+| 4 | Registro de lanzamientos | automático (veces + fecha, franja sup. der.) | `HandleLaunchTrigger` → `RecordLaunch` |
+| 5 | Filtro de favoritos | botón **corazón** (rojo = activo) | `SdFolderFilterSortParams.favoritesOnly` |
+| 6 | Recientes / "Continuar jugando" | botón **reloj** → hoja; tocar navega y preselecciona | `views/recents/`, `RecentsViewModel` |
+| 7 | Panel de estadísticas | **START** | `views/statistics/`, `StatisticsViewModel` |
+| 8 | Borrar juegos (ROM + .sav) | botón **basurero** → X confirma, A/B cancelan | `views/deleteconfirm/`, `RequestDeleteSelected` |
+| 9 | Clave por gamecode + auto-sanado | interno (renombrar ROMs no pierde datos) | `JsonGameDataService::GetOrCreateEntry` |
+| 10 | Música por carpeta | `bgm.bcstm` dentro de la carpeta | `IBgmService::UpdateBgmForFolder` |
+| 11 | Fondos por hora (20:00–6:59) | `topbg_night.bin`/`bottombg_night.bin` en el tema | `ThemeTimeOfDay`, `Custom*Background` |
+| 12 | Tiempo jugado aproximado | automático ("3x 2h05" + total en estadísticas) | `CloseOpenSession` + fecha civil |
+
+### El almacén de datos: `/_pico/gamedata.json`
+
+`JsonGameDataService` (singleton DI, `services/gamedata/`). Entradas por juego:
+`fileName` + `gameCode` (identidad estable, con auto-sanado del nombre al usar),
+`favorite`, `launchCount`, `playMinutes`, `lastPlayed`, `path`. Claves de sesión
+a nivel raíz (`sessionGame/sessionStart`) para medir tiempo jugado: la sesión
+abre al lanzar y cierra en el siguiente arranque del launcher (descartada si
+pasan >6 h — eso fue un apagado, no una partida). Pool JSON dimensionado por
+entrada (nunca el pool fijo de 2048 de settings.json).
+
+### Lecciones de sangre (reglas para código nuevo)
+
+1. **Mutaciones de `_entries` solo en el hilo principal**; para guardar,
+   serializar en el hilo que muta y encolar solo la escritura con buffer propio
+   (`SaveAsync`). El array realoca: un `Save()` en el hilo IO fue use-after-free.
+2. **Toda vista que sobreviva a mutaciones copia POR VALOR** (recientes durante
+   su animación de cierre dereferenciaba punteros al array realocable).
+3. **Nunca usar `_triggerFileInfo` para acciones destructivas**: los flujos de
+   launch lo sobrescriben ANTES de que el FSM rechace su trigger. Buffer
+   dedicado (`_deleteRomFileName`).
+4. **Las hojas sin hijos enfocables deben enfocar un HIJO** (p. ej. su título):
+   `FocusManager::Update` ignora vistas enfocadas sin padre — auto-enfocarse
+   deja las teclas muertas.
+5. **El RTC entrega BCD**: formatear con `%02x` imprime dígitos decimales
+   correctos sin conversión.
+6. **Estado en singletons DI sobrevive los cambios de proceso** — resetear
+   coherencia en los puntos de re-entrada (p. ej. `StartBgmFromConfig` limpia
+   el dedup de música de carpeta).
+7. Patrón para hojas nuevas: estado FSM + par de triggers Show/Hide +
+   transición `Navigate` si la hoja navega + `IsRomBrowserVisible` + handler en
+   `App::HandleTrigger` + cierre del diálogo en `HandleNavigateTrigger` si
+   aplica. Modelos: recientes (con recycler) y estadísticas (solo labels).
+8. Iconos nuevos del app bar: PNG 16×16 modo P donde índice = intensidad
+   (trazo E/D + antialias bajo) + `.grit` copiado de otro icono.
+9. `IconButtonView::SetIconColorOverride` tiñe el icono de un botón (ambas
+   variantes de tema) — usado para el corazón rojo del filtro.
+
+### Herramientas (`tools/`, corren en la Mac)
+
+- `png2icon.py` — imagen → icono de banner NDS (PNG ≤15 colores + alpha; ndstool acepta PNG aunque su README no lo diga).
+- `img2cover.py` — imagen → carátula 128×96/8bpp (arte estirado a los 106×96 visibles, como los packs).
+- `fetch_covers_gba.py` — carátulas GBA por gamecode desde libretro-thumbnails.
+- `fetch_covers.py <sistemas>` — carátulas por nombre de archivo (gb, gbc, gen, sms, gg, nes, snes, ws, ngp) a `covers/user/`.
+- `make_banner.py` — banner.bnr de carpeta (icono desde otro .nds sin pérdida, o desde imagen) + título.
+- `make_night_bg.py` — variantes nocturnas de los fondos de un tema.
+- Matching de carátulas: exacto → prefijo → fuzzy (el prefijo va antes: el fuzzy confunde numeraciones).
+
+### Limitaciones aceptadas y documentadas
+
+- Franja superior no personalizable por temas (colores del esquema Material).
+- Filtro de favoritos por nombre: duplicados en dos carpetas muestran corazón pero no filtran hasta usarse ahí; romhacks comparten entrada con su base (mismo gamecode).
+- Tiempo jugado aproximado: incluye tiempo en sleep; sesiones sin volver al launcher (apagado directo) se pierden; >6 h se descartan.
+- Borrar `Juego.gba` borra `Juego.sav` — que compartiría un hipotético `Juego.nds` (convención del loader).
+- SNEmulDS sin asociación (no argv): lanzarlo manual desde `Games/snes/`; sus `.sfc` son invisibles en el navegador.
