@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Descarga caratulas GBA faltantes desde libretro-thumbnails (No-Intro) y las
-instala en la SD en el formato de Pico Launcher.
+"""Download missing GBA covers from libretro-thumbnails (No-Intro) and install
+them on the SD in Pico Launcher's format.
 
-Para cada .gba en <SD>/Games/gba sin caratula: lee el gamecode (offset 0xAC),
-busca el boxart por nombre (fuzzy, prefiriendo la region que indica la ultima
-letra del gamecode), lo convierte con img2cover y lo deja en
-<SD>/_pico/covers/gba/<CODE>.bmp (o covers/user/<archivo>.bmp si no hay code).
+For each .gba in <SD>/Games/gba without a cover: read the gamecode (offset
+0xAC), find the boxart by name (fuzzy, preferring the region indicated by the
+gamecode's last letter), convert it with img2cover and drop it at
+<SD>/_pico/covers/gba/<CODE>.bmp (or covers/user/<file>.bmp if there is no code).
 
-Uso: python3 tools/fetch_covers_gba.py [/Volumes/DSPICO] [--dry-run]
+Usage: python3 tools/fetch_covers_gba.py [/Volumes/DSPICO] [--dry-run]
 """
 from __future__ import annotations
 
@@ -40,7 +40,7 @@ DEFAULT_PREF = ["(Europe", "(USA", "(World"]
 
 def norm(s: str) -> str:
     s = unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode()
-    s = re.sub(r"\(.*?\)", "", s)            # quitar (USA), (Rev 1), etc.
+    s = re.sub(r"\(.*?\)", "", s)            # strip (USA), (Rev 1), etc.
     s = re.sub(r"[^a-z0-9]+", " ", s.lower())
     s = re.sub(r"\b(the|a|an|el|la|los|las)\b", " ", s)
     return " ".join(s.split())
@@ -61,7 +61,7 @@ def pick(title: str, code: str, catalog: list[str], by_norm: dict[str, list[str]
     key = norm(title)
     candidates = by_norm.get(key)
     if not candidates:
-        # prefijo ANTES que fuzzy: difflib confunde numeraciones (Zero 1 vs Zero 4)
+        # prefix BEFORE fuzzy: difflib mixes up numbered entries (Zero 1 vs Zero 4)
         prefixes = [k for k in by_norm if key.startswith(k + " ") or k.startswith(key + " ")]
         if prefixes:
             candidates = by_norm[max(prefixes, key=len)]
@@ -89,12 +89,12 @@ def main() -> None:
     have = {f[:-4].upper() for f in os.listdir(covers_gba) if f.lower().endswith(".bmp") and not f.startswith("._")}
     have_user = {f for f in os.listdir(covers_user)} if os.path.isdir(covers_user) else set()
 
-    print("Descargando catálogo de libretro-thumbnails...")
+    print("Downloading libretro-thumbnails catalog...")
     catalog = fetch_catalog()
     by_norm: dict[str, list[str]] = {}
     for name in catalog:
         by_norm.setdefault(norm(name[:-4]), []).append(name)
-    print(f"{len(catalog)} boxarts en el catálogo")
+    print(f"{len(catalog)} boxarts in the catalog")
 
     ok, fail = [], []
     for f in sorted(os.listdir(games_dir)):
@@ -109,7 +109,7 @@ def main() -> None:
         title = f.rsplit(".", 1)[0]
         match = pick(title, code, catalog, by_norm)
         if not match:
-            fail.append((f, code, "sin match en catálogo"))
+            fail.append((f, code, "no catalog match"))
             continue
         if dry:
             ok.append((f, code, match))
@@ -127,14 +127,14 @@ def main() -> None:
                 tmp.flush()
                 convert(tmp.name, dst)
             ok.append((f, code, match))
-        except Exception as e:  # noqa: BLE001 — reportar y seguir con el resto
+        except Exception as e:  # noqa: BLE001 — report and keep going with the rest
             fail.append((f, code, str(e)))
 
-    print(f"\n✓ {len(ok)} caratulas instaladas:")
+    print(f"\n✓ {len(ok)} covers installed:")
     for f, code, m in ok:
         print(f"  [{code or '----'}] {f}  ←  {m}")
     if fail:
-        print(f"\n✗ {len(fail)} sin resolver:")
+        print(f"\n✗ {len(fail)} unresolved:")
         for f, code, why in fail:
             print(f"  [{code or '----'}] {f}: {why}")
 

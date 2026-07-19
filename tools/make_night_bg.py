@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Genera las variantes nocturnas (*_night.bin) de los fondos de un tema
-custom de Pico Launcher. Los .bin son volcados crudos 256x192 en BGR555;
-la variante nocturna oscurece y enfria los colores.
+"""Generate the night variants (*_night.bin) of a Pico Launcher custom
+theme's backgrounds. The .bin files are raw 256x192 BGR555 dumps; the night
+variant darkens and cools the colors.
 
-Uso: python3 tools/make_night_bg.py <carpeta-del-tema>
-     python3 tools/make_night_bg.py "/Volumes/DSPICO/_pico/themes/Basic Gray"
+Usage: python3 tools/make_night_bg.py <theme-folder>
+       python3 tools/make_night_bg.py "/Volumes/DSPICO/_pico/themes/Basic Gray"
 """
 import os
 import struct
@@ -14,7 +14,7 @@ W, H = 256, 192
 
 
 def night_tint(r: int, g: int, b: int) -> tuple[int, int, int]:
-    # oscurecer y correr hacia el azul: mood nocturno
+    # darken and shift toward blue: night mood
     nr = int(r * 0.40)
     ng = int(g * 0.48)
     nb = min(31, int(b * 0.62) + 3)
@@ -25,7 +25,7 @@ def convert(src_path: str, dst_path: str) -> None:
     with open(src_path, "rb") as f:
         data = bytearray(f.read())
     if len(data) < W * H * 2:
-        raise ValueError(f"{src_path}: tamaño inesperado ({len(data)} bytes)")
+        raise ValueError(f"{src_path}: unexpected size ({len(data)} bytes)")
     for i in range(0, W * H * 2, 2):
         v = data[i] | (data[i + 1] << 8)
         r, g, b = v & 31, (v >> 5) & 31, (v >> 10) & 31
@@ -35,7 +35,7 @@ def convert(src_path: str, dst_path: str) -> None:
         data[i + 1] = nv >> 8
     with open(dst_path, "wb") as f:
         f.write(data)
-    print(f"{dst_path} generado")
+    print(f"{dst_path} written")
 
 
 if __name__ == "__main__":
@@ -49,4 +49,4 @@ if __name__ == "__main__":
             convert(src, os.path.join(theme_dir, f"{name}_night.bin"))
             made += 1
     if made == 0:
-        sys.exit(f"No hay topbg.bin/bottombg.bin en {theme_dir}")
+        sys.exit(f"No topbg.bin/bottombg.bin in {theme_dir}")

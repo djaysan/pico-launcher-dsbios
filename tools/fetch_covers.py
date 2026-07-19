@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""Descarga caratulas faltantes desde libretro-thumbnails (No-Intro) para los
-sistemas SIN gamecode (GB, GBC, Mega Drive, etc.) y las instala en
-<SD>/_pico/covers/user/<archivo>.bmp — la carpeta que Pico Launcher consulta
-por nombre de archivo para cualquier tipo asociado.
+"""Download missing covers from libretro-thumbnails (No-Intro) for the systems
+WITHOUT a gamecode (GB, GBC, Mega Drive, etc.) and install them into
+<SD>/_pico/covers/user/<file>.bmp — the folder Pico Launcher checks by
+filename for any associated type.
 
-(Para GBA usar fetch_covers_gba.py, que aprovecha el gamecode del header.)
+(For GBA use fetch_covers_gba.py, which leverages the gamecode in the header.)
 
-Uso: python3 tools/fetch_covers.py <sistema...> [--sd /Volumes/DSPICO] [--dry-run]
-     python3 tools/fetch_covers.py gb gbc gen
+Usage: python3 tools/fetch_covers.py <system...> [--sd /Volumes/DSPICO] [--dry-run]
+       python3 tools/fetch_covers.py gb gbc gen
 """
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ import urllib.request
 
 from img2cover import convert
 
-# gamesDir relativo a la SD; exts en minusculas
+# gamesDir relative to the SD root; exts in lowercase
 SYSTEMS = {
     "gb":   {"repo": "Nintendo_-_Game_Boy",                          "gamesDir": "Games/gb",   "exts": (".gb",)},
     "gbc":  {"repo": "Nintendo_-_Game_Boy_Color",                    "gamesDir": "Games/gb",   "exts": (".gbc",)},
@@ -64,7 +64,7 @@ def pick(title: str, by_norm: dict[str, list[str]]) -> str | None:
     key = norm(title)
     candidates = by_norm.get(key)
     if not candidates:
-        # prefijo ANTES que fuzzy: difflib confunde numeraciones (Zero 1 vs Zero 4)
+        # prefix BEFORE fuzzy: difflib mixes up numbered entries (Zero 1 vs Zero 4)
         prefixes = [k for k in by_norm if key.startswith(k + " ") or k.startswith(key + " ")]
         if prefixes:
             candidates = by_norm[max(prefixes, key=len)]
@@ -88,7 +88,7 @@ def main() -> None:
         sd = sys.argv[sys.argv.index("--sd") + 1]
     dry = "--dry-run" in sys.argv
     if not args or any(a not in SYSTEMS for a in args):
-        sys.exit(__doc__ + "\nSistemas: " + ", ".join(SYSTEMS))
+        sys.exit(__doc__ + "\nSystems: " + ", ".join(SYSTEMS))
 
     covers_user = os.path.join(sd, "_pico", "covers", "user")
     os.makedirs(covers_user, exist_ok=True)
@@ -105,21 +105,21 @@ def main() -> None:
             if not f.startswith("._") and f.lower().endswith(cfg["exts"]) and f + ".bmp" not in have
         ]
         if not pending:
-            print(f"{system}: nada que hacer")
+            print(f"{system}: nothing to do")
             continue
 
-        print(f"{system}: descargando catálogo {cfg['repo']}...")
+        print(f"{system}: downloading catalog {cfg['repo']}...")
         catalog = fetch_catalog(cfg["repo"])
         by_norm: dict[str, list[str]] = {}
         for name in catalog:
             by_norm.setdefault(norm(name[:-4]), []).append(name)
-        print(f"{system}: {len(catalog)} boxarts, {len(pending)} juegos sin carátula")
+        print(f"{system}: {len(catalog)} boxarts, {len(pending)} games without a cover")
 
         raw_base = f"https://raw.githubusercontent.com/libretro-thumbnails/{cfg['repo']}/master/Named_Boxarts/"
         for f in pending:
             match = pick(f.rsplit(".", 1)[0], by_norm)
             if not match:
-                fail.append((system, f, "sin match en catálogo"))
+                fail.append((system, f, "no catalog match"))
                 continue
             if dry:
                 ok.append((system, f, match))
@@ -131,14 +131,14 @@ def main() -> None:
                     tmp.flush()
                     convert(tmp.name, os.path.join(covers_user, f + ".bmp"))
                 ok.append((system, f, match))
-            except Exception as e:  # noqa: BLE001 — reportar y seguir
+            except Exception as e:  # noqa: BLE001 — report and keep going
                 fail.append((system, f, str(e)))
 
-    print(f"\n✓ {len(ok)} caratulas{' (dry-run)' if dry else ' instaladas'}:")
+    print(f"\n✓ {len(ok)} covers{' (dry-run)' if dry else ' installed'}:")
     for s, f, m in ok:
         print(f"  [{s}] {f}  ←  {m}")
     if fail:
-        print(f"\n✗ {len(fail)} sin resolver:")
+        print(f"\n✗ {len(fail)} unresolved:")
         for s, f, why in fail:
             print(f"  [{s}] {f}: {why}")
 

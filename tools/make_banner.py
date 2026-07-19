@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
-"""Genera archivos banner.bnr (banner NDS v1, 0x840 bytes) para carpetas de
-Pico Launcher: icono 32x32 + titulo que reemplaza el nombre de la carpeta.
+"""Generate banner.bnr files (NDS banner v1, 0x840 bytes) for Pico Launcher
+folders: a 32x32 icon + a title that replaces the folder name.
 
-El icono puede venir de:
-  --from-nds ROM.nds   copia bitmap+paleta del banner de otro ROM (sin perdida)
-  --from-image img.png cuantiza una imagen a 15 colores + transparencia (alpha)
+The icon can come from:
+  --from-nds ROM.nds   copies bitmap+palette from another ROM's banner (lossless)
+  --from-image img.png quantizes an image to 15 colors + transparency (alpha)
 
-Uso:
-  python3 tools/make_banner.py --from-nds emulador.nds "Titulo" salida.bnr
-  python3 tools/make_banner.py --from-image logo.png "Titulo" salida.bnr
+Usage:
+  python3 tools/make_banner.py --from-nds emulator.nds "Title" output.bnr
+  python3 tools/make_banner.py --from-image logo.png "Title" output.bnr
 """
 from __future__ import annotations
 
 import struct
 import sys
 
-BANNER_SIZE = 0x840  # v1: header 0x20 + icono 0x200 + paleta 0x20 + 6 titulos
+BANNER_SIZE = 0x840  # v1: 0x20 header + 0x200 icon + 0x20 palette + 6 titles
 
 
 def crc16(data: bytes) -> int:
@@ -32,7 +32,7 @@ def icon_from_nds(path: str) -> tuple[bytes, bytes]:
         data = f.read()
     off = struct.unpack_from("<I", data, 0x68)[0]
     if off == 0 or off + 0x240 > len(data):
-        raise ValueError(f"{path}: sin banner")
+        raise ValueError(f"{path}: no banner")
     return data[off + 0x20 : off + 0x220], data[off + 0x220 : off + 0x240]
 
 
@@ -71,7 +71,7 @@ def icon_from_image(path: str) -> tuple[bytes, bytes]:
             bitmap[i // 2] |= idx << 4
 
     palette = bytearray(0x20)
-    struct.pack_into("<H", palette, 0, 0x7C1F)  # indice 0: magenta (transparente)
+    struct.pack_into("<H", palette, 0, 0x7C1F)  # index 0: magenta (transparent)
     for i, (r, g, b) in enumerate(pal_colors[:15]):
         struct.pack_into("<H", palette, (i + 1) * 2, (r >> 3) | ((g >> 3) << 5) | ((b >> 3) << 10))
     return bytes(bitmap), bytes(palette)
@@ -84,7 +84,7 @@ def make_banner(bitmap: bytes, palette: bytes, title: str) -> bytes:
     banner[0x20:0x220] = bitmap
     banner[0x220:0x240] = palette
     encoded = title.encode("utf-16-le")[:0xFE]
-    for lang in range(6):  # japones..espanol, mismo texto
+    for lang in range(6):  # Japanese..Spanish, same text
         base = 0x240 + lang * 0x100
         banner[base : base + len(encoded)] = encoded
     struct.pack_into("<H", banner, 0x02, crc16(banner[0x20:BANNER_SIZE]))
@@ -98,4 +98,4 @@ if __name__ == "__main__":
     bitmap, palette = icon_from_nds(src) if mode == "--from-nds" else icon_from_image(src)
     with open(dst, "wb") as f:
         f.write(make_banner(bitmap, palette, title))
-    print(f"{dst}: banner v1, titulo \"{title}\"")
+    print(f"{dst}: banner v1, title \"{title}\"")

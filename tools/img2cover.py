@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""Convierte cualquier imagen a una caratula de Pico Launcher.
+"""Convert any image to a Pico Launcher cover.
 
-Formato (ver arm9/source/romBrowser/FileType/BmpHeader.h y BmpFileCover.cpp):
-BMP de 128x96, 8bpp indexado, sin compresion, DIB de 40 bytes, clrUsed=256.
-El launcher solo muestra los 106x96 de la izquierda, asi que el arte se estira
-a exactamente 106x96 (misma convencion que los packs de covers de la comunidad:
-sin barras negras visibles; la leve distorsion no se nota en pantalla) y las
-columnas 106-127 quedan negras (zona invisible).
+Format (see arm9/source/romBrowser/FileType/BmpHeader.h and BmpFileCover.cpp):
+128x96 BMP, 8bpp indexed, uncompressed, 40-byte DIB, clrUsed=256.
+The launcher only shows the leftmost 106x96, so the art is stretched to
+exactly 106x96 (same convention as the community cover packs: no visible
+black bars; the slight distortion is unnoticeable on screen) and columns
+106-127 stay black (invisible area).
 
-Uso: python3 tools/img2cover.py entrada.png salida.bmp
+Usage: python3 tools/img2cover.py input.png output.bmp
 """
 import struct
 import sys
@@ -34,7 +34,7 @@ def convert(src_path: str, dst_path: str) -> None:
         struct.pack("<BBBB", pal[i * 3 + 2], pal[i * 3 + 1], pal[i * 3], 0) for i in range(256)
     )
     pixel_offset = 14 + 40 + len(pal_bytes)
-    # filas de abajo hacia arriba (bottom-up), 128 bytes/fila (multiplo de 4)
+    # rows bottom-up, 128 bytes/row (multiple of 4)
     pixel_data = b"".join(pixels[y * W : (y + 1) * W] for y in range(H - 1, -1, -1))
 
     header = struct.pack("<2sIHHI", b"BM", pixel_offset + len(pixel_data), 0, 0, pixel_offset)
@@ -48,4 +48,4 @@ if __name__ == "__main__":
     if len(sys.argv) != 3:
         sys.exit(__doc__)
     convert(sys.argv[1], sys.argv[2])
-    print(f"{sys.argv[2]}: {W}x{H}, 8bpp, 256 colores")
+    print(f"{sys.argv[2]}: {W}x{H}, 8bpp, 256 colors")

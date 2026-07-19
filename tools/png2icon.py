@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
-"""Prepara el icono del banner del cartucho NDS a partir de cualquier imagen.
+"""Prepare the NDS cartridge banner icon from any image.
 
-ndstool (BlocksDS) acepta PNG con alpha para `-b`, pero exige <=16 colores en
-total. Este script encaja la imagen en 32x32, umbraliza el alpha (>=128 opaco)
-y cuantiza los pixeles opacos a 15 colores; los transparentes se colapsan en
-un unico color con alpha 0. ndstool asigna el indice 0 (transparente en DS) a
-ese color y los 15 restantes a los indices 1-15.
+ndstool (BlocksDS) accepts a PNG with alpha for `-b`, but requires <=16 colors
+in total. This script fits the image into 32x32, thresholds the alpha (>=128
+opaque) and quantizes the opaque pixels to 15 colors; transparent ones are
+collapsed into a single color with alpha 0. ndstool assigns index 0
+(transparent on DS) to that color and the remaining 15 colors to indices 1-15.
 
-Uso: python3 tools/png2icon.py entrada.png [salida.png]
+Usage: python3 tools/png2icon.py input.png [output.png]
 """
 import sys
 
 from PIL import Image
 
 SIZE = 32
-OPAQUE_COLORS = 15  # + 1 transparente = 16 en total
+OPAQUE_COLORS = 15  # + 1 transparent = 16 total
 
 
 def convert(src_path: str, dst_path: str) -> None:
@@ -34,10 +34,10 @@ def convert(src_path: str, dst_path: str) -> None:
 
     colors = out.getcolors(SIZE * SIZE)
     opaque = [c for _, c in colors if c[3] == 255]
-    assert len(opaque) <= OPAQUE_COLORS, f"quedaron {len(opaque)} colores opacos"
+    assert len(opaque) <= OPAQUE_COLORS, f"{len(opaque)} opaque colors remain"
 
     out.save(dst_path)
-    print(f"{dst_path}: {SIZE}x{SIZE}, {len(opaque)} colores opacos + transparencia")
+    print(f"{dst_path}: {SIZE}x{SIZE}, {len(opaque)} opaque colors + transparency")
 
 
 if __name__ == "__main__":
