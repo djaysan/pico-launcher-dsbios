@@ -1,5 +1,22 @@
 # Changelog
 
+## Enhanced fork
+
+### Added
+- Game count of the current folder on the top screen
+- Random game launch with the SELECT button
+- Favorites toggled with the X button, shown as a heart on the top screen
+- Favorites filter with a heart button in the app bar (red while active)
+- Recently played panel (clock button in the app bar); tapping an entry navigates to the game
+- Statistics panel (START button)
+- Per-game launch tracking (launch count and last-played date on the top screen)
+- Approximate play time per game, with totals in the statistics panel
+- Game deletion (trash button with confirmation); removes the ROM and its save file
+- Per-folder background music with a `bgm.bcstm` file inside a folder
+- Optional time-of-day theme backgrounds (`topbg_night.bin`/`bottombg_night.bin`, shown 20:00–6:59)
+- Persistent per-game data in `/_pico/gamedata.json`, keyed by gamecode with filename fallback and self-healing renames
+- Desktop helper tools for covers, banners, icons and night backgrounds (see `tools/`)
+
 ## [Unreleased]
 
 ### Added
