@@ -82,9 +82,26 @@ void RomBrowserController::ToggleFavorite(const FileInfo& fileInfo, const char* 
     }
 }
 
+void RomBrowserController::ToggleCompleted(const FileInfo& fileInfo, const char* gameCode)
+{
+    _gameDataService->ToggleCompleted(fileInfo.GetFileName(), gameCode);
+    _gameDataService->SaveAsync(_ioTaskQueue);
+    if (_completedFilter)
+    {
+        // a game unmarked as completed must drop out of the filtered view
+        _stateMachine.Fire(RomBrowserStateTrigger::ChangeDisplayMode);
+    }
+}
+
 void RomBrowserController::ToggleFavoritesFilter()
 {
     _favoritesFilter = !_favoritesFilter;
+    _stateMachine.Fire(RomBrowserStateTrigger::ChangeDisplayMode);
+}
+
+void RomBrowserController::ToggleCompletedFilter()
+{
+    _completedFilter = !_completedFilter;
     _stateMachine.Fire(RomBrowserStateTrigger::ChangeDisplayMode);
 }
 

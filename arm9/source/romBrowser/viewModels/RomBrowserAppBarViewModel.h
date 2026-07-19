@@ -28,6 +28,16 @@ public:
         return _romBrowserController->IsFavoritesFilterEnabled();
     }
 
+    void ToggleCompletedFilter()
+    {
+        _romBrowserController->ToggleCompletedFilter();
+    }
+
+    bool IsCompletedFilterEnabled() const
+    {
+        return _romBrowserController->IsCompletedFilterEnabled();
+    }
+
     void ShowRecents()
     {
         _romBrowserController->ShowRecents();

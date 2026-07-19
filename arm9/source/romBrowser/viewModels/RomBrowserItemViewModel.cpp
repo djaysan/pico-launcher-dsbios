@@ -34,6 +34,19 @@ void RomBrowserItemViewModel::ToggleFavorite()
     }
 }
 
+void RomBrowserItemViewModel::ToggleCompleted()
+{
+    if (_index >= 0)
+    {
+        auto& fileInfoManager = _romBrowserController->GetRomBrowserViewModel()->GetFileInfoManager();
+        const auto& item = fileInfoManager.GetItem(_index);
+        if (item.GetFileType()->GetClassification() == FileTypeClassification::Game)
+        {
+            _romBrowserController->ToggleCompleted(item, GetGameCode(fileInfoManager));
+        }
+    }
+}
+
 const char* RomBrowserItemViewModel::GetGameCode(FileInfoManager& fileInfoManager) const
 {
     if (!fileInfoManager.IsFileInfoLoaded(_index))

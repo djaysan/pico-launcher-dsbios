@@ -29,8 +29,11 @@ public:
     void LaunchFile(const FileInfo& fileInfo, const char* gameCode) override;
     void LaunchRandomGame() override;
     void ToggleFavorite(const FileInfo& fileInfo, const char* gameCode) override;
+    void ToggleCompleted(const FileInfo& fileInfo, const char* gameCode) override;
     void ToggleFavoritesFilter() override;
     bool IsFavoritesFilterEnabled() const override { return _favoritesFilter; }
+    void ToggleCompletedFilter() override;
+    bool IsCompletedFilterEnabled() const override { return _completedFilter; }
     void ShowGameInfo(const FileInfo& fileInfo) override;
     void HideGameInfo() override;
     void ShowDisplaySettings() override;
@@ -78,6 +81,7 @@ private:
     TaskQueueBase* _ioTaskQueue;
     TaskQueueBase* _bgTaskQueue;
     bool _favoritesFilter = false;
+    bool _completedFilter = false;
     TCHAR _triggerGameCode[8];
     TCHAR _deleteGameCode[8];
 

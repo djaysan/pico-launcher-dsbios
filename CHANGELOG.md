@@ -2,7 +2,16 @@
 
 ## Enhanced fork
 
-### Added
+### [enhanced-v1.1.0]
+
+#### Added
+- Completed games: hold X on a game to mark it as completed, shown as a green check on the top screen
+- Completed filter with a check button in the app bar (green while active)
+- Completed count in the statistics panel
+
+### [enhanced-v1.0.0]
+
+#### Added
 - Game count of the current folder on the top screen
 - Random game launch with the SELECT button
 - Favorites toggled with the X button, shown as a heart on the top screen

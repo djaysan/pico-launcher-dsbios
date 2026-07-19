@@ -43,7 +43,9 @@ private:
     bool _showCover;
     Point _coverPosition;
     u32 _heartVramOffset = 0;
+    u32 _checkVramOffset = 0;
     bool _selectedFavorite = false;
+    bool _selectedCompleted = false;
     int _lastGameDataItem = -1;
     u32 _lastGameDataVersion = 0;
     bool _lastGameDataInfoLoaded = false;

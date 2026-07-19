@@ -13,6 +13,9 @@ public:
     /// @brief When true only folders and favorite games are kept.
     ///        Requires gameDataService.
     bool favoritesOnly = false;
+    /// @brief When true only folders and completed games are kept.
+    ///        Requires gameDataService.
+    bool completedOnly = false;
     const IGameDataService* gameDataService = nullptr;
 
     SdFolderFilterSortParams() { }

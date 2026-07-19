@@ -28,15 +28,26 @@ StatisticsBottomSheetView::StatisticsBottomSheetView(SharedPtr<StatisticsViewMod
     AddChildTail(_titleLabel.GetPointer());
 
     char text[144];
-    if (_viewModel->GetPlayedCount() == 0 && _viewModel->GetFavoriteCount() == 0)
+    if (_viewModel->GetPlayedCount() == 0 && _viewModel->GetFavoriteCount() == 0 &&
+        _viewModel->GetCompletedCount() == 0)
     {
         AddLine(fontRepository, FontType::Regular10, "Nothing played yet.");
     }
     else
     {
-        mini_snprintf(text, sizeof(text), "%u game%s played, %u favorite%s",
-            _viewModel->GetPlayedCount(), _viewModel->GetPlayedCount() == 1 ? "" : "s",
-            _viewModel->GetFavoriteCount(), _viewModel->GetFavoriteCount() == 1 ? "" : "s");
+        if (_viewModel->GetCompletedCount() > 0)
+        {
+            mini_snprintf(text, sizeof(text), "%u game%s played, %u favorite%s, %u completed",
+                _viewModel->GetPlayedCount(), _viewModel->GetPlayedCount() == 1 ? "" : "s",
+                _viewModel->GetFavoriteCount(), _viewModel->GetFavoriteCount() == 1 ? "" : "s",
+                _viewModel->GetCompletedCount());
+        }
+        else
+        {
+            mini_snprintf(text, sizeof(text), "%u game%s played, %u favorite%s",
+                _viewModel->GetPlayedCount(), _viewModel->GetPlayedCount() == 1 ? "" : "s",
+                _viewModel->GetFavoriteCount(), _viewModel->GetFavoriteCount() == 1 ? "" : "s");
+        }
         AddLine(fontRepository, FontType::Regular10, text);
 
         u32 playMinutes = _viewModel->GetTotalPlayMinutes();

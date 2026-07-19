@@ -13,6 +13,7 @@
 #define KEY_GAMES             "games"
 #define KEY_GAME_CODE         "gameCode"
 #define KEY_FAVORITE          "favorite"
+#define KEY_COMPLETED         "completed"
 #define KEY_LAUNCH_COUNT      "launchCount"
 #define KEY_PLAY_MINUTES      "playMinutes"
 #define KEY_LAST_PLAYED       "lastPlayed"
@@ -26,10 +27,10 @@
 // ArduinoJson silently drops data when its pool is exhausted, so the pool is
 // sized from the entry count (write) or file size (read) instead of a fixed
 // JSON_RESERVED_SIZE like settings.json uses.
-// ~420 bytes/entry = object node + favorite/launchCount/lastPlayed/path keys
-// and values + up to 96 chars of fileName key + up to 256 chars of path.
+// ~440 bytes/entry = object node + favorite/completed/launchCount/lastPlayed/
+// path keys and values + up to 96 chars of fileName key + up to 256 of path.
 #define JSON_POOL_BASE_SIZE       4096
-#define JSON_POOL_PER_ENTRY       420
+#define JSON_POOL_PER_ENTRY       440
 #define JSON_POOL_READ_MAX        (96 * 1024)
 
 static u32 writePoolSize(u32 entryCount)
@@ -173,6 +174,13 @@ void JsonGameDataService::ToggleFavorite(const char* fileName, const char* gameC
     _version++;
 }
 
+void JsonGameDataService::ToggleCompleted(const char* fileName, const char* gameCode)
+{
+    auto& entry = GetOrCreateEntry(fileName, gameCode);
+    entry.completed = !entry.completed;
+    _version++;
+}
+
 void JsonGameDataService::RecordLaunch(const char* fileName, const char* gameCode,
     const char* fullPath, const char* lastPlayedDateTime)
 {
@@ -237,13 +245,15 @@ void JsonGameDataService::SaveAsync(TaskQueueBase* ioTaskQueue)
     {
         const auto& entry = _entries[i];
         // entries reset back to all-default state are pruned on write
-        if (!entry.favorite && entry.launchCount == 0 && entry.playMinutes == 0)
+        if (!entry.favorite && !entry.completed && entry.launchCount == 0 && entry.playMinutes == 0)
             continue;
         auto game = games[entry.fileName.GetString()].to<JsonObject>();
         if (entry.gameCode.GetString()[0] != 0)
             game[KEY_GAME_CODE] = entry.gameCode.GetString();
         if (entry.favorite)
             game[KEY_FAVORITE] = true;
+        if (entry.completed)
+            game[KEY_COMPLETED] = true;
         if (entry.launchCount > 0)
             game[KEY_LAUNCH_COUNT] = entry.launchCount;
         if (entry.playMinutes > 0)
@@ -319,6 +329,7 @@ void JsonGameDataService::Load()
     {
         auto& entry = GetOrCreateEntry(item.key().c_str(), item.value()[KEY_GAME_CODE] | "");
         entry.favorite = item.value()[KEY_FAVORITE] | false;
+        entry.completed = item.value()[KEY_COMPLETED] | false;
         entry.launchCount = item.value()[KEY_LAUNCH_COUNT] | 0u;
         entry.playMinutes = item.value()[KEY_PLAY_MINUTES] | 0u;
         entry.lastPlayed = item.value()[KEY_LAST_PLAYED] | "";

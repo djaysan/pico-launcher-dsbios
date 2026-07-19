@@ -26,8 +26,11 @@ public:
     virtual void LaunchFile(const FileInfo& fileInfo, const char* gameCode = nullptr) = 0;
     virtual void LaunchRandomGame() = 0;
     virtual void ToggleFavorite(const FileInfo& fileInfo, const char* gameCode = nullptr) = 0;
+    virtual void ToggleCompleted(const FileInfo& fileInfo, const char* gameCode = nullptr) = 0;
     virtual void ToggleFavoritesFilter() = 0;
     virtual bool IsFavoritesFilterEnabled() const = 0;
+    virtual void ToggleCompletedFilter() = 0;
+    virtual bool IsCompletedFilterEnabled() const = 0;
     virtual void ShowGameInfo(const FileInfo& fileInfo) = 0;
     virtual void HideGameInfo() = 0;
     virtual void ShowDisplaySettings() = 0;

@@ -36,6 +36,13 @@ std::unique_ptr<const FileInfo*[]> SdFolder::FilterAndSort(
             if (!entry || !entry->favorite)
                 continue;
         }
+        if (filterSortParams.completedOnly && filterSortParams.gameDataService &&
+            classification != FileTypeClassification::Folder)
+        {
+            const auto* entry = filterSortParams.gameDataService->GetEntry(file->GetFileName());
+            if (!entry || !entry->completed)
+                continue;
+        }
         sortedFilteredFiles[filteredCount++] = file;
     }
     std::sort(sortedFilteredFiles.get(), sortedFilteredFiles.get() + filteredCount,

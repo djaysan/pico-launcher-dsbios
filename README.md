@@ -13,7 +13,8 @@ Everything upstream Pico Launcher offers (display modes, [covers](docs/Covers.md
 - **Game count** of the current folder on the top screen
 - **Random game launch** with the SELECT button
 - **Favorites** — press X on a game; a heart shows on the top screen
-- **Favorites filter** — heart button in the app bar, tinted red while active
+- **Completed games** — hold X on a game; a green check shows on the top screen
+- **Favorites and completed filters** — heart and check buttons in the app bar, tinted while active
 - **Recently played panel** — clock button in the app bar; tapping an entry jumps to the game
 - **Statistics panel** — press START for totals and most-played games
 - **Per-game launch tracking** — launch count and last-played date on the top screen

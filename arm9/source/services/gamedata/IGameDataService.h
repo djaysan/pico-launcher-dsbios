@@ -17,6 +17,7 @@ public:
     /// @brief Mutations resolve the entry by code first and self-heal its
     ///        stored file name, so renamed files keep their data.
     virtual void ToggleFavorite(const char* fileName, const char* gameCode = nullptr) = 0;
+    virtual void ToggleCompleted(const char* fileName, const char* gameCode = nullptr) = 0;
     virtual void RecordLaunch(const char* fileName, const char* gameCode,
         const char* fullPath, const char* lastPlayedDateTime) = 0;
     virtual void RemoveEntry(const char* fileName, const char* gameCode = nullptr) = 0;

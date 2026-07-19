@@ -13,10 +13,16 @@ public:
     void Activate() override;
     void ShowGameInfo() override;
     void ToggleFavorite() override;
+    void ToggleCompleted() override;
 
     void SetIndex(int index) override
     {
         _index = index;
+    }
+
+    int GetIndex() const override
+    {
+        return _index;
     }
 
     void SetQueueTask(QueueTask<void> queueTask) override

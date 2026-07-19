@@ -19,6 +19,7 @@
 #include "themes/IFontRepository.h"
 #include "../Theme/IRomBrowserViewFactory.h"
 #include "smallHeartIconFilled.h"
+#include "checkIcon.h"
 #include "RomBrowserTopScreenView.h"
 
 RomBrowserTopScreenView::RomBrowserTopScreenView(
@@ -54,10 +55,10 @@ RomBrowserTopScreenView::RomBrowserTopScreenView(
     _gameDataService = _viewModel->GetRomBrowserController()->GetGameDataService();
     _materialColorScheme = materialColorScheme;
     // launch info for the selected game ("3x 16/07"), right-aligned in the top
-    // strip, leaving 16px on the right for the favorite heart
+    // strip, leaving 2x16px on the right for the completed check + favorite heart
     _launchInfoLabel = Label2DView::CreateShared(96, 16, 15, fontRepository->GetFont(FontType::Medium7_5));
     _launchInfoLabel->SetHorizontalAlignment(Alignment::End);
-    _launchInfoLabel->SetPosition(256 - 4 - 16 - 96, 2);
+    _launchInfoLabel->SetPosition(256 - 4 - 16 - 18 - 96, 2);
     _launchInfoLabel->SetBackgroundColor(materialColorScheme->surfaceBright);
     _launchInfoLabel->SetForegroundColor(materialColorScheme->onSurfaceVariant);
     AddChildTail(_launchInfoLabel.GetPointer());
@@ -72,6 +73,9 @@ void RomBrowserTopScreenView::InitVram(const VramContext& vramContext)
         _heartVramOffset = objVramManager->Alloc(smallHeartIconFilledTilesLen);
         dma_ntrCopy32(3, smallHeartIconFilledTiles,
             objVramManager->GetVramAddress(_heartVramOffset), smallHeartIconFilledTilesLen);
+        _checkVramOffset = objVramManager->Alloc(checkIconTilesLen);
+        dma_ntrCopy32(3, checkIconTiles,
+            objVramManager->GetVramAddress(_checkVramOffset), checkIconTilesLen);
     }
     int tileIndex = 0;
     vu16* mapPtr = (vu16*)((u8*)GFX_BG_SUB + 0x3800);
@@ -141,6 +145,7 @@ void RomBrowserTopScreenView::Update()
         infoLoaded != _lastGameDataInfoLoaded)
     {
         _selectedFavorite = false;
+        _selectedCompleted = false;
         char info[24];
         info[0] = 0;
         if (selectedItem >= 0)
@@ -157,6 +162,7 @@ void RomBrowserTopScreenView::Update()
             if (entry)
             {
                 _selectedFavorite = entry->favorite;
+                _selectedCompleted = entry->completed;
                 if (entry->launchCount > 0)
                 {
                     if (entry->playMinutes >= 60)
@@ -200,6 +206,16 @@ void RomBrowserTopScreenView::Draw(GraphicsContext& graphicsContext)
         u32 paletteRow = graphicsContext.GetPaletteManager().AllocRow(
             GradientPalette(_materialColorScheme->surfaceBright, _materialColorScheme->primary), 2, 18);
         OamBuilder::OamWithSize<16, 16>(256 - 4 - 16, 2, _heartVramOffset >> 7)
+            .WithPalette16(paletteRow)
+            .WithPriority(graphicsContext.GetPriority())
+            .Build(oams[0]);
+    }
+    if (_selectedCompleted)
+    {
+        auto oams = graphicsContext.GetOamManager().AllocOams(1);
+        u32 paletteRow = graphicsContext.GetPaletteManager().AllocRow(
+            GradientPalette(_materialColorScheme->surfaceBright, Rgb<8, 8, 8>(67, 160, 71)), 2, 18);
+        OamBuilder::OamWithSize<16, 16>(256 - 4 - 16 - 18, 2, _checkVramOffset >> 7)
             .WithPalette16(paletteRow)
             .WithPriority(graphicsContext.GetPriority())
             .Build(oams[0]);

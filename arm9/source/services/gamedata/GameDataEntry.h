@@ -14,6 +14,8 @@ struct GameDataEntry
     ///        until the next launcher boot, so it is an approximation.
     u32 playMinutes = 0;
     bool favorite = false;
+    /// @brief Marked as finished by the user (long-press X in the browser).
+    bool completed = false;
     /// @brief "YYYY-MM-DD HH:MM", empty when never launched. Lexicographic
     ///        order equals chronological order.
     String<char, 20> lastPlayed;

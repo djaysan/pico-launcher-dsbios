@@ -24,6 +24,8 @@ public:
             const auto& entry = gameDataService->GetEntryByIndex(i);
             if (entry.favorite)
                 _favoriteCount++;
+            if (entry.completed)
+                _completedCount++;
             if (entry.launchCount == 0)
                 continue;
             _playedCount++;
@@ -53,6 +55,7 @@ public:
 
     u32 GetPlayedCount() const { return _playedCount; }
     u32 GetFavoriteCount() const { return _favoriteCount; }
+    u32 GetCompletedCount() const { return _completedCount; }
     u32 GetTotalLaunches() const { return _totalLaunches; }
     u32 GetTotalPlayMinutes() const { return _totalPlayMinutes; }
     u32 GetTopCount() const { return _topCount; }
@@ -68,6 +71,7 @@ private:
     IRomBrowserController* _romBrowserController;
     u32 _playedCount = 0;
     u32 _favoriteCount = 0;
+    u32 _completedCount = 0;
     u32 _totalLaunches = 0;
     u32 _totalPlayMinutes = 0;
     u32 _topCount = 0;
