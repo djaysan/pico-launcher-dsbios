@@ -97,6 +97,10 @@ The [`tools/`](tools/) directory contains desktop helper scripts for preparing S
 
 The fork stores per-game data (favorites, launch counts, play time) in `/_pico/gamedata.json`. The format is documented in [Game data](docs/GameData.md).
 
+## Contributing
+
+Bug reports, ideas and pull requests are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License
 
 Icons by [icons8](https://icons8.com/)
