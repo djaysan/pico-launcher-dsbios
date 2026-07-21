@@ -23,6 +23,7 @@
 #include "logger/ThreadSafeLogger.h"
 #include "picoLoaderBootstrap.h"
 #include "sharedMemory.h"
+#include "ipcChannels.h"
 #include "ipcServices/DsiSdIpcService.h"
 #include "ipcServices/DldiIpcService.h"
 #include "ipcServices/SoundIpcService.h"
@@ -47,10 +48,37 @@ static rtos_event_t sVCountEvent;
 static ExitMode sExitMode;
 static Arm7State sState;
 static volatile u8 sMcuIrqFlag = false;
+/// @brief Requested backlight level + 1, 0 when nothing is pending. Written
+///        from the IPC handler, consumed on the main thread: the PMIC shares
+///        the SPI bus with the touch screen, so all SPI stays on one thread.
+static volatile u8 sPendingBacklight = 0;
 
 static void vcountIrq(u32 irqMask)
 {
     rtos_signalEvent(&sVCountEvent);
+}
+
+static void backlightIpcHandler(u32 channel, u32 data, void* arg)
+{
+    sPendingBacklight = (data & PMIC_BACKLIGHT_MASK) + 1;
+}
+
+static void applyPendingBacklight()
+{
+    u8 pending = mem_swapByte(0, &sPendingBacklight);
+    if (pending != 0)
+    {
+        u8 backlight = pmic_readRegister(PMIC_REG_BACKLIGHT);
+        // DS Lite only, where bits 4-7 of the backlight register read back
+        // as 4. On the original DS registers 4..7F are MIRRORS of 0..3, so
+        // this read actually hit the control register — writing it back
+        // with modified low bits would clobber the sound amplifier there.
+        if ((backlight & 0xF0) == 0x40)
+        {
+            pmic_writeRegister(PMIC_REG_BACKLIGHT,
+                (backlight & ~PMIC_BACKLIGHT_MASK) | (pending - 1));
+        }
+    }
 }
 
 static void mcuIrq(u32 irq2Mask)
@@ -141,6 +169,7 @@ static void initializeArm7()
     snd_setMasterEnable(true);
     sSoundIpcService.Start();
     sRtcIpcService.Start();
+    ipc_setChannelHandler(IPC_CHANNEL_PMIC, backlightIpcHandler, nullptr);
 
     initializeVCountIrq();
 
@@ -237,6 +266,7 @@ int main()
             SHARED_TOUCH_Y = touchPos.py;
         }
         SHARED_KEY_XY = keys;
+        applyPendingBacklight();
         updateArm7();
     }
 

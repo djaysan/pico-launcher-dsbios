@@ -20,6 +20,7 @@ Everything upstream Pico Launcher offers (display modes, [covers](docs/Covers.md
 - **Per-game launch tracking** — launch count and last-played date on the top screen
 - **Approximate play time** — per game and in the statistics panel
 - **Game deletion** — trash button with confirmation; removes the ROM and its save
+- **Brightness control** — set the DS Lite's backlight level from display settings
 - **Per-folder background music** — drop a `bgm.bcstm` inside a folder
 - **Time-of-day theme backgrounds** — optional night variants shown from 20:00 to 6:59
 - **Rename-proof game data** — entries are keyed by gamecode and self-heal after file renames

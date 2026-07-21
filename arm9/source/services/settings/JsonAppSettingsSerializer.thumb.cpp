@@ -14,6 +14,7 @@
 #define KEY_ROM_BROWSER_SORT_MODE    "romBrowserSortMode"
 #define KEY_THEME                    "theme"
 #define KEY_LAST_USED_FILE_PATH      "lastUsedFilePath"
+#define KEY_BACKLIGHT_LEVEL          "backlightLevel"
 #define KEY_FILE_ASSOCIATIONS        "fileAssociations"
 #define KEY_FILE_ASSOCIATIONS_APPLICATION_PATH  "appPath"
 
@@ -129,6 +130,9 @@ static std::unique_ptr<u8[]> writeJson(const AppSettings* appSettings, u32& leng
     json[KEY_ROM_BROWSER_SORT_MODE] = serializeRomBrowserSortMode(appSettings->romBrowserDisplaySettings.sortMode);
     json[KEY_THEME] = appSettings->theme.GetString();
     json[KEY_LAST_USED_FILE_PATH] = appSettings->lastUsedFilePath.GetString();
+    // only written once the user picked a level; -1 keeps the firmware's
+    if (appSettings->backlightLevel >= 0)
+        json[KEY_BACKLIGHT_LEVEL] = appSettings->backlightLevel;
     serializeFileAssociations(json, appSettings);
 
     u32 outputSize = measureJsonPretty(json);
@@ -167,6 +171,10 @@ static void readJson(AppSettings* appSettings, const JsonDocument& json)
     appSettings->language = json[KEY_LANGUAGE] | appSettings->language.GetString();
     appSettings->theme = json[KEY_THEME] | appSettings->theme.GetString();
     appSettings->lastUsedFilePath = json[KEY_LAST_USED_FILE_PATH] | appSettings->lastUsedFilePath.GetString();
+
+    int backlightLevel = json[KEY_BACKLIGHT_LEVEL] | -1;
+    if (backlightLevel >= 0 && backlightLevel <= 3)
+        appSettings->backlightLevel = (s8)backlightLevel;
 
     RomBrowserLayout romBrowserLayout;
     if (tryParseRomBrowserLayout(json[KEY_ROM_BROWSER_LAYOUT].as<const char*>(),

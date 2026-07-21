@@ -14,6 +14,7 @@
 #include "bgm/IBgmService.h"
 #include "core/mini-printf.h"
 #include "rtcIpc.h"
+#include "backlightIpc.h"
 #include "RomBrowserController.h"
 
 RomBrowserController::RomBrowserController(
@@ -23,7 +24,14 @@ RomBrowserController::RomBrowserController(
     , _gameDataService(gameDataService)
     , _bgmService(bgmService)
     , _ioTaskQueue(ioTaskQueue), _bgTaskQueue(bgTaskQueue)
-    , _fileTypeProvider(appSettingsService->GetAppSettings()) { }
+    , _fileTypeProvider(appSettingsService->GetAppSettings())
+{
+    // restore the user's backlight level at boot (harmless to re-apply when
+    // this process is re-entered from the settings screen)
+    int backlightLevel = appSettingsService->GetAppSettings().backlightLevel;
+    if (backlightLevel >= 0)
+        backlight_setLevel(backlightLevel);
+}
 
 void RomBrowserController::NavigateToPath(const TCHAR* name)
 {
@@ -234,6 +242,20 @@ void RomBrowserController::SetRomBrowserDisplaySettings(
     _appSettingsService->GetAppSettings().romBrowserDisplaySettings = romBrowserDisplaySettings;
     _saveSettingsPending = true;
     _stateMachine.Fire(RomBrowserStateTrigger::ChangeDisplayMode);
+}
+
+void RomBrowserController::SetBacklightLevel(int level)
+{
+    if (level < 0 || level > 3)
+        return;
+    auto& appSettings = _appSettingsService->GetAppSettings();
+    if (appSettings.backlightLevel != level)
+    {
+        appSettings.backlightLevel = (s8)level;
+        _saveSettingsPending = true;
+    }
+    // apply immediately; no browser rebuild is needed for this
+    backlight_setLevel(level);
 }
 
 void RomBrowserController::Update()

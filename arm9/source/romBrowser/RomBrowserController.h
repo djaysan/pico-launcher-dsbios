@@ -67,6 +67,13 @@ public:
 
     void SetRomBrowserDisplaySettings(const RomBrowserDisplaySettings& romBrowserDisplaySettings) override;
 
+    int GetBacklightLevel() const override
+    {
+        return _appSettingsService->GetAppSettings().backlightLevel;
+    }
+
+    void SetBacklightLevel(int level) override;
+
     const RomBrowserDisplaySettings& GetRomBrowserDisplaySettings() const override
     {
         return _appSettingsService->GetAppSettings().romBrowserDisplaySettings;

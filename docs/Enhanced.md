@@ -12,6 +12,7 @@ These controls are available in the rom browser, on top of the standard ones (se
 | START | Open the statistics panel |
 | Heart button (app bar) | Toggle the favorites filter (the heart turns red while active) |
 | Check button (app bar) | Toggle the completed filter (the check turns green while active) |
+| Light row (display settings) | Set the DS Lite backlight level (4 levels) |
 | Clock button (app bar) | Open the recently played panel |
 | Trash button (app bar) | Delete the highlighted game (X confirms, A or B cancels) |
 
@@ -50,6 +51,11 @@ Press START to open a summary panel: how many games you have played, favorited a
 The trash button in the app bar deletes the highlighted game. A confirmation sheet opens first: press **X** to confirm, or A or B to cancel. Only games can be deleted, not folders.
 
 Deleting a game also deletes its save file (same name with a `.sav` extension, next to the ROM) and removes the game's entry from `gamedata.json`. Note that saves are matched by name without the extension: if `Game.gba` and `Game.nds` sit in the same folder, they share `Game.sav`, and deleting either game deletes it.
+
+## Screen brightness (DS Lite)
+The display settings sheet (gear button in the app bar) has a **Light** row with the DS Lite's four backlight levels. Tapping a level applies it immediately, and the choice is remembered and restored on every boot — it also stays active inside the game you launch, until the console powers off.
+
+Until you pick a level the launcher leaves the firmware's brightness untouched. The original DS has no brightness levels (the setting does nothing there), and the DSi manages brightness through its own system menu.
 
 ## Per-folder music
 Place a `bgm.bcstm` file directly inside a folder to give it its own background music. It uses the same DSP-ADPCM `.bcstm` format as theme music (see [Themes](Themes.md)) and supports looping. The music starts when you enter the folder and switches back to the theme music when you leave. Each folder is checked independently — subfolders do not inherit their parent's music.

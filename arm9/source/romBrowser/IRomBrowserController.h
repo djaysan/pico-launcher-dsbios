@@ -72,6 +72,11 @@ public:
     virtual void SetRomBrowserDisplaySettings(
         const RomBrowserDisplaySettings& romBrowserDisplaySettings) = 0;
 
+    /// @brief DS Lite backlight level (0..3), or -1 when the user never
+    ///        picked one (the firmware's level is left untouched then).
+    virtual int GetBacklightLevel() const = 0;
+    virtual void SetBacklightLevel(int level) = 0;
+
     virtual const FileInfo& GetTriggerFileInfo() const = 0;
 };
 

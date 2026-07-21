@@ -2,6 +2,11 @@
 
 ## Enhanced fork
 
+### [enhanced-v1.2.0]
+
+#### Added
+- Screen brightness control for the DS Lite: a Light row in the display settings sheet with the four backlight levels, remembered across boots and active in-game
+
 ### [enhanced-v1.1.0]
 
 #### Added
