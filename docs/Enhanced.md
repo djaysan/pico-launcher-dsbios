@@ -11,6 +11,7 @@ These controls are available in the rom browser, on top of the standard ones (se
 | SELECT | Launch a random game from the current folder |
 | START | Open the statistics panel |
 | Heart button (app bar) | Toggle the favorites filter (the heart turns red while active) |
+| Heart button (hold ~half a second) | Open the favorites panel: all favorites from every folder |
 | Check button (app bar) | Toggle the completed filter (the check turns green while active) |
 | Light row (display settings) | Set the DS Lite backlight level (4 levels) |
 | Clock button (app bar) | Open the recently played panel |
@@ -21,6 +22,11 @@ The top-left of the top screen shows how many games the current folder contains 
 
 ## Favorites
 Press X on a highlighted game to mark it as a favorite (press again to unmark). Favorites show a small heart on the top screen when highlighted. Games are remembered by their internal game code where possible, so renaming or moving a ROM keeps its favorite mark.
+
+## Favorites panel
+Hold the heart button in the app bar for about half a second to open a panel listing your favorites from **every** folder, alphabetically, each with its total play time — handy when the collection is spread across many folders. Tap an entry (or highlight it and press A) to jump to that game's folder with the game preselected; press B to close.
+
+Favorites marked before this feature existed appear in the panel after you toggle them again or launch them once (the panel needs the game's stored path).
 
 ## Completed games
 Hold X on a highlighted game for about half a second to mark it as completed (hold again to unmark). Completed games show a small green check on the top screen when highlighted, next to the heart. Like favorites, the mark follows the game's internal game code across renames.

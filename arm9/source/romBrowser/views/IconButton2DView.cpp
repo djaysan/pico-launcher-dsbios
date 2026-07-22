@@ -20,7 +20,7 @@ void IconButton2DView::Draw(GraphicsContext& graphicsContext)
     if (_isFocused || _penDown)
     {
         const auto& bgColor = _materialColorScheme->GetColor(_backgroundColor);
-        const auto& selectorBaseColor = _materialColorScheme->GetColor(GetCircleBackgroundColor());
+        const auto& selectorBaseColor = _materialColorScheme->GetColor(GetFocusCircleColor());
         const auto& fgColor = _materialColorScheme->GetColor(GetForegroundColor());
         auto selectorColor = RgbMixer::Lerp(selectorBaseColor, fgColor, 12, 100);
         u32 selectorPlttRow = graphicsContext.GetPaletteManager().AllocRow(

@@ -21,7 +21,7 @@ void IconButton3DView::Draw(GraphicsContext& graphicsContext)
     u32 iconPaletteRow;
     if (_isFocused || _penDown)
     {
-        const auto& selectorBaseColor = _materialColorScheme->GetColor(GetCircleBackgroundColor());
+        const auto& selectorBaseColor = _materialColorScheme->GetColor(GetFocusCircleColor());
         const auto& fgColor = _materialColorScheme->GetColor(GetForegroundColor());
         auto selectorColor = RgbMixer::Lerp(selectorBaseColor, fgColor, 12, 100);
         DrawSelector(graphicsContext, selectorColor);

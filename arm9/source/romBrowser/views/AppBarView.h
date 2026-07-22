@@ -24,6 +24,11 @@ public:
         _buttons[button]->SetAction(action, arg);
     }
 
+    void SetButtonLongAction(int button, IconButtonView::button_action_t longAction)
+    {
+        _buttons[button]->SetLongAction(longAction);
+    }
+
     void SetButtonIconColorOverride(int button, const Rgb<8, 8, 8>& color)
     {
         _buttons[button]->SetIconColorOverride(color);

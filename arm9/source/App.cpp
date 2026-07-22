@@ -287,6 +287,16 @@ void App::HandleTrigger(RomBrowserStateTrigger trigger, RomBrowserState newState
             HandleHideRecentsTrigger();
             break;
         }
+        case RomBrowserStateTrigger::ShowFavorites:
+        {
+            HandleShowFavoritesTrigger();
+            break;
+        }
+        case RomBrowserStateTrigger::HideFavorites:
+        {
+            HandleHideFavoritesTrigger();
+            break;
+        }
         case RomBrowserStateTrigger::ShowStatistics:
         {
             HandleShowStatisticsTrigger();
@@ -362,13 +372,30 @@ void App::HandleHideDisplaySettingsTrigger()
 
 void App::HandleShowRecentsTrigger()
 {
-    auto recentsViewModel = SharedPtr<RecentsViewModel>::MakeShared(&_romBrowserController);
+    auto recentsViewModel = SharedPtr<RecentsViewModel>::MakeShared(
+        &_romBrowserController, GameListKind::Recents);
     auto recentsDialog = RecentsBottomSheetView::CreateShared(
         std::move(recentsViewModel), &_theme->GetMaterialColorScheme(), _theme->GetFontRepository(), &_focusManager);
     _dialogPresenter.ShowDialog(std::move(recentsDialog));
 }
 
 void App::HandleHideRecentsTrigger()
+{
+    _dialogPresenter.CloseDialog();
+    if (!_dialogPresenter.GetOldFocus())
+        _romBrowserBottomScreenView->Focus(_focusManager);
+}
+
+void App::HandleShowFavoritesTrigger()
+{
+    auto favoritesViewModel = SharedPtr<RecentsViewModel>::MakeShared(
+        &_romBrowserController, GameListKind::Favorites);
+    auto favoritesDialog = RecentsBottomSheetView::CreateShared(
+        std::move(favoritesViewModel), &_theme->GetMaterialColorScheme(), _theme->GetFontRepository(), &_focusManager);
+    _dialogPresenter.ShowDialog(std::move(favoritesDialog));
+}
+
+void App::HandleHideFavoritesTrigger()
 {
     _dialogPresenter.CloseDialog();
     if (!_dialogPresenter.GetOldFocus())
@@ -407,9 +434,10 @@ void App::HandleHideDeleteConfirmTrigger()
 
 void App::HandleNavigateTrigger()
 {
-    // navigation can also start from inside the recents or delete sheets
+    // navigation can also start from inside the recents/favorites/delete sheets
     auto previousState = _romBrowserController.GetStateMachine().GetPreviousState();
-    if (previousState == RomBrowserState::Recents || previousState == RomBrowserState::DeleteConfirm)
+    if (previousState == RomBrowserState::Recents || previousState == RomBrowserState::Favorites ||
+        previousState == RomBrowserState::DeleteConfirm)
         _dialogPresenter.CloseDialog();
     if (!_romBrowserBottomScreenView->IsAppBarFocused(_focusManager))
         _focusManager.Unfocus();

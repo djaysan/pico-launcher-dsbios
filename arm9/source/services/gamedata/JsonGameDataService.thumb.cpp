@@ -76,17 +76,22 @@ static bool parseDateTime(const char* text, s64& totalMinutes)
 }
 
 // homebrew headers can hold garbage where retail games keep their code; only
-// printable codes are usable as identity (and safe inside the json file)
+// printable codes are usable as identity (and safe inside the json file).
+// "####" is the toolchain's placeholder — every homebrew built without its
+// own code carries it, so matching by it would make them all share one entry.
 static bool isUsableGameCode(const char* gameCode)
 {
     if (!gameCode || gameCode[0] == 0)
         return false;
+    bool allPlaceholder = true;
     for (const char* c = gameCode; *c != 0; c++)
     {
         if (*c < 0x20 || *c >= 0x7F)
             return false;
+        if (*c != '#')
+            allPlaceholder = false;
     }
-    return true;
+    return !allPlaceholder;
 }
 
 JsonGameDataService::JsonGameDataService()
@@ -167,18 +172,51 @@ GameDataEntry& JsonGameDataService::GetOrCreateEntry(const char* fileName, const
     return entry;
 }
 
-void JsonGameDataService::ToggleFavorite(const char* fileName, const char* gameCode)
+void JsonGameDataService::ToggleFavorite(const char* fileName, const char* gameCode,
+    const char* fullPath)
 {
     auto& entry = GetOrCreateEntry(fileName, gameCode);
     entry.favorite = !entry.favorite;
+    if (fullPath)
+        entry.path = fullPath;
     _version++;
 }
 
-void JsonGameDataService::ToggleCompleted(const char* fileName, const char* gameCode)
+void JsonGameDataService::ToggleCompleted(const char* fileName, const char* gameCode,
+    const char* fullPath)
 {
     auto& entry = GetOrCreateEntry(fileName, gameCode);
     entry.completed = !entry.completed;
+    if (fullPath)
+        entry.path = fullPath;
     _version++;
+}
+
+bool JsonGameDataService::BackfillPath(const char* fileName, const char* gameCode,
+    const char* fullPath)
+{
+    if (!fullPath || fullPath[0] == 0)
+        return false;
+    GameDataEntry* entry = isUsableGameCode(gameCode) ? FindByCode(gameCode) : nullptr;
+    if (!entry)
+        entry = Find(fileName);
+    // only fill a still-empty path on an entry a panel would navigate to
+    if (!entry || entry->path.GetString()[0] != 0 || (!entry->favorite && !entry->completed))
+        return false;
+    entry->path = fullPath;
+    _version++;
+    return true;
+}
+
+bool JsonGameDataService::HasUnpathedFlaggedEntry() const
+{
+    for (u32 i = 0; i < _entryCount; i++)
+    {
+        const auto& entry = _entries[i];
+        if ((entry.favorite || entry.completed) && entry.path.GetString()[0] == 0)
+            return true;
+    }
+    return false;
 }
 
 void JsonGameDataService::RecordLaunch(const char* fileName, const char* gameCode,

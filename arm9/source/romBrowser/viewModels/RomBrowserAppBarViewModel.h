@@ -43,6 +43,11 @@ public:
         _romBrowserController->ShowRecents();
     }
 
+    void ShowFavorites()
+    {
+        _romBrowserController->ShowFavorites();
+    }
+
     void RequestDeleteSelected()
     {
         _romBrowserController->RequestDeleteSelected();

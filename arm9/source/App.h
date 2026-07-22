@@ -117,6 +117,8 @@ private:
     void HandleHideDisplaySettingsTrigger();
     void HandleShowRecentsTrigger();
     void HandleHideRecentsTrigger();
+    void HandleShowFavoritesTrigger();
+    void HandleHideFavoritesTrigger();
     void HandleShowStatisticsTrigger();
     void HandleHideStatisticsTrigger();
     void HandleShowDeleteConfirmTrigger();

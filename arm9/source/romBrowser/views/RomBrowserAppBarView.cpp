@@ -37,6 +37,11 @@ RomBrowserAppBarView::RomBrowserAppBarView(
     {
         ((RomBrowserAppBarViewModel*)arg)->ToggleFavoritesFilter();
     }, _viewModel);
+    // holding the heart opens the cross-folder favorites panel
+    _appBarView->SetButtonLongAction(APP_BAR_BUTTON_FAVORITE, [] (IconButtonView* sender, void* arg)
+    {
+        ((RomBrowserAppBarViewModel*)arg)->ShowFavorites();
+    });
     _appBarView->SetButtonAction(APP_BAR_BUTTON_COMPLETED, [] (IconButtonView* sender, void* arg)
     {
         ((RomBrowserAppBarViewModel*)arg)->ToggleCompletedFilter();

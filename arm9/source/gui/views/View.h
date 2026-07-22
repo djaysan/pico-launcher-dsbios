@@ -105,7 +105,7 @@ public:
 
     /// @brief Sets whether the view is currently focused.
     /// @param focused True if the view is currently focused, or false otherwise.
-    void SetFocused(bool focused) { _isFocused = focused; }
+    virtual void SetFocused(bool focused) { _isFocused = focused; }
 
     /// @brief Gets whether the view is currently focused.
     /// @return True if the view is currently focused, or false otherwise.

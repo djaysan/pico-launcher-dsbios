@@ -37,6 +37,8 @@ public:
     virtual void HideDisplaySettings() = 0;
     virtual void ShowRecents() = 0;
     virtual void HideRecents() = 0;
+    virtual void ShowFavorites() = 0;
+    virtual void HideFavorites() = 0;
     virtual void ShowStatistics() = 0;
     virtual void HideStatistics() = 0;
     virtual void RequestDeleteSelected() = 0;

@@ -40,6 +40,8 @@ public:
     void HideDisplaySettings() override;
     void ShowRecents() override;
     void HideRecents() override;
+    void ShowFavorites() override;
+    void HideFavorites() override;
     void ShowStatistics() override;
     void HideStatistics() override;
     void RequestDeleteSelected() override;
@@ -93,6 +95,9 @@ private:
     TCHAR _deleteGameCode[8];
 
     void FormatNowDateTime(TCHAR* buffer, u32 bufferLength) const;
+    /// @brief Full path of a file in the current folder (f_getcwd + name).
+    void BuildCurrentFolderFilePath(const char* fileName,
+        TCHAR* buffer, u32 bufferLength) const;
     TCHAR _deleteRomFileName[256];
     TCHAR _deleteSaveFileName[256];
     bool _deleteHasSave = false;
@@ -116,6 +121,7 @@ private:
     void HandleTrigger();
     void HandleNavigateTrigger();
     void HandleFolderLoadDoneTrigger();
+    void BackfillFavoritePaths();
     void HandleLaunchTrigger();
     void HandleChangeDisplayModeTrigger();
     void HandleGotoSettingsScreenTrigger();

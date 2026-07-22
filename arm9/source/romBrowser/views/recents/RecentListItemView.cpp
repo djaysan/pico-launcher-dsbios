@@ -39,20 +39,34 @@ void RecentListItemView::SetEntry(const GameDataEntry* entry, int index)
     _entry = entry;
     _index = index;
     _nameLabel->SetText(entry->fileName.GetString());
-    // lastPlayed is "YYYY-MM-DD HH:MM"; shown as "DD/MM HH:MM"
-    const char* lastPlayed = entry->lastPlayed.GetString();
-    char date[16];
-    if (strlen(lastPlayed) >= 16)
+    char subtitle[16];
+    if (_viewModel->GetKind() == GameListKind::Favorites)
     {
-        mini_snprintf(date, sizeof(date), "%c%c/%c%c %c%c:%c%c",
-            lastPlayed[8], lastPlayed[9], lastPlayed[5], lastPlayed[6],
-            lastPlayed[11], lastPlayed[12], lastPlayed[14], lastPlayed[15]);
+        // favorites show accumulated play time (same format as the top strip)
+        u32 minutes = entry->playMinutes;
+        if (minutes >= 60)
+            mini_snprintf(subtitle, sizeof(subtitle), "%uh%02u", minutes / 60, minutes % 60);
+        else if (minutes > 0)
+            mini_snprintf(subtitle, sizeof(subtitle), "%um", minutes);
+        else
+            subtitle[0] = 0; // never played: no time to show
     }
     else
     {
-        date[0] = 0;
+        // recents show the last-played date: "YYYY-MM-DD HH:MM" -> "DD/MM HH:MM"
+        const char* lastPlayed = entry->lastPlayed.GetString();
+        if (strlen(lastPlayed) >= 16)
+        {
+            mini_snprintf(subtitle, sizeof(subtitle), "%c%c/%c%c %c%c:%c%c",
+                lastPlayed[8], lastPlayed[9], lastPlayed[5], lastPlayed[6],
+                lastPlayed[11], lastPlayed[12], lastPlayed[14], lastPlayed[15]);
+        }
+        else
+        {
+            subtitle[0] = 0;
+        }
     }
-    _dateLabel->SetText(date);
+    _dateLabel->SetText(subtitle);
 }
 
 void RecentListItemView::Update()

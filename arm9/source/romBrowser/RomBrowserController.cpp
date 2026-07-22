@@ -79,9 +79,29 @@ void RomBrowserController::LaunchRandomGame()
     }
 }
 
+void RomBrowserController::BuildCurrentFolderFilePath(const char* fileName,
+    TCHAR* buffer, u32 bufferLength) const
+{
+    buffer[0] = 0;
+    f_getcwd(buffer, bufferLength);
+    int idx = strlcat(buffer, "/", bufferLength);
+    // collapse a "//" at the root; guard idx>=2 in case f_getcwd left the
+    // buffer empty (then idx==1 and buffer[idx-2] would read out of bounds)
+    if (idx >= 2 && buffer[idx - 2] == '/')
+    {
+        buffer[idx - 1] = 0;
+    }
+    strlcat(buffer, fileName, bufferLength);
+}
+
 void RomBrowserController::ToggleFavorite(const FileInfo& fileInfo, const char* gameCode)
 {
-    _gameDataService->ToggleFavorite(fileInfo.GetFileName(), gameCode);
+    // the path makes the entry navigable from the favorites panel even for
+    // games that were marked but never launched
+    TCHAR fullPath[256];
+    BuildCurrentFolderFilePath(fileInfo.GetFileName(), fullPath,
+        sizeof(fullPath) / sizeof(fullPath[0]));
+    _gameDataService->ToggleFavorite(fileInfo.GetFileName(), gameCode, fullPath);
     _gameDataService->SaveAsync(_ioTaskQueue);
     if (_favoritesFilter)
     {
@@ -92,7 +112,10 @@ void RomBrowserController::ToggleFavorite(const FileInfo& fileInfo, const char* 
 
 void RomBrowserController::ToggleCompleted(const FileInfo& fileInfo, const char* gameCode)
 {
-    _gameDataService->ToggleCompleted(fileInfo.GetFileName(), gameCode);
+    TCHAR fullPath[256];
+    BuildCurrentFolderFilePath(fileInfo.GetFileName(), fullPath,
+        sizeof(fullPath) / sizeof(fullPath[0]));
+    _gameDataService->ToggleCompleted(fileInfo.GetFileName(), gameCode, fullPath);
     _gameDataService->SaveAsync(_ioTaskQueue);
     if (_completedFilter)
     {
@@ -132,6 +155,16 @@ void RomBrowserController::ShowDisplaySettings()
 void RomBrowserController::ShowRecents()
 {
     _stateMachine.Fire(RomBrowserStateTrigger::ShowRecents);
+}
+
+void RomBrowserController::ShowFavorites()
+{
+    _stateMachine.Fire(RomBrowserStateTrigger::ShowFavorites);
+}
+
+void RomBrowserController::HideFavorites()
+{
+    _stateMachine.Fire(RomBrowserStateTrigger::HideFavorites);
 }
 
 void RomBrowserController::HideRecents()
@@ -177,6 +210,9 @@ void RomBrowserController::RequestDeleteSelected()
     if (dot)
         *dot = 0;
     strlcat(_deleteSaveFileName, ".sav", sizeof(_deleteSaveFileName));
+    // Existence check drives only the confirm dialog's wording; the actual
+    // deletion in ConfirmDelete is unconditional, so a wrong answer here
+    // never leaves the save behind.
     FILINFO fileInfo;
     _deleteHasSave = f_stat(_deleteSaveFileName, &fileInfo) == FR_OK;
 
@@ -204,9 +240,17 @@ void RomBrowserController::ConfirmDelete()
     {
         FRESULT result = f_unlink(_deleteRomFileName);
         if (result != FR_OK)
+        {
             LOG_ERROR("Couldn't delete file (%d)\n", result);
-        else if (_deleteHasSave)
+        }
+        else
+        {
+            // delete the save unconditionally: its name is derived from the
+            // rom and f_unlink harmlessly returns FR_NO_FILE when there is
+            // none. Do NOT gate on a main-thread existence check — SD access
+            // from that thread is unreliable and used to skip this.
             f_unlink(_deleteSaveFileName);
+        }
         _deleteCompleted = true;
         return TaskResult<void>::Completed();
     });
@@ -423,6 +467,35 @@ void RomBrowserController::HandleFolderLoadDoneTrigger()
     _romBrowserViewModel.Reset();
     _sdFolder = std::move(_newSdFolder);
     _romBrowserViewModel = SharedPtr<RomBrowserViewModel>::MakeShared(this, _navigateFileName);
+    BackfillFavoritePaths();
+}
+
+// Favorites/completed marks made before path recording existed have no
+// stored path, so the panels can't navigate to them. The current folder is
+// loaded and is the cwd here (main thread, after the navigate IO task), so
+// fill in the path of any flagged game found in it — the marks self-heal as
+// the user browses, with no card-wide scan.
+void RomBrowserController::BackfillFavoritePaths()
+{
+    // cheap O(entries) gate: once every mark is navigable, skip the
+    // O(files x entries) folder scan entirely (steady state on a big library)
+    if (!_sdFolder || !_gameDataService->HasUnpathedFlaggedEntry())
+        return;
+    bool changed = false;
+    TCHAR fullPath[256];
+    const FileInfo* const* files = _sdFolder->GetFiles();
+    for (int i = 0; i < _sdFolder->GetFileCount(); i++)
+    {
+        const FileInfo* file = files[i];
+        if (file->GetFileType()->GetClassification() != FileTypeClassification::Game)
+            continue;
+        BuildCurrentFolderFilePath(file->GetFileName(), fullPath,
+            sizeof(fullPath) / sizeof(fullPath[0]));
+        if (_gameDataService->BackfillPath(file->GetFileName(), nullptr, fullPath))
+            changed = true;
+    }
+    if (changed)
+        _gameDataService->SaveAsync(_ioTaskQueue);
 }
 
 void RomBrowserController::HandleLaunchTrigger()
@@ -430,16 +503,11 @@ void RomBrowserController::HandleLaunchTrigger()
     LOG_DEBUG("RomBrowserStateTrigger::Launch\n");
     char lastPlayed[20];
     FormatNowDateTime(lastPlayed, sizeof(lastPlayed));
-    // same full-path construction as UpdateLastUsedFilepath, but into a local
-    // buffer: _navigatePath belongs to the navigation flow
+    // full path into a local buffer: _navigatePath belongs to the navigation
+    // flow (same construction the favorite/completed toggles use)
     TCHAR fullPath[256];
-    f_getcwd(fullPath, sizeof(fullPath) / sizeof(fullPath[0]));
-    int idx = strlcat(fullPath, "/", sizeof(fullPath));
-    if (fullPath[idx - 2] == '/')
-    {
-        fullPath[idx - 1] = 0;
-    }
-    strlcat(fullPath, _triggerFileInfo.GetFileName(), sizeof(fullPath));
+    BuildCurrentFolderFilePath(_triggerFileInfo.GetFileName(), fullPath,
+        sizeof(fullPath) / sizeof(fullPath[0]));
     _gameDataService->RecordLaunch(_triggerFileInfo.GetFileName(),
         _triggerGameCode[0] != 0 ? _triggerGameCode : nullptr, fullPath, lastPlayed);
     _gameDataService->SaveAsync(_ioTaskQueue);

@@ -14,6 +14,8 @@ enum class RomBrowserStateTrigger
     GotoSettingsScreen,
     ShowRecents,
     HideRecents,
+    ShowFavorites,
+    HideFavorites,
     ShowStatistics,
     HideStatistics,
     ShowDeleteConfirm,

@@ -2,6 +2,16 @@
 
 ## Enhanced fork
 
+### [enhanced-v1.3.0]
+
+#### Added
+- Favorites panel: hold the heart button to see all favorites from every folder and jump to any of them
+- Marking a favorite or completed game now stores its path, so the favorites panel works for games never launched
+
+#### Fixed
+- The focus highlight on app bar buttons is now clearly visible while moving with the dpad
+- Homebrew ROMs carrying the `####` placeholder game code no longer share one gamedata entry (favorites, completed marks and play time no longer bleed between them)
+
 ### [enhanced-v1.2.0]
 
 #### Added

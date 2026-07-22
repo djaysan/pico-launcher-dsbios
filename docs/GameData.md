@@ -33,7 +33,7 @@ Each key in `games` is a file name (not a path). All keys inside an entry are op
 
 | Key | Type | Written when | Meaning |
 |---|---|---|---|
-| `gameCode` | string | non-empty | Internal game code from the NDS/GBA header. Only stored when it is printable ASCII (homebrew ROMs can hold garbage there). |
+| `gameCode` | string | non-empty | Internal game code from the NDS/GBA header. Only used as identity when it is printable ASCII and not the `####` toolchain placeholder (homebrew ROMs can hold garbage or the placeholder there — matching by those would make unrelated files share one entry). |
 | `favorite` | bool | `true` | Marked as favorite. Absent means not a favorite — `false` is never written. |
 | `completed` | bool | `true` | Marked as completed (finished). Absent means not completed — `false` is never written. |
 | `launchCount` | number | > 0 | How many times the game was launched. |

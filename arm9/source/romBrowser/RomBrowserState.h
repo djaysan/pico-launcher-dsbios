@@ -10,6 +10,7 @@ enum class RomBrowserState
     DisplaySettings,
     GoingToSettingsScreen,
     Recents,
+    Favorites,
     Statistics,
     DeleteConfirm
 };

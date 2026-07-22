@@ -33,8 +33,16 @@ RecentsBottomSheetView::RecentsBottomSheetView(SharedPtr<RecentsViewModel> viewM
     , _fontRepository(fontRepository)
     , _focusManager(focusManager)
 {
-    _titleLabel->SetText(u"Recent games");
-    _emptyLabel->SetText(u"Nothing played yet.");
+    if (_viewModel->GetKind() == GameListKind::Recents)
+    {
+        _titleLabel->SetText(u"Recent games");
+        _emptyLabel->SetText(u"Nothing played yet.");
+    }
+    else
+    {
+        _titleLabel->SetText(u"Favorite games");
+        _emptyLabel->SetText(u"No favorites yet. Press X on a game.");
+    }
     AddChildTail(_titleLabel.GetPointer());
     if (_viewModel->GetItemCount() == 0)
         AddChildTail(_emptyLabel.GetPointer());

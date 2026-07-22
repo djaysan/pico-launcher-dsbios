@@ -21,6 +21,7 @@ public:
             || state == RomBrowserState::GameInfo
             || state == RomBrowserState::DisplaySettings
             || state == RomBrowserState::Recents
+            || state == RomBrowserState::Favorites
             || state == RomBrowserState::Statistics
             || state == RomBrowserState::DeleteConfirm
             || state == RomBrowserState::Launching

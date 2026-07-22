@@ -8,8 +8,13 @@ public:
     JsonGameDataService();
 
     const GameDataEntry* GetEntry(const char* fileName, const char* gameCode = nullptr) const override;
-    void ToggleFavorite(const char* fileName, const char* gameCode = nullptr) override;
-    void ToggleCompleted(const char* fileName, const char* gameCode = nullptr) override;
+    void ToggleFavorite(const char* fileName, const char* gameCode = nullptr,
+        const char* fullPath = nullptr) override;
+    void ToggleCompleted(const char* fileName, const char* gameCode = nullptr,
+        const char* fullPath = nullptr) override;
+    bool BackfillPath(const char* fileName, const char* gameCode,
+        const char* fullPath) override;
+    bool HasUnpathedFlaggedEntry() const override;
     void RecordLaunch(const char* fileName, const char* gameCode,
         const char* fullPath, const char* lastPlayedDateTime) override;
     void RemoveEntry(const char* fileName, const char* gameCode = nullptr) override;
