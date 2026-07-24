@@ -124,7 +124,9 @@ void ChipView::DrawIcon(GraphicsContext& graphicsContext, const Rgb<8, 8, 8>& fg
             _position.y, _position.y + 20);
     }
     auto iconOam = graphicsContext.GetOamManager().AllocOams(1);
-    OamBuilder::OamWithSize<16, 16>(_position.x + 5, _position.y + 4, _iconVramOffset >> 7)
+    // +2: the heart's ink now fills rows 2-13 of its canvas (matched to the
+    // check icon), so a smaller offset keeps it centered on the 20px chip
+    OamBuilder::OamWithSize<16, 16>(_position.x + 5, _position.y + 2, _iconVramOffset >> 7)
         .WithPalette16(iconPaletteRow)
         .WithPriority(graphicsContext.GetPriority())
         .Build(iconOam[0]);

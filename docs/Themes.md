@@ -62,6 +62,8 @@ Custom themes support additional properties in the `theme.json` file to allow fo
 - **topBannerTextLine2** - Properties of the third banner text line displayed on the top screen.
 - **topFileNameText** - Properties of the file name text displayed on the top screen.
 - **topCover** - Properties of the cover image displayed on the top screen.
+- **topGameCount** - Properties of the game count shown on the top screen. `position` is the top-left corner of its pill. Set `hidden` to `true` to remove it entirely.
+- **topLaunchInfo** - Properties of the launch info shown on the top screen (play count and last played, plus the favorite and completed markers). `position` is the top-right corner of its pill, which grows to the left. Set `hidden` to `true` to remove it entirely.
 - **gridIcon** - Properties of the icons displayed on the bottom screen in grid display modes.
 - **bannerListIcon** - Properties of the icons displayed on the bottom screen in banner list display mode.
 - **bannerListTextLine0** - Properties of the first banner text line displayed on the bottom screen in banner list display mode.
@@ -108,6 +110,13 @@ Blend colors are used to fake translucency. They should be set to an approximati
     },
     "topCover": {
         "position": { "x": 75, "y": 18 }
+    },
+    "topGameCount": {
+        "position": { "x": 4, "y": 2 }
+    },
+    "topLaunchInfo": {
+        "position": { "x": 252, "y": 2 },
+        "hidden": false
     },
     "gridIcon": {
         "blendColor": { "r": 200, "g": 200, "b": 200 }

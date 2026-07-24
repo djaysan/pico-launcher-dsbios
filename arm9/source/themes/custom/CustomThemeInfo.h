@@ -3,6 +3,7 @@
 #include "CustomBottomIconInfo.h"
 #include "CustomTopCoverInfo.h"
 #include "CustomTopIconInfo.h"
+#include "CustomTopStripElementInfo.h"
 #include "CustomTextElementInfo.h"
 
 struct CustomThemeInfo
@@ -13,6 +14,8 @@ struct CustomThemeInfo
     CustomTopTextElementInfo topBannerTextLine2Info;
     CustomTopTextElementInfo topFileNameTextInfo;
     CustomTopCoverInfo topCoverInfo;
+    CustomTopStripElementInfo topGameCountInfo;
+    CustomTopStripElementInfo topLaunchInfoInfo;
 
     CustomBottomIconInfo gridIconInfo;
 

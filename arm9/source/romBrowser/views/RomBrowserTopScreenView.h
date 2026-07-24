@@ -42,8 +42,13 @@ private:
     bool _coverGraphicsUploaded = false;
     bool _showCover;
     Point _coverPosition;
+    Point _gameCountPosition;
+    bool _gameCountHidden = false;
+    Point _launchInfoPosition;
+    bool _launchInfoHidden = false;
     u32 _heartVramOffset = 0;
     u32 _checkVramOffset = 0;
+    u32 _chipVramOffset = 0;
     bool _selectedFavorite = false;
     bool _selectedCompleted = false;
     int _lastGameDataItem = -1;
@@ -57,4 +62,6 @@ private:
         const IRomBrowserViewFactory* romBrowserViewFactory,
         const IFontRepository* fontRepository,
         const MaterialColorScheme* materialColorScheme);
+
+    void DrawChip(GraphicsContext& graphicsContext, int x, int y, int width, u32 paletteRow);
 };

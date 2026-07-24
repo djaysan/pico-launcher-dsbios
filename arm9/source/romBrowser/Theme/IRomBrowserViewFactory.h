@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include "core/SharedPtr.h"
+#include "core/math/Point.h"
 #include "../views/IconGridItemView.h"
 #include "../views/BannerListItemView.h"
 #include "../views/AppBarView.h"
@@ -13,6 +14,15 @@ class RomBrowserViewModel;
 class IThemeFileIconFactory;
 class FileRecyclerAdapter;
 class IRomBrowserItemViewModel;
+
+// position is the top-left corner for the game count pill and the top-right
+// corner for the launch info pill (that one grows leftward); hidden suppresses
+// the pill, its text and its icons entirely
+struct TopStripElementLayout
+{
+    Point position;
+    bool hidden;
+};
 
 class IRomBrowserViewFactory
 {
@@ -40,6 +50,9 @@ public:
         VBlankTextureLoader* vblankTextureLoader) const = 0;
 
     virtual Point GetTopCoverPosition() const = 0;
+
+    virtual TopStripElementLayout GetTopGameCountLayout() const = 0;
+    virtual TopStripElementLayout GetTopLaunchInfoLayout() const = 0;
 };
 
 inline IRomBrowserViewFactory::~IRomBrowserViewFactory() { }

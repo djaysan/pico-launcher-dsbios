@@ -1,4 +1,5 @@
 #include "common.h"
+#include <algorithm>
 #include <string.h>
 #include <libtwl/mem/memVram.h>
 #include <libtwl/gfx/gfx.h>
@@ -20,6 +21,7 @@
 #include "../Theme/IRomBrowserViewFactory.h"
 #include "smallHeartIconFilled.h"
 #include "checkIcon.h"
+#include "stripChipBg.h"
 #include "RomBrowserTopScreenView.h"
 
 RomBrowserTopScreenView::RomBrowserTopScreenView(
@@ -37,16 +39,30 @@ RomBrowserTopScreenView::RomBrowserTopScreenView(
 {
     AddChildTail(_fileInfoView.GetPointer());
 
+    // the strip is positioned by the theme (top-left corner for the game count,
+    // top-right corner for the launch info) so a custom theme can move or hide
+    // it away from its own top art; clamp to the screen so a malformed theme.json
+    // can't place the OBJs at coordinates that wrap in OAM
+    auto gameCountLayout = romBrowserViewFactory->GetTopGameCountLayout();
+    _gameCountHidden = gameCountLayout.hidden;
+    _gameCountPosition = Point(std::clamp(gameCountLayout.position.x, 0, 256),
+        std::clamp(gameCountLayout.position.y, 0, 192));
+    auto launchInfoLayout = romBrowserViewFactory->GetTopLaunchInfoLayout();
+    _launchInfoHidden = launchInfoLayout.hidden;
+    _launchInfoPosition = Point(std::clamp(launchInfoLayout.position.x, 0, 256),
+        std::clamp(launchInfoLayout.position.y, 0, 192));
+
     u32 gameCount = _viewModel->GetFileInfoManager().GetGameCount();
-    if (gameCount > 0)
+    if (gameCount > 0 && !_gameCountHidden)
     {
         char text[16];
         mini_snprintf(text, sizeof(text), "%u game%s", gameCount, gameCount == 1 ? "" : "s");
-        _gameCountLabel = Label2DView::CreateShared(96, 16, 15, fontRepository->GetFont(FontType::Medium7_5));
+        _gameCountLabel = Label2DView::CreateShared(96, 16, 15, fontRepository->GetFont(FontType::Medium10));
         _gameCountLabel->SetText(text);
-        // top strip y 0-16: free of theme elements in both themes' defaults
-        // (cover starts at y=18, banner text at y>=118, filename at y>=168)
-        _gameCountLabel->SetPosition(4, 2);
+        // Draw() puts a chip behind each strip cluster so the strip stays readable
+        // over any theme art; the label sits 6px in from the pill's left edge and
+        // 2px down from its top
+        _gameCountLabel->SetPosition(_gameCountPosition.x + 6, _gameCountPosition.y + 2);
         _gameCountLabel->SetBackgroundColor(materialColorScheme->surfaceBright);
         _gameCountLabel->SetForegroundColor(materialColorScheme->onSurfaceVariant);
         AddChildTail(_gameCountLabel.GetPointer());
@@ -54,14 +70,16 @@ RomBrowserTopScreenView::RomBrowserTopScreenView(
 
     _gameDataService = _viewModel->GetRomBrowserController()->GetGameDataService();
     _materialColorScheme = materialColorScheme;
-    // launch info for the selected game ("3x 16/07"), right-aligned in the top
-    // strip, leaving 2x16px on the right for the completed check + favorite heart
-    _launchInfoLabel = Label2DView::CreateShared(96, 16, 15, fontRepository->GetFont(FontType::Medium7_5));
+    // launch info for the selected game ("3x 16/07"), packed right to left in
+    // the top strip with the completed check + favorite heart; Draw() positions
+    // it so the cluster's chip is sized to its content
+    _launchInfoLabel = Label2DView::CreateShared(96, 16, 15, fontRepository->GetFont(FontType::Medium10));
     _launchInfoLabel->SetHorizontalAlignment(Alignment::End);
-    _launchInfoLabel->SetPosition(256 - 4 - 16 - 18 - 96, 2);
+    _launchInfoLabel->SetPosition(_launchInfoPosition.x - 96, _launchInfoPosition.y + 2);
     _launchInfoLabel->SetBackgroundColor(materialColorScheme->surfaceBright);
     _launchInfoLabel->SetForegroundColor(materialColorScheme->onSurfaceVariant);
-    AddChildTail(_launchInfoLabel.GetPointer());
+    if (!_launchInfoHidden)
+        AddChildTail(_launchInfoLabel.GetPointer());
 }
 
 void RomBrowserTopScreenView::InitVram(const VramContext& vramContext)
@@ -76,6 +94,9 @@ void RomBrowserTopScreenView::InitVram(const VramContext& vramContext)
         _checkVramOffset = objVramManager->Alloc(checkIconTilesLen);
         dma_ntrCopy32(3, checkIconTiles,
             objVramManager->GetVramAddress(_checkVramOffset), checkIconTilesLen);
+        _chipVramOffset = objVramManager->Alloc(stripChipBgTilesLen);
+        dma_ntrCopy32(3, stripChipBgTiles,
+            objVramManager->GetVramAddress(_chipVramOffset), stripChipBgTilesLen);
     }
     int tileIndex = 0;
     vu16* mapPtr = (vu16*)((u8*)GFX_BG_SUB + 0x3800);
@@ -177,10 +198,23 @@ void RomBrowserTopScreenView::Update()
                     }
                     else if (strlen(entry->lastPlayed.GetString()) >= 10)
                     {
-                        // stored as "YYYY-MM-DD HH:MM", shown as "3x 16/07"
+                        // stored as "YYYY-MM-DD HH:MM", shown as "3x · 16 Jul" (a bare
+                        // "16/07" reads like a fraction to new users). The separator is
+                        // the middle dot U+00B7, which the Medium10 font provides.
+                        static const char* const sMonthNames[12] = { "Jan", "Feb", "Mar", "Apr",
+                            "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
                         const char* lastPlayed = entry->lastPlayed.GetString();
-                        mini_snprintf(info, sizeof(info), "%ux %c%c/%c%c", entry->launchCount,
-                            lastPlayed[8], lastPlayed[9], lastPlayed[5], lastPlayed[6]);
+                        u32 month = (lastPlayed[5] - '0') * 10 + (lastPlayed[6] - '0');
+                        u32 day = (lastPlayed[8] - '0') * 10 + (lastPlayed[9] - '0');
+                        if (month >= 1 && month <= 12)
+                        {
+                            mini_snprintf(info, sizeof(info), "%ux · %u %s", entry->launchCount,
+                                day, sMonthNames[month - 1]);
+                        }
+                        else
+                        {
+                            mini_snprintf(info, sizeof(info), "%ux", entry->launchCount);
+                        }
                     }
                     else
                     {
@@ -199,32 +233,122 @@ void RomBrowserTopScreenView::Update()
 
 void RomBrowserTopScreenView::Draw(GraphicsContext& graphicsContext)
 {
+    // widths follow the currently displayed string (updated at vblank), so the
+    // chips always match the text on screen
+    u32 gameCountWidth = _gameCountLabel ? _gameCountLabel->GetStringWidth() : 0;
+    // a hidden launch info suppresses its text, heart and check together
+    bool showFavorite = _selectedFavorite && !_launchInfoHidden;
+    bool showCompleted = _selectedCompleted && !_launchInfoHidden;
+    u32 launchInfoWidth = _launchInfoHidden ? 0 : _launchInfoLabel->GetStringWidth();
+    int clusterWidth = 0;
+    if (launchInfoWidth > 0)
+        clusterWidth += launchInfoWidth + 2;
+    if (showCompleted)
+        clusterWidth += 16 + 2;
+    if (showFavorite)
+        clusterWidth += 16 + 2;
+    if (clusterWidth > 0)
+        clusterWidth -= 2;
+    int heartX = 0;
+    int checkX = 0;
+    if (gameCountWidth > 0 || clusterWidth > 0)
+    {
+        // both chips share one palette row (SimplePaletteManager doesn't dedup)
+        u32 chipPaletteRow = graphicsContext.GetPaletteManager().AllocRow(
+            GradientPalette(_materialColorScheme->outline, _materialColorScheme->surfaceBright), 0, 18);
+        if (gameCountWidth > 0)
+            DrawChip(graphicsContext, _gameCountPosition.x, _gameCountPosition.y,
+                std::max((int)gameCountWidth + 12, 38), chipPaletteRow);
+        if (clusterWidth > 0)
+        {
+            // right chip's right edge sits at the themed x, content centered with 6px padding
+            int chipWidth = std::max(clusterWidth + 12, 38);
+            int chipX = _launchInfoPosition.x - chipWidth;
+            int x = chipX + (chipWidth - clusterWidth) / 2;
+            if (launchInfoWidth > 0)
+            {
+                _launchInfoLabel->SetPosition(x + (int)launchInfoWidth - 96, _launchInfoPosition.y + 2);
+                x += launchInfoWidth + 2;
+            }
+            if (showCompleted)
+            {
+                checkX = x;
+                x += 16 + 2;
+            }
+            if (showFavorite)
+                heartX = x;
+            DrawChip(graphicsContext, chipX, _launchInfoPosition.y, chipWidth, chipPaletteRow);
+        }
+    }
+    // the labels draw after the chips and therefore get lower oam indices,
+    // which puts them in front
     ViewContainer::Draw(graphicsContext);
-    if (_selectedFavorite)
+    if (showFavorite)
     {
         auto oams = graphicsContext.GetOamManager().AllocOams(1);
         u32 paletteRow = graphicsContext.GetPaletteManager().AllocRow(
-            GradientPalette(_materialColorScheme->surfaceBright, _materialColorScheme->primary), 2, 18);
-        OamBuilder::OamWithSize<16, 16>(256 - 4 - 16, 2, _heartVramOffset >> 7)
+            GradientPalette(_materialColorScheme->surfaceBright, _materialColorScheme->primary), 1, 17);
+        OamBuilder::OamWithSize<16, 16>(heartX, _launchInfoPosition.y + 1, _heartVramOffset >> 7)
             .WithPalette16(paletteRow)
             .WithPriority(graphicsContext.GetPriority())
             .Build(oams[0]);
     }
-    if (_selectedCompleted)
+    if (showCompleted)
     {
         auto oams = graphicsContext.GetOamManager().AllocOams(1);
         u32 paletteRow = graphicsContext.GetPaletteManager().AllocRow(
-            GradientPalette(_materialColorScheme->surfaceBright, Rgb<8, 8, 8>(67, 160, 71)), 2, 18);
-        OamBuilder::OamWithSize<16, 16>(256 - 4 - 16 - 18, 2, _checkVramOffset >> 7)
+            GradientPalette(_materialColorScheme->surfaceBright, Rgb<8, 8, 8>(67, 160, 71)), 1, 17);
+        OamBuilder::OamWithSize<16, 16>(checkX, _launchInfoPosition.y + 1, _checkVramOffset >> 7)
             .WithPalette16(paletteRow)
             .WithPriority(graphicsContext.GetPriority())
             .Build(oams[0]);
     }
 }
 
+// 18px tall pill behind a strip cluster, built from 32x32 pieces whose left 6
+// columns are rounded: a left cap, middle pieces at a 26px stride and an h-flipped
+// right cap. Oams come out of AllocOams front to back, so each piece hides the
+// rounded columns of the piece to its right. Minimum width is 38 to keep the caps'
+// flat columns out of each other's corners. Pieces are semi-transparent OBJs (see
+// the blend setup in VBlank) so the theme art shows faintly through the pill.
+void RomBrowserTopScreenView::DrawChip(GraphicsContext& graphicsContext, int x, int y, int width, u32 paletteRow)
+{
+    int middleCount = width > 64 ? (width - 64 + 25) / 26 : 0;
+    auto oams = graphicsContext.GetOamManager().AllocOams(middleCount + 2);
+    OamBuilder::OamWithSize<32, 32>(x, y, _chipVramOffset >> 7)
+        .WithPalette16(paletteRow)
+        .WithPriority(graphicsContext.GetPriority())
+        .AsTranslucent()
+        .Build(oams[0]);
+    for (int i = 0; i < middleCount; i++)
+    {
+        OamBuilder::OamWithSize<32, 32>(x + 26 * (i + 1), y, _chipVramOffset >> 7)
+            .WithPalette16(paletteRow)
+            .WithPriority(graphicsContext.GetPriority())
+            .AsTranslucent()
+            .Build(oams[1 + i]);
+    }
+    OamBuilder::OamWithSize<32, 32>(x + width - 32, y, _chipVramOffset >> 7)
+        .WithPalette16(paletteRow)
+        .WithPriority(graphicsContext.GetPriority())
+        .WithHFlip()
+        .AsTranslucent()
+        .Build(oams[middleCount + 1]);
+}
+
 void RomBrowserTopScreenView::VBlank()
 {
     ViewContainer::VBlank();
+
+    // the chip pieces are semi-transparent OBJs so the pills reveal a hint of the
+    // theme art behind them (the labels/heart/check stay opaque normal OBJs in
+    // front). Reuse the splash's REG_BLDCNT_SUB value: BG1 (its 1st target) is off
+    // in the browser, so its only live effect is picking the theme backgrounds and
+    // backdrop as 2nd targets, and matching the value keeps the startup fade - which
+    // also drives these registers until it hands off - from glitching. 12/16 pill +
+    // 4/16 backdrop keeps the labels readable over busy art.
+    REG_BLDCNT_SUB = 0x3D42;
+    REG_BLDALPHA_SUB = (4 << 8) | 12;
 
     if (!_coverGraphicsUploaded && _selectedFileCover.IsValid())
     {
