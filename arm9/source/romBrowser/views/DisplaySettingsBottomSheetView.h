@@ -36,6 +36,10 @@ private:
 
     SharedPtr<Label2DView> _titleLabel;
     SharedPtr<IconButton2DView> _themeButton;
+    /// @brief Toggles RomBrowserDisplaySettings::hideEmptyFolders. Lives in
+    ///        the title row (icon-only, like the theme button) - the layout/
+    ///        sorting/brightness rows below already fill the sheet's height.
+    SharedPtr<IconButton2DView> _hideEmptyFoldersButton;
     SharedPtr<Label2DView> _layoutLabel;
     SharedPtr<Label2DView> _sortingLabel;
     SharedPtr<Label2DView> _brightnessLabel;

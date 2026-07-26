@@ -16,6 +16,11 @@ public:
     /// @brief When true only folders and completed games are kept.
     ///        Requires gameDataService.
     bool completedOnly = false;
+    /// @brief When true, folders with no visible entries of their own are
+    ///        dropped. Relies on FileInfo::IsEmptyFolder() already being
+    ///        populated (see SdFolderFactory::HasVisibleContent) - this flag
+    ///        itself does no SD access.
+    bool hideEmptyFolders = false;
     const IGameDataService* gameDataService = nullptr;
 
     SdFolderFilterSortParams() { }

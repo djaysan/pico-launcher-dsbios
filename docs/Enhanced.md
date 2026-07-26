@@ -14,6 +14,7 @@ These controls are available in the rom browser, on top of the standard ones (se
 | Heart button (hold ~half a second) | Open the favorites panel: all favorites from every folder |
 | Check button (app bar) | Toggle the completed filter (the check turns green while active) |
 | Light row (display settings) | Set the DS Lite backlight level (4 levels) |
+| Folder button (display settings) | Toggle hiding empty folders |
 | Clock button (app bar) | Open the recently played panel |
 | Trash button (app bar) | Delete the highlighted game (X confirms, A or B cancels) |
 
@@ -62,6 +63,11 @@ Deleting a game also deletes its save file (same name with a `.sav` extension, n
 The display settings sheet (gear button in the app bar) has a **Light** row with the DS Lite's four backlight levels. Tapping a level applies it immediately, and the choice is remembered and restored on every boot — it also stays active inside the game you launch, until the console powers off.
 
 Until you pick a level the launcher leaves the firmware's brightness untouched. The original DS has no brightness levels (the setting does nothing there), and the DSi manages brightness through its own system menu.
+
+## Hide empty folders
+The display settings sheet has a folder toggle that hides folders containing no visible games, homebrew or media of their own (banner, BGM and other system files don't count as content). It's off by default; toggling it refreshes the folder you're currently viewing immediately.
+
+Only a folder's direct contents are checked, not what's inside its subfolders: a folder that contains only other empty folders still counts as non-empty and stays visible.
 
 ## Per-folder music
 Place a `bgm.bcstm` file directly inside a folder to give it its own background music. It uses the same DSP-ADPCM `.bcstm` format as theme music (see [Themes](Themes.md)) and supports looping. The music starts when you enter the folder and switches back to the theme music when you leave. Each folder is checked independently — subfolders do not inherit their parent's music.

@@ -35,6 +35,10 @@ public:
     /// @return A pointer to an array with all files in the folder.
     const FileInfo* const* GetFiles() const { return _files; }
 
+    /// @brief Same array as the const overload, but with mutable entries, for
+    ///        a one-time post-load pass (e.g. caching subfolder emptiness).
+    FileInfo* const* GetFiles() { return _files; }
+
     /// @brief Gets the total number of files in the folder.
     /// @return The total number of files.
     int GetFileCount() const { return _fileCount; }

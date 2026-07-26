@@ -43,6 +43,11 @@ std::unique_ptr<const FileInfo*[]> SdFolder::FilterAndSort(
             if (!entry || !entry->completed)
                 continue;
         }
+        if (filterSortParams.hideEmptyFolders &&
+            classification == FileTypeClassification::Folder && file->IsEmptyFolder())
+        {
+            continue;
+        }
         sortedFilteredFiles[filteredCount++] = file;
     }
     std::sort(sortedFilteredFiles.get(), sortedFilteredFiles.get() + filteredCount,

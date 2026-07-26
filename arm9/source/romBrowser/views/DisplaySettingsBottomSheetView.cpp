@@ -20,6 +20,7 @@
 #include "unknownIcon.h"
 #include "coverflowIcon.h"
 #include "themeIcon.h"
+#include "folderIcon.h"
 #include "../IRomBrowserController.h"
 #include "gui/input/InputProvider.h"
 #include "themes/material/MaterialColorScheme.h"
@@ -31,6 +32,11 @@
 
 #define THEME_BUTTON_X      212
 #define THEME_BUTTON_Y      (TITLE_LABEL_Y - 7)
+
+// Shares the title row with the theme button - the layout/sorting/brightness
+// rows below already run edge to edge with no vertical room for a 4th row.
+#define HIDE_EMPTY_FOLDERS_BUTTON_X     176
+#define HIDE_EMPTY_FOLDERS_BUTTON_Y     (TITLE_LABEL_Y - 7)
 
 #define LAYOUT_LABEL_X      20
 #define LAYOUT_LABEL_Y      46
@@ -69,6 +75,11 @@ DisplaySettingsBottomSheetView::DisplaySettingsBottomSheetView(
         IconButtonView::State::NoToggle,
         md::sys::color::inverseOnSurface,
         materialColorScheme))
+    , _hideEmptyFoldersButton(IconButton2DView::CreateShared(
+        IconButtonView::Type::Tonal,
+        IconButtonView::State::ToggleUnselected,
+        md::sys::color::surfaceContainerLow,
+        materialColorScheme))
     , _layoutLabel(Label2DView::CreateShared(64, 16, 25, fontRepository->GetFont(FontType::Regular10)))
     , _sortingLabel(Label2DView::CreateShared(64, 16, 25, fontRepository->GetFont(FontType::Regular10)))
     , _brightnessLabel(Label2DView::CreateShared(64, 16, 25, fontRepository->GetFont(FontType::Regular10)))
@@ -82,6 +93,13 @@ DisplaySettingsBottomSheetView::DisplaySettingsBottomSheetView(
         ((DisplaySettingsBottomSheetView*)arg)->_viewModel->GotoSettingsScreen();
     }, this);
     AddChildTail(_themeButton.GetPointer());
+
+    _hideEmptyFoldersButton->SetAction([] (IconButtonView*, void* arg)
+    {
+        auto self = (DisplaySettingsBottomSheetView*)arg;
+        self->_viewModel->SetHideEmptyFolders(!self->_viewModel->GetHideEmptyFolders());
+    }, this);
+    AddChildTail(_hideEmptyFoldersButton.GetPointer());
 
     _layoutLabel->SetText(u"Layout");
     AddChildTail(_layoutLabel.GetPointer());
@@ -186,6 +204,7 @@ void DisplaySettingsBottomSheetView::InitVram(const VramContext& vramContext)
     if (objVramManager)
     {
         _themeButton->SetIconVramOffset(LoadIcon(*objVramManager, themeIconTiles, themeIconTilesLen));
+        _hideEmptyFoldersButton->SetIconVramOffset(LoadIcon(*objVramManager, folderIconTiles, folderIconTilesLen));
 
         // layout options
         _layoutOptions[0]->SetIconVramOffset(LoadIcon(*objVramManager, hGridIconTiles, hGridIconTilesLen));
@@ -217,6 +236,10 @@ void DisplaySettingsBottomSheetView::Update()
 {
     BottomSheetView::Update();
     _themeButton->SetPosition(THEME_BUTTON_X, _position.y + THEME_BUTTON_Y);
+    _hideEmptyFoldersButton->SetPosition(HIDE_EMPTY_FOLDERS_BUTTON_X, _position.y + HIDE_EMPTY_FOLDERS_BUTTON_Y);
+    _hideEmptyFoldersButton->SetState(_viewModel->GetHideEmptyFolders()
+        ? IconButtonView::State::ToggleSelected
+        : IconButtonView::State::ToggleUnselected);
     UpdateLabels();
     auto selectedDisplayMode = _viewModel->GetRomBrowserDisplayMode();
     int x = 70;
@@ -295,6 +318,26 @@ SharedPtr<View> DisplaySettingsBottomSheetView::MoveFocus(const SharedPtr<View>&
         if (direction == FocusMoveDirection::Down)
         {
             return _layoutOptions[0];
+        }
+        else if (direction == FocusMoveDirection::Left)
+        {
+            return _hideEmptyFoldersButton;
+        }
+        else
+        {
+            return nullptr;
+        }
+    }
+
+    if (currentFocus.GetPointer() == _hideEmptyFoldersButton.GetPointer())
+    {
+        if (direction == FocusMoveDirection::Down)
+        {
+            return _layoutOptions[0];
+        }
+        else if (direction == FocusMoveDirection::Right)
+        {
+            return _themeButton;
         }
         else
         {
@@ -397,6 +440,7 @@ void DisplaySettingsBottomSheetView::SetGraphics(
     const IconButton2DView::VramToken& iconButtonVramToken)
 {
     _themeButton->SetGraphics(iconButtonVramToken);
+    _hideEmptyFoldersButton->SetGraphics(iconButtonVramToken);
     for (auto& layoutOption : _layoutOptions)
     {
         layoutOption->SetGraphics(iconButtonVramToken);

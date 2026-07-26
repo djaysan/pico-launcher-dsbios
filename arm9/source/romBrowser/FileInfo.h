@@ -19,6 +19,7 @@ public:
             _name = std::move(rhs._name);
             _type = rhs._type;
             _fastFileRef = rhs._fastFileRef;
+            _emptyFolder = rhs._emptyFolder;
         }
 
         return *this;
@@ -39,9 +40,17 @@ public:
     bool IsHidden() const { return _attributes & AM_HID; }
     bool IsSystem() const { return _attributes & AM_SYS; }
 
+    /// @brief Only meaningful when GetFileType()->GetClassification() is
+    ///        Folder: whether this folder has no visible entries of its own.
+    ///        Probed once at navigate time (see SdFolderFactory::HasVisibleContent)
+    ///        and cached here so re-filtering afterward needs no SD access.
+    bool IsEmptyFolder() const { return _emptyFolder; }
+    void SetEmptyFolder(bool empty) { _emptyFolder = empty; }
+
 private:
     std::unique_ptr<TCHAR[]> _name;
     const FileType* _type;
     FastFileRef _fastFileRef;
     u8 _attributes;
+    bool _emptyFolder = false;
 };

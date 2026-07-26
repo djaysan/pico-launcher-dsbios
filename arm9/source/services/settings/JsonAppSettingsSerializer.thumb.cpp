@@ -12,6 +12,7 @@
 #define KEY_LANGUAGE                 "language"
 #define KEY_ROM_BROWSER_LAYOUT       "romBrowserLayout"
 #define KEY_ROM_BROWSER_SORT_MODE    "romBrowserSortMode"
+#define KEY_ROM_BROWSER_HIDE_EMPTY_FOLDERS  "romBrowserHideEmptyFolders"
 #define KEY_THEME                    "theme"
 #define KEY_LAST_USED_FILE_PATH      "lastUsedFilePath"
 #define KEY_BACKLIGHT_LEVEL          "backlightLevel"
@@ -128,6 +129,7 @@ static std::unique_ptr<u8[]> writeJson(const AppSettings* appSettings, u32& leng
     json[KEY_LANGUAGE] = appSettings->language.GetString();
     json[KEY_ROM_BROWSER_LAYOUT] = serializeRomBrowserLayout(appSettings->romBrowserDisplaySettings.layout);
     json[KEY_ROM_BROWSER_SORT_MODE] = serializeRomBrowserSortMode(appSettings->romBrowserDisplaySettings.sortMode);
+    json[KEY_ROM_BROWSER_HIDE_EMPTY_FOLDERS] = appSettings->romBrowserDisplaySettings.hideEmptyFolders;
     json[KEY_THEME] = appSettings->theme.GetString();
     json[KEY_LAST_USED_FILE_PATH] = appSettings->lastUsedFilePath.GetString();
     // only written once the user picked a level; -1 keeps the firmware's
@@ -188,6 +190,8 @@ static void readJson(AppSettings* appSettings, const JsonDocument& json)
     {
         appSettings->romBrowserDisplaySettings.sortMode = romBrowserSortMode;
     }
+    appSettings->romBrowserDisplaySettings.hideEmptyFolders =
+        json[KEY_ROM_BROWSER_HIDE_EMPTY_FOLDERS] | appSettings->romBrowserDisplaySettings.hideEmptyFolders;
 
     tryParseFileAssociations(json[KEY_FILE_ASSOCIATIONS], appSettings);
 }

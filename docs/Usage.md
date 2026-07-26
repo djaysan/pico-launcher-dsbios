@@ -45,6 +45,7 @@ Settings are stored on your SD card in `/_pico/settings.json`. They can be edite
 - `language` - Display language for Pico Launcher. Currently, only `english` is supported. Other languages may be supported later.
 - `romBrowserLayout` - Specified how folder contents are displayed. This setting can be changed in Pico Launcher directly.
 - `romBrowserSortMode` - Specified if folder contents should be sorted from A to Z (`NameAscending`), or from Z to A (`NameDescending`). This setting can be changed from within Pico Launcher.
+- `romBrowserHideEmptyFolders` - When `true`, folders with no visible content of their own are hidden from the browser. This setting can be changed in Pico Launcher directly.
 - `theme`: Specifies the folder name of the theme to use. If the theme cannot be found, a default fallback theme will be used.
 - `lastUsedFilePath` - Specifies the path of the most recently launched homebrew or game, such that it can be selected the next time Pico Launcher is started. It is automatically updated by Pico Launcher.
 - `fileAssociations` - See [FileAssociations.md](/docs/FileAssociations.md) for information about how to use this setting.

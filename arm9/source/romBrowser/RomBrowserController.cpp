@@ -436,6 +436,31 @@ void RomBrowserController::HandleNavigateTrigger()
         f_chdir(_navigatePath);
         SdFolderFactory sdFolderFactory { &_fileTypeProvider };
         _newSdFolder = sdFolderFactory.CreateFromPath(".");
+        if (_newSdFolder)
+        {
+            // Probed unconditionally, not gated on the current "hide empty
+            // folders" setting: the cached bit must already be correct
+            // whenever the toggle is flipped later (main thread, no I/O -
+            // see HandleChangeDisplayModeTrigger), including while the user
+            // is already inside the folder. cwd is still _navigatePath here,
+            // so bare relative names resolve without building full paths.
+            // One level deep only - a folder containing only empty folders
+            // still counts as non-empty, keeping this bounded per navigation
+            // instead of scaling with tree depth.
+            FileInfo* const* files = _newSdFolder->GetFiles();
+            for (int i = 0; i < _newSdFolder->GetFileCount(); i++)
+            {
+                FileInfo* file = files[i];
+                if (file->GetFileType()->GetClassification() == FileTypeClassification::Folder)
+                {
+                    // mirror the favorites/completed filters exactly like
+                    // FilterAndSort does, or a folder full of non-matching
+                    // games would wrongly count as non-empty
+                    file->SetEmptyFolder(!sdFolderFactory.HasVisibleContent(
+                        file->GetFileName(), _favoritesFilter, _completedFilter, _gameDataService));
+                }
+            }
+        }
         u64 endTick = gTickCounter.GetValue();
         LOG_DEBUG("Loading files in folder took: %d us\n", (u32)TickCounter::TicksToMicroSeconds(endTick - startTick));
 

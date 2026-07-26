@@ -38,6 +38,20 @@ public:
         }
     }
 
+    constexpr bool GetHideEmptyFolders() const
+    {
+        return _romBrowserDisplaySettings.hideEmptyFolders;
+    }
+
+    void SetHideEmptyFolders(bool hideEmptyFolders)
+    {
+        if (_romBrowserDisplaySettings.hideEmptyFolders != hideEmptyFolders)
+        {
+            _romBrowserDisplaySettings.hideEmptyFolders = hideEmptyFolders;
+            _romBrowserController->SetRomBrowserDisplaySettings(_romBrowserDisplaySettings);
+        }
+    }
+
     int GetBacklightLevel() const
     {
         return _romBrowserController->GetBacklightLevel();
