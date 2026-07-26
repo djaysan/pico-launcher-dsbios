@@ -20,7 +20,7 @@
 #include "unknownIcon.h"
 #include "coverflowIcon.h"
 #include "themeIcon.h"
-#include "folderIcon.h"
+#include "hideEmptyFoldersIcon.h"
 #include "../IRomBrowserController.h"
 #include "gui/input/InputProvider.h"
 #include "themes/material/MaterialColorScheme.h"
@@ -204,7 +204,7 @@ void DisplaySettingsBottomSheetView::InitVram(const VramContext& vramContext)
     if (objVramManager)
     {
         _themeButton->SetIconVramOffset(LoadIcon(*objVramManager, themeIconTiles, themeIconTilesLen));
-        _hideEmptyFoldersButton->SetIconVramOffset(LoadIcon(*objVramManager, folderIconTiles, folderIconTilesLen));
+        _hideEmptyFoldersButton->SetIconVramOffset(LoadIcon(*objVramManager, hideEmptyFoldersIconTiles, hideEmptyFoldersIconTilesLen));
 
         // layout options
         _layoutOptions[0]->SetIconVramOffset(LoadIcon(*objVramManager, hGridIconTiles, hGridIconTilesLen));

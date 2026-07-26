@@ -1,5 +1,6 @@
 #include "common.h"
 #include <vector>
+#include "core/mini-printf.h"
 #include "fat/Directory.h"
 #include "FileInfo.h"
 #include "FileType/Folder/FolderFileType.h"
@@ -40,7 +41,7 @@ std::unique_ptr<SdFolder> SdFolderFactory::CreateFromPath(const char* path) cons
 }
 
 bool SdFolderFactory::HasVisibleContent(const char* path, bool favoritesOnly, bool completedOnly,
-    const IGameDataService* gameDataService) const
+    const IGameDataService* gameDataService, int maxDepth) const
 {
     Directory directory;
     if (directory.Open(path) != FR_OK)
@@ -58,21 +59,34 @@ bool SdFolderFactory::HasVisibleContent(const char* path, bool favoritesOnly, bo
         if (fileInfo.fname[0] == '.' || (fileInfo.fattrib & AM_HID))
             continue;
 
-        auto classification = fileInfo.fattrib & AM_DIR
+        bool isFolder = fileInfo.fattrib & AM_DIR;
+        auto classification = isFolder
             ? FileTypeClassification::Folder
             : _fileTypeProvider->GetFileType(fileInfo.fname)->GetClassification();
         if (classification == FileTypeClassification::Unknown)
             continue;
 
         // mirrors SdFolder::FilterAndSort exactly: favorites/completed only
-        // ever exclude non-folder entries, a subfolder always counts
-        if (classification != FileTypeClassification::Folder && gameDataService &&
-            (favoritesOnly || completedOnly))
+        // ever exclude non-folder entries
+        if (!isFolder && gameDataService && (favoritesOnly || completedOnly))
         {
             const auto* entry = gameDataService->GetEntry(fileInfo.fname);
             if (favoritesOnly && (!entry || !entry->favorite))
                 continue;
             if (completedOnly && (!entry || !entry->completed))
+                continue;
+        }
+
+        // a subfolder only counts if IT has visible content too, so a chain
+        // of nested empty folders is fully hidden, not just its outer layer;
+        // maxDepth bounds a pathological chain from recursing unboundedly
+        if (isFolder)
+        {
+            if (maxDepth <= 0)
+                return true; // fail open: assume non-empty past the depth cap
+            char childPath[256];
+            mini_snprintf(childPath, sizeof(childPath), "%s/%s", path, fileInfo.fname);
+            if (!HasVisibleContent(childPath, favoritesOnly, completedOnly, gameDataService, maxDepth - 1))
                 continue;
         }
         return true;
