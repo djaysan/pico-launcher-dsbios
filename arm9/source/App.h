@@ -64,7 +64,11 @@ private:
     Animator<int> _fadeAnimator;
 
     TaskQueue<32, sizeof(TaskBase) + 32> _ioTaskQueue;
-    u32 _ioTaskThreadStack[2048 / 4];
+    // 4096, not 2048: this thread also runs SdFolderFactory's recursive
+    // empty-folder probe (issue #6), and 2048 turned out to be tight enough
+    // for that recursion to plausibly overrun it on real hardware - see
+    // SdFolderFactory.cpp's own stack-usage comments for the accounting.
+    u32 _ioTaskThreadStack[4096 / 4];
     TaskQueue<32, sizeof(TaskBase) + 32> _bgTaskQueue;
     u32 _bgTaskThreadStack[2048 / 4];
 

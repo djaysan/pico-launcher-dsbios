@@ -444,9 +444,13 @@ void RomBrowserController::HandleNavigateTrigger()
             // see HandleChangeDisplayModeTrigger), including while the user
             // is already inside the folder. cwd is still _navigatePath here,
             // so bare relative names resolve without building full paths.
-            // One level deep only - a folder containing only empty folders
-            // still counts as non-empty, keeping this bounded per navigation
-            // instead of scaling with tree depth.
+            // readBudget is declared once here and shared across every
+            // sibling folder below (HasVisibleContent decrements it, never
+            // resets it) - otherwise each sibling would get its own fresh
+            // allowance and a folder full of large, mostly-empty siblings
+            // (photos, DSi system data, ...) could cost their sum instead of
+            // a single bounded worst case for the whole navigation.
+            int readBudget = SdFolderFactory::kInitialReadBudget;
             FileInfo* const* files = _newSdFolder->GetFiles();
             for (int i = 0; i < _newSdFolder->GetFileCount(); i++)
             {
@@ -457,7 +461,8 @@ void RomBrowserController::HandleNavigateTrigger()
                     // FilterAndSort does, or a folder full of non-matching
                     // games would wrongly count as non-empty
                     file->SetEmptyFolder(!sdFolderFactory.HasVisibleContent(
-                        file->GetFileName(), _favoritesFilter, _completedFilter, _gameDataService));
+                        file->GetFileName(), _favoritesFilter, _completedFilter, _gameDataService,
+                        readBudget));
                 }
             }
         }
