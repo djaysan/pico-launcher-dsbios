@@ -11,7 +11,7 @@
 #include "logger/SemihostingOutputStream.h"
 #include "logger/NitroEmulatorOutputStream.h"
 #include "logger/PicoAgbAdapterOutputStream.h"
-#include "logger/NullLogger.h"
+#include "logger/FileOutputStream.h"
 #include "logger/ThreadSafeLogger.h"
 #include "dsiSdIpc.h"
 #include "dldiIpc.h"
@@ -38,12 +38,19 @@ RandomGenerator* gRandomGenerator;
 static void initLogger()
 {
     std::unique_ptr<IOutputStream> outputStream;
+    // The debug channels below (emulator/JTAG/nocash) are effectively free to
+    // write to, so they get everything. The file fallback writes to the SD
+    // card, which is slow enough that logging per-item scroll spam (there are
+    // LOG_DEBUG calls on every list bind/release) would hurt navigation for
+    // every real-hardware user - so it only records Error/Fatal, the rare
+    // events actually worth persisting.
+    LogLevel logLevel = LogLevel::All;
     if (Environment::IsIsNitroEmulator() && Environment::SupportsAgbSemihosting())
     {
         outputStream = std::make_unique<NitroEmulatorOutputStream>();
     }
     else if (Environment::SupportsJtagSemihosting())
-    { 
+    {
         outputStream = std::make_unique<SemihostingOutputStream>();
     }
     else if (Environment::HasPicoAgbAdapter())
@@ -51,15 +58,19 @@ static void initLogger()
         outputStream = std::make_unique<PicoAgbAdapterOutputStream>();
     }
     else if (Environment::SupportsNocashPrint())
-    { 
+    {
         outputStream = std::make_unique<NocashOutputStream>();
     }
     else
     {
-        gLogger = new NullLogger();
-        return;
+        // No debug channel available - this is real hardware. Log errors to a
+        // file on the SD card instead of a NullLogger, so a hardware-only
+        // crash still leaves a trail (see FileOutputStream for why it opens/
+        // writes/closes per call rather than keeping the file open).
+        outputStream = std::make_unique<FileOutputStream>();
+        logLevel = LogLevel::Error;
     }
-    gLogger = new ThreadSafeLogger(std::make_unique<PlainLogger>(LogLevel::All, std::move(outputStream)));
+    gLogger = new ThreadSafeLogger(std::make_unique<PlainLogger>(logLevel, std::move(outputStream)));
 }
 
 static void initRandomGenerator()
