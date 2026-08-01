@@ -29,6 +29,11 @@ public:
         _buttons[button]->SetLongAction(longAction);
     }
 
+    void SetButtonEnabled(int button, bool enabled)
+    {
+        _buttons[button]->SetEnabled(enabled);
+    }
+
     void SetButtonIconColorOverride(int button, const Rgb<8, 8, 8>& color)
     {
         _buttons[button]->SetIconColorOverride(color);

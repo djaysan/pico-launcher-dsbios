@@ -38,6 +38,11 @@ public:
         return _romBrowserController->IsCompletedFilterEnabled();
     }
 
+    bool CanDeleteSelected() const
+    {
+        return _romBrowserController->CanDeleteSelected();
+    }
+
     void ShowRecents()
     {
         _romBrowserController->ShowRecents();

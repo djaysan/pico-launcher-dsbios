@@ -41,6 +41,10 @@ public:
     virtual void HideFavorites() = 0;
     virtual void ShowStatistics() = 0;
     virtual void HideStatistics() = 0;
+    /// @brief Whether the highlighted entry can be deleted at all. Folders and
+    ///        support files cannot, so the app bar dims its delete button rather
+    ///        than offering one that does nothing.
+    virtual bool CanDeleteSelected() const = 0;
     virtual void RequestDeleteSelected() = 0;
     virtual void CancelDelete() = 0;
     virtual void ConfirmDelete() = 0;

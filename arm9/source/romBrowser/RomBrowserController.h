@@ -44,6 +44,7 @@ public:
     void HideFavorites() override;
     void ShowStatistics() override;
     void HideStatistics() override;
+    bool CanDeleteSelected() const override;
     void RequestDeleteSelected() override;
     void CancelDelete() override;
     void ConfirmDelete() override;
@@ -92,7 +93,6 @@ private:
     bool _favoritesFilter = false;
     bool _completedFilter = false;
     TCHAR _triggerGameCode[8];
-    TCHAR _deleteGameCode[8];
 
     void FormatNowDateTime(TCHAR* buffer, u32 bufferLength) const;
     /// @brief Full path of a file in the current folder (f_getcwd + name).
@@ -109,6 +109,10 @@ private:
     RomBrowserStateMachine _stateMachine;
     TCHAR _navigatePath[256];
     TCHAR* _navigateFileName;
+    /// @brief Entry the next listing should land on, when it is not part of
+    ///        _navigatePath. Used when going up a folder: the parent listing
+    ///        preselects the folder just left instead of its first entry.
+    TCHAR _navigateSelectName[256];
     FileInfo _triggerFileInfo;
     QueueTask<void> _navigateTask;
     bool _saveSettingsPending = false;

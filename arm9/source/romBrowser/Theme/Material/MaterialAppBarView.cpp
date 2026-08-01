@@ -11,7 +11,9 @@ MaterialAppBarView::MaterialAppBarView(int x, int y, Orientation orientation,
     {
         _buttons[i] = IconButton2DView::CreateShared(
             IconButtonView::Type::Standard,
-            IconButtonView::State::NoToggle,
+            // the unselected tone at rest, so the focus circle (which uses the
+            // selected tone, matching the display settings sheet) stands out
+            IconButtonView::State::ToggleUnselected,
             md::sys::color::inverseOnSurface,
             materialColorScheme);
         AddChildTail(_buttons[i].GetPointer());

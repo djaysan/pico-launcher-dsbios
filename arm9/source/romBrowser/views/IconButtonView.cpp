@@ -1,5 +1,6 @@
 #include "common.h"
 #include "gui/input/InputProvider.h"
+#include "core/math/RgbMixer.h"
 #include "themes/material/MaterialColorScheme.h"
 #include "IconButtonView.h"
 
@@ -7,6 +8,13 @@
 
 bool IconButtonView::HandleInput(const InputProvider& inputProvider, FocusManager& focusManager)
 {
+    // a disabled button still takes focus (so the app bar layout never shifts)
+    // but must not act, and must not swallow the key either
+    if (!_enabled)
+    {
+        _heldFrames = 0;
+        return View::HandleInput(inputProvider, focusManager);
+    }
     if (inputProvider.Triggered(InputKey::A))
     {
         if (_longAction)
@@ -51,6 +59,8 @@ bool IconButtonView::HandleInput(const InputProvider& inputProvider, FocusManage
 
 void IconButtonView::HandlePenDown(const Point& touchPoint, FocusManager& focusManager)
 {
+    if (!_enabled)
+        return;
     if (GetBounds().Contains(touchPoint))
     {
         _penDown = true;
@@ -142,11 +152,31 @@ md::sys::color IconButtonView::GetCircleBackgroundColor() const
     }
 }
 
+// Half way to the button's own background: enough to read as inactive on any
+// theme, without inventing a color the scheme does not have.
+Rgb<8, 8, 8> IconButtonView::FadeIfDisabled(const Rgb<8, 8, 8>& color) const
+{
+    if (_enabled)
+        return color;
+    return RgbMixer::Lerp(color, _materialColorScheme->GetColor(_backgroundColor), 55, 100);
+}
+
 Rgb<8, 8, 8> IconButtonView::GetIconColor() const
 {
-    return _hasIconColorOverride
+    return FadeIfDisabled(_hasIconColorOverride
         ? _iconColorOverride
-        : _materialColorScheme->GetColor(GetForegroundColor());
+        : _materialColorScheme->GetColor(GetForegroundColor()));
+}
+
+Rgb<8, 8, 8> IconButtonView::GetFocusIconColor() const
+{
+    // must match whichever circle GetFocusFillColor picked
+    auto role = _state == State::ToggleSelected
+        ? md::sys::color::onPrimary
+        : md::sys::color::onSecondaryContainer;
+    return FadeIfDisabled(_hasIconColorOverride
+        ? _iconColorOverride
+        : _materialColorScheme->GetColor(role));
 }
 
 md::sys::color IconButtonView::GetForegroundColor() const

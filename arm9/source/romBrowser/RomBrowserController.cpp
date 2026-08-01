@@ -178,31 +178,30 @@ void RomBrowserController::ShowStatistics()
     _stateMachine.Fire(RomBrowserStateTrigger::ShowStatistics);
 }
 
-void RomBrowserController::RequestDeleteSelected()
+// only games: deleting folders would need recursion, and deleting random
+// support files from the launcher is asking for trouble. The app bar asks the
+// same question to decide whether to dim its delete button, so the button and
+// the action can never disagree about what is deletable.
+bool RomBrowserController::CanDeleteSelected() const
 {
     if (!_romBrowserViewModel.IsValid())
-        return;
+        return false;
     int selectedItem = _romBrowserViewModel->GetSelectedItem();
     if (selectedItem < 0)
-        return;
+        return false;
     const auto& item = _romBrowserViewModel->GetFileInfoManager().GetItem(selectedItem);
-    // only games: deleting folders would need recursion, and deleting random
-    // support files from the launcher is asking for trouble
-    if (item.GetFileType()->GetClassification() != FileTypeClassification::Game)
+    return item.GetFileType()->GetClassification() == FileTypeClassification::Game;
+}
+
+void RomBrowserController::RequestDeleteSelected()
+{
+    if (!CanDeleteSelected())
         return;
+    int selectedItem = _romBrowserViewModel->GetSelectedItem();
+    const auto& item = _romBrowserViewModel->GetFileInfoManager().GetItem(selectedItem);
 
     StringUtil::Copy(_deleteRomFileName, item.GetFileName(),
         sizeof(_deleteRomFileName) / sizeof(_deleteRomFileName[0]));
-    const char* gameCode = nullptr;
-    auto& fileInfoManager = _romBrowserViewModel->GetFileInfoManager();
-    if (fileInfoManager.IsFileInfoLoaded(selectedItem))
-    {
-        const auto* info = fileInfoManager.GetInternalFileInfo(selectedItem);
-        if (info)
-            gameCode = info->GetGameCode();
-    }
-    StringUtil::Copy(_deleteGameCode, gameCode ? gameCode : "",
-        sizeof(_deleteGameCode) / sizeof(_deleteGameCode[0]));
     // "<name minus extension>.sav" is the save convention used by the loader
     // and the emulators next to their roms
     StringUtil::Copy(_deleteSaveFileName, _deleteRomFileName,
@@ -420,6 +419,27 @@ void RomBrowserController::HandleNavigateTrigger()
 
         u64 startTick = gTickCounter.GetValue();
         _navigateFileName = nullptr;
+        // Going up: land on the folder just left instead of the first entry, so
+        // stepping out of a folder does not lose the user's place. The current
+        // directory is read here, on the IO thread, because that is the thread
+        // that owns the cwd - f_chdir below runs here too, and reading the card
+        // from the main thread is unreliable.
+        if (strcmp(_navigatePath, "..") == 0)
+        {
+            TCHAR currentPath[256];
+            if (f_getcwd(currentPath, sizeof(currentPath) / sizeof(currentPath[0])) == FR_OK)
+            {
+                // "fat:/Games/nds" -> "nds"; at the root the separator is the
+                // last character, so there is nothing to preselect
+                const TCHAR* folderName = strrchr(currentPath, '/');
+                if (folderName && folderName[1] != 0)
+                {
+                    StringUtil::Copy(_navigateSelectName, folderName + 1,
+                        sizeof(_navigateSelectName) / sizeof(_navigateSelectName[0]));
+                    _navigateFileName = _navigateSelectName;
+                }
+            }
+        }
         if (strcmp(_navigatePath, "/") != 0) // can't f_stat on root dir
         {
             FILINFO fileInfo;

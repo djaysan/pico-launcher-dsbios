@@ -5,7 +5,6 @@
 #include "gui/OamBuilder.h"
 #include "gui/input/InputProvider.h"
 #include "iconButtonSelectorTexture.h"
-#include "core/math/RgbMixer.h"
 #include "core/math/ColorConverter.h"
 #include "gui/palette/GradientPalette.h"
 #include "themes/material/MaterialColorScheme.h"
@@ -21,13 +20,11 @@ void IconButton3DView::Draw(GraphicsContext& graphicsContext)
     u32 iconPaletteRow;
     if (_isFocused || _penDown)
     {
-        const auto& selectorBaseColor = _materialColorScheme->GetColor(GetFocusCircleColor());
-        const auto& fgColor = _materialColorScheme->GetColor(GetForegroundColor());
-        auto selectorColor = RgbMixer::Lerp(selectorBaseColor, fgColor, 12, 100);
+        const auto& selectorColor = _materialColorScheme->GetColor(GetFocusFillColor());
         DrawSelector(graphicsContext, selectorColor);
 
         iconPaletteRow = graphicsContext.GetPaletteManager().AllocRow(
-            GradientPalette(selectorColor, GetIconColor()), _position.y + 8, _position.y + 24);
+            GradientPalette(selectorColor, GetFocusIconColor()), _position.y + 8, _position.y + 24);
     }
     else
     {

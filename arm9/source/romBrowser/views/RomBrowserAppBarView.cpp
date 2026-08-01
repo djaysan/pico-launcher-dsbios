@@ -68,6 +68,9 @@ void RomBrowserAppBarView::Update()
         _appBarView->SetButtonIconColorOverride(APP_BAR_BUTTON_COMPLETED, Rgb<8, 8, 8>(67, 160, 71));
     else
         _appBarView->ClearButtonIconColorOverride(APP_BAR_BUTTON_COMPLETED);
+    // folders and support files cannot be deleted, so the button is dimmed
+    // instead of looking available and doing nothing
+    _appBarView->SetButtonEnabled(APP_BAR_BUTTON_DELETE, _viewModel->CanDeleteSelected());
     ViewContainer::Update();
 }
 
