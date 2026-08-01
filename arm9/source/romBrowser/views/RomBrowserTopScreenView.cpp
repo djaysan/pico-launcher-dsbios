@@ -161,9 +161,7 @@ void RomBrowserTopScreenView::Update()
     }
 
     u32 gameDataVersion = _gameDataService->GetVersion();
-    bool infoLoaded = selectedItem >= 0 && _viewModel->GetFileInfoManager().IsFileInfoLoaded(selectedItem);
-    if (selectedItem != _lastGameDataItem || gameDataVersion != _lastGameDataVersion ||
-        infoLoaded != _lastGameDataInfoLoaded)
+    if (selectedItem != _lastGameDataItem || gameDataVersion != _lastGameDataVersion)
     {
         _selectedFavorite = false;
         _selectedCompleted = false;
@@ -172,14 +170,12 @@ void RomBrowserTopScreenView::Update()
         if (selectedItem >= 0)
         {
             const auto& item = _viewModel->GetFileInfoManager().GetItem(selectedItem);
-            const char* gameCode = nullptr;
-            if (infoLoaded)
-            {
-                const auto* internalInfo = _viewModel->GetFileInfoManager().GetInternalFileInfo(selectedItem);
-                if (internalInfo)
-                    gameCode = internalInfo->GetGameCode();
-            }
-            const auto* entry = _gameDataService->GetEntry(item.GetFileName(), gameCode);
+            // by file name, exactly like the browser filter resolves it. This
+            // used to also try the loaded rom header's game code, which made the
+            // heart appear for a file the filter could not match (issue #7), and
+            // meant the strip had to wait for the header to load before it could
+            // show anything.
+            const auto* entry = _gameDataService->GetEntry(item.GetFileName());
             if (entry)
             {
                 _selectedFavorite = entry->favorite;
@@ -226,7 +222,6 @@ void RomBrowserTopScreenView::Update()
         _launchInfoLabel->SetText(info);
         _lastGameDataItem = selectedItem;
         _lastGameDataVersion = gameDataVersion;
-        _lastGameDataInfoLoaded = infoLoaded;
     }
     ViewContainer::Update();
 }

@@ -63,8 +63,9 @@ void RomBrowserController::LaunchRandomGame()
             continue;
         if (pick == 0)
         {
-            // an off-screen random pick usually has no file info loaded yet;
-            // the launch then records by name only, which self-heals later
+            // an off-screen random pick usually has no file info loaded yet, so
+            // the code is simply not recorded; it is metadata, and the entry is
+            // keyed by file name either way
             const char* gameCode = nullptr;
             if (fileInfoManager.IsFileInfoLoaded(i))
             {
@@ -308,8 +309,7 @@ void RomBrowserController::Update()
     {
         _deleteCompleted = false;
         // the deleted game's favorite/stats entry goes with it
-        _gameDataService->RemoveEntry(_deleteRomFileName,
-            _deleteGameCode[0] != 0 ? _deleteGameCode : nullptr);
+        _gameDataService->RemoveEntry(_deleteRomFileName);
         _gameDataService->SaveAsync(_ioTaskQueue);
         // reload the current folder so the deleted file disappears
         NavigateToPath(".");
@@ -521,7 +521,7 @@ void RomBrowserController::BackfillFavoritePaths()
             continue;
         BuildCurrentFolderFilePath(file->GetFileName(), fullPath,
             sizeof(fullPath) / sizeof(fullPath[0]));
-        if (_gameDataService->BackfillPath(file->GetFileName(), nullptr, fullPath))
+        if (_gameDataService->BackfillPath(file->GetFileName(), fullPath))
             changed = true;
     }
     if (changed)

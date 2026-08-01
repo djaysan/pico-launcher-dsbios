@@ -69,6 +69,11 @@ public:
         _items = std::make_unique<GameDataEntry[]>(_itemCount);
         for (u32 i = 0; i < _itemCount; i++)
             _items[i] = gameDataService->GetEntryByIndex(indices[i]);
+        // Deliberately no "does the file still exist" pass here. Checking every
+        // row means SD I/O on the main thread inside the frame loop, and one
+        // f_stat is a full directory scan, so a library with many favorites
+        // stalls visibly - the same failure the empty-folder probe once caused.
+        // Rows whose file is gone stay listed and are handled in ActivateItem.
     }
 
     constexpr GameListKind GetKind() const { return _kind; }
@@ -83,6 +88,19 @@ public:
     {
         if (index >= 0 && (u32)index < _itemCount)
         {
+            // The file may be gone (renamed or deleted outside the launcher) or
+            // the stored path stale after a reorganisation. Navigating to a
+            // missing file falls back to the card root, which reads as the
+            // launcher randomly jumping somewhere, so ignore the press instead.
+            // One check, and only on a deliberate activation - not a scan of
+            // every row each time the panel opens.
+            FILINFO fileInfo;
+            if (f_stat(_items[index].path.GetString(), &fileInfo) != FR_OK)
+            {
+                LOG_ERROR("Game data: %s is not at %s any more\n",
+                    _items[index].fileName.GetString(), _items[index].path.GetString());
+                return;
+            }
             // navigates to the game's folder and preselects it, the same
             // mechanism used for lastUsedFilePath at startup
             _romBrowserController->NavigateToPath(_items[index].path.GetString());

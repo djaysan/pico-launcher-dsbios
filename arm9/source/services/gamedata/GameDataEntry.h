@@ -1,13 +1,17 @@
 #pragma once
 #include "core/String.h"
 
-/// @brief Per-game persisted data, keyed by file name (same convention as
-///        the /_pico/icons|covers/user folders).
+/// @brief Persisted data for ONE rom file, keyed by its file name (same
+///        convention as the /_pico/icons|covers/user folders). Marks and play
+///        statistics belong to the file, so two copies of a game are tracked
+///        separately and renaming a rom starts it over.
 struct GameDataEntry
 {
     String<char, 96> fileName;
     /// @brief Internal game code (NDS/GBA header), empty when the file has
-    ///        none. Lookups prefer it: it survives renames and moves.
+    ///        none. Stored as information only - it is never used to look an
+    ///        entry up, because the browser filter only ever sees file names and
+    ///        the two would then disagree (issue #7).
     String<char, 8> gameCode;
     u32 launchCount = 0;
     /// @brief Accumulated play time. A session spans from launching the game

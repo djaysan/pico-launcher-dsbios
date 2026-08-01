@@ -33,7 +33,7 @@ Each key in `games` is a file name (not a path). All keys inside an entry are op
 
 | Key | Type | Written when | Meaning |
 |---|---|---|---|
-| `gameCode` | string | non-empty | Internal game code from the NDS/GBA header. Only used as identity when it is printable ASCII and not the `####` toolchain placeholder (homebrew ROMs can hold garbage or the placeholder there — matching by those would make unrelated files share one entry). |
+| `gameCode` | string | non-empty | Internal game code from the NDS/GBA header, stored as information only — it is never used to identify an entry. Written when it is printable ASCII and not the `####` toolchain placeholder (homebrew ROMs often carry garbage or the placeholder there). |
 | `favorite` | bool | `true` | Marked as favorite. Absent means not a favorite — `false` is never written. |
 | `completed` | bool | `true` | Marked as completed (finished). Absent means not completed — `false` is never written. |
 | `launchCount` | number | > 0 | How many times the game was launched. |
@@ -54,16 +54,33 @@ While a play session is open, the root object holds:
 
 A session opens when a game is launched and closes at the next launcher boot. On boot, the elapsed time since `sessionStart` is added to the game's `playMinutes` if it is between 1 minute and 6 hours (longer means the console was powered off, not playing), and the session keys are removed.
 
-## Identity and self-healing
-- Lookups prefer `gameCode` and fall back to the entry key (file name). Both comparisons are case-insensitive.
-- When a game with a known code is used again under a different file name, its entry is re-keyed to the new name automatically — renaming a ROM does not lose its data.
-- An entry created before the game's code was known gets its `gameCode` added the first time the code is read.
-- Consequence: two ROMs with the same game code (for example a ROM hack and its base game, or copies in two folders) share one entry, and only the most recently used file name is stored.
+## Identity
+**An entry belongs to one ROM file, and the file name is its identity.** Favorites, completed marks
+and play statistics all follow the file. Comparison is case-insensitive.
+
+- Two copies of the same game keep separate entries, with separate favorites and separate play time.
+  A ROM hack and its base game never share data either, even though they share a game code.
+- `gameCode` is stored as information only. It is never used to look an entry up.
+- **Renaming a ROM starts it over**: the launcher sees a different file, so the old entry stays behind
+  (unused) and the renamed file begins with no favorite and no history.
+- Moving a ROM to another folder keeps its data, since the file name does not change, and the browser
+  filter keeps working immediately. Its stored `path` still points at the old location until the game is
+  launched or re-marked, and until then the favorites panel leaves it out (the panel needs a path that
+  resolves).
+
+Earlier versions resolved entries by `gameCode` first and re-keyed them to whatever file was used last.
+That made a game's heart appear on every copy while the browser filter — which only ever sees file
+names — could not match them, so filtering by favorites could come up empty. Worse, marking such a
+file toggled the flag on the *other* copy's entry instead of creating its own.
 
 ## Limits
-Values longer than these are truncated (lengths in characters):
+**File names longer than 96 bytes are not tracked at all.** Marking such a game does nothing and
+logs an error. They used to be truncated, which silently merged two files sharing a 96-character prefix
+into one entry and lost one of their favorites for good; refusing them is the honest failure.
 
-- entry key / `sessionGame` (file name): 96
+Other values longer than these are truncated (lengths in bytes, so accented characters count double):
+
+- entry key / `sessionGame` (file name): 96 (longer names are refused, see above)
 - `gameCode`: 8
 - `lastPlayed` / `sessionStart`: 20
 - `path`: 256
@@ -73,6 +90,15 @@ Years in `lastPlayed` are written as `20YY`; dates before the year 2000 do not p
 ## Rules for external tools
 - **Unknown keys are not preserved.** The launcher rewrites the whole file on every change and serializes only the keys listed above. Do not store tool-specific data in this file.
 - The file is pretty-printed JSON and is replaced in full on every save. Entry order is not meaningful and not preserved.
-- If the file cannot be parsed, the launcher starts with no data and overwrites the file on its next save — a tool that writes invalid JSON effectively wipes everything.
-- Keep `gameCode` values unique: entries sharing a code are merged when the file is loaded, with the later entry's values overwriting the earlier one's.
+- **Saves are atomic.** The launcher writes `/_pico/gamedata.tmp` and renames it over `gamedata.json`
+  only once it is complete, so losing power mid-save leaves the previous file intact. On the next boot a
+  leftover `gamedata.tmp` is deleted when `gamedata.json` is present, but **promoted to
+  `gamedata.json` when it is missing** — a crash between the two steps would otherwise leave the temp
+  file as the only surviving copy. Do not delete it blindly.
+- **If the file cannot be parsed, the launcher refuses to save for the rest of that session** and logs
+  the error, rather than overwriting your data with the little it managed to read. Fix or remove the
+  file to start saving again. (Earlier versions overwrote it, so a tool writing invalid JSON wiped
+  everything.)
+- Duplicate `gameCode` values are fine — entries are never merged by code. Entry keys (file names)
+  must be unique, which JSON already guarantees.
 - The launcher parses the file with a bounded memory budget of 96 KB (about three times the file size); files larger than roughly 32 KB may fail to load. In practice this fits several hundred entries.

@@ -22,20 +22,20 @@ These controls are available in the rom browser, on top of the standard ones (se
 The top-left of the top screen shows how many games the current folder contains (e.g. `12 games`). Only games are counted, not folders or other files.
 
 ## Favorites
-Press X on a highlighted game to mark it as a favorite (press again to unmark). Favorites show a small heart on the top screen when highlighted. Games are remembered by their internal game code where possible, so renaming or moving a ROM keeps its favorite mark.
+Press X on a highlighted game to mark it as a favorite (press again to unmark). Favorites show a small heart on the top screen when highlighted. The mark belongs to that ROM **file**: moving it to another folder keeps it, renaming it starts over, and a second copy of the same game is marked separately.
 
 ## Favorites panel
 Hold the heart button in the app bar for about half a second to open a panel listing your favorites from **every** folder, alphabetically, each with its total play time — handy when the collection is spread across many folders. Tap an entry (or highlight it and press A) to jump to that game's folder with the game preselected; press B to close.
 
-Favorites marked before this feature existed appear in the panel after you toggle them again or launch them once (the panel needs the game's stored path).
+Favorites marked before this feature existed appear in the panel after you toggle them again or launch them once (the panel needs the game's stored path). An entry whose file has moved or is gone still appears, but selecting it does nothing instead of jumping to the card root; re-mark or launch the game from its new location to update it.
 
 ## Completed games
-Hold X on a highlighted game for about half a second to mark it as completed (hold again to unmark). Completed games show a small green check on the top screen when highlighted, next to the heart. Like favorites, the mark follows the game's internal game code across renames.
+Hold X on a highlighted game for about half a second to mark it as completed (hold again to unmark). Completed games show a small green check on the top screen when highlighted, next to the heart. Like favorites, the mark belongs to the ROM file.
 
 ## Favorites and completed filters
 The heart button in the app bar filters the browser down to favorites; the heart is drawn red while the filter is active. The check button next to it filters down to completed games and turns green while active. With both filters on, only games that are favorite *and* completed remain. The filters apply per folder — folders themselves always stay visible.
 
-Limitations: the filters match by file name, and duplicate copies of the same game share a single entry (see [GameData.md](GameData.md)). A second copy of a favorite in another folder shows the heart, but only the most recently used copy passes the filter. ROM hacks share the game code of their base game, so they also share its favorite mark and statistics.
+Marks, play counts and play time all belong to the ROM file, so what the top screen shows and what the filter matches are always the same thing (see [GameData.md](GameData.md)). Two copies of a game are marked separately, and a ROM hack no longer inherits its base game's mark. Renaming a ROM outside the launcher starts it over, and games whose file name is longer than 96 bytes cannot be marked at all (accented characters count double).
 
 ## Random game
 Press SELECT to launch a random game from the folder you are currently viewing. With the favorites filter active, it picks a random favorite.
@@ -80,6 +80,6 @@ Custom themes can provide night variants of their backgrounds: place `topbg_nigh
 `tools/make_night_bg.py` can generate night variants from a theme's existing backgrounds — see [Tools.md](Tools.md).
 
 ## Data storage
-Favorites, completed marks, launch counts, play time and the recents list are all stored in a single file, `/_pico/gamedata.json`, written by the launcher itself. Games are identified by their internal game code with the file name as fallback, so renaming a ROM does not lose its data. Deleting the file resets all favorites and statistics.
+Favorites, completed marks, launch counts, play time and the recents list are all stored in a single file, `/_pico/gamedata.json`, written by the launcher itself. Each entry belongs to one ROM file and is identified by its file name, so two copies of a game are tracked separately and renaming a ROM starts it over. Saves are atomic, and if the file ever fails to parse the launcher refuses to overwrite it. Deleting the file resets all favorites and statistics.
 
 The file format is documented in [GameData.md](GameData.md) for anyone writing external tools.
