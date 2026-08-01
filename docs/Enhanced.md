@@ -22,7 +22,7 @@ These controls are available in the rom browser, on top of the standard ones (se
 The top-left of the top screen shows how many games the current folder contains (e.g. `12 games`). Only games are counted, not folders or other files.
 
 ## Favorites
-Press X on a highlighted game to mark it as a favorite (press again to unmark). Favorites show a small heart on the top screen when highlighted. The mark belongs to that ROM **file**: moving it to another folder keeps it, renaming it starts over, and a second copy of the same game is marked separately.
+Press X on a highlighted game to mark it as a favorite (press again to unmark). Favorites show a small heart on the top screen when highlighted. The mark belongs to that ROM **file**: moving it to another folder keeps it, renaming it starts over, and a second copy of the same game is marked separately — see [Data storage](#data-storage) if a mark is not where you expect it.
 
 ## Favorites panel
 Hold the heart button in the app bar for about half a second to open a panel listing your favorites from **every** folder, alphabetically, each with its total play time — handy when the collection is spread across many folders. Tap an entry (or highlight it and press A) to jump to that game's folder with the game preselected; press B to close.
@@ -82,6 +82,19 @@ Custom themes can provide night variants of their backgrounds: place `topbg_nigh
 `tools/make_night_bg.py` can generate night variants from a theme's existing backgrounds — see [Tools.md](Tools.md).
 
 ## Data storage
-Favorites, completed marks, launch counts, play time and the recents list are all stored in a single file, `/_pico/gamedata.json`, written by the launcher itself. Each entry belongs to one ROM file and is identified by its file name, so two copies of a game are tracked separately and renaming a ROM starts it over. Saves are atomic, and if the file ever fails to parse the launcher refuses to overwrite it. Deleting the file resets all favorites and statistics.
+Favorites, completed marks, launch counts, play time and the recents list are all stored in a single file, `/_pico/gamedata.json`, written by the launcher itself. Saves are atomic, and if the file ever fails to parse the launcher refuses to overwrite it rather than starting over. Deleting the file resets all favorites and statistics.
+
+**Each entry belongs to one ROM file, identified by its file name.** That single rule explains most surprises:
+
+| What you see | Why |
+|---|---|
+| A game lost its heart and its play time | The file was renamed outside the launcher. The launcher sees a different file, so it starts over. The old entry stays in the file, unused |
+| The same game in two folders has separate favorites | They are two files. Marking one does not mark the other |
+| A ROM hack does not inherit the base game's marks | Same reason — different files, even though they share an internal game code |
+| Two copies with the *same* file name share one entry | The name is the identity, so same name means same entry. Deleting one through the launcher removes the entry both were using |
+| Pressing X does nothing on some game | Its file name is longer than 96 bytes, which cannot be stored (accented characters count as two). The launcher logs it |
+| A favorite is missing from the favorites panel | The panel only lists entries with a stored path. Marks made before that existed get one the next time you launch or re-mark the game. Entries whose file has moved or is gone are still listed, but selecting them does nothing |
+
+Earlier versions identified a game by its internal game code instead, which made a ROM hack and its base game share one entry, and could leave the browser filter and the top screen disagreeing about the same game.
 
 The file format is documented in [GameData.md](GameData.md) for anyone writing external tools.

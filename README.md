@@ -95,7 +95,7 @@ The [`tools/`](tools/) directory contains desktop helper scripts for preparing S
 
 ## Data formats
 
-The fork stores per-game data (favorites, launch counts, play time) in `/_pico/gamedata.json`. The format is documented in [Game data](docs/GameData.md).
+The fork stores per-game data (favorites, launch counts, play time) in `/_pico/gamedata.json`. Each entry belongs to one ROM file — if a favorite or a play count is not where you expect it, [Data storage](docs/Enhanced.md#data-storage) explains why in a table. The file format itself is documented in [Game data](docs/GameData.md) for tool authors.
 
 ## Contributing
 
