@@ -2,6 +2,24 @@
 
 ## Enhanced fork
 
+### [enhanced-v1.5.0]
+
+#### Fixed
+- Favorites and completed marks now belong to the ROM file, so the browser filter and the top screen always agree. Filtering by favorites could come up empty, and on a renamed ROM pressing X unmarked the game instead of marking it
+- ROM hacks no longer inherit their base game's favorite, completed mark and play time, and two copies of a game are tracked separately (fixes #1 as well as #7)
+- Empty folders no longer reappear while browsing: probing a folder with a filter active read every ROM in it and ran out of its budget, so every folder checked afterwards was shown again
+- Saving game data is now atomic and refuses to overwrite a file it could not read, so an interrupted save or a corrupt file can no longer wipe every favorite and play stat
+- The focus highlight on app bar buttons is genuinely visible now; the v1.3.0 attempt was too subtle to see on hardware
+- Going up a folder lands on the folder you just left instead of jumping back to the first entry
+- The delete button is dimmed while a folder is highlighted, since only games can be deleted
+- Favorites and recents entries whose file is gone no longer drop you at the card root when activated
+- ROM file names longer than 96 bytes are refused instead of being silently truncated, which used to merge two files with a long shared prefix into one entry
+
+### [enhanced-v1.4.0]
+
+#### Fixed
+- The game count and launch info on the top screen are readable on any theme: they sit on launcher-drawn chips instead of relying on the theme's artwork for contrast, and custom themes can position or hide them (issue #4)
+
 ### [enhanced-v1.3.0]
 
 #### Added
