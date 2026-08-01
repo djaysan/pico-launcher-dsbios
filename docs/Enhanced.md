@@ -67,7 +67,9 @@ Until you pick a level the launcher leaves the firmware's brightness untouched. 
 ## Hide empty folders
 The display settings sheet has a folder toggle that hides folders containing no visible games, homebrew or media of their own (banner, BGM and other system files don't count as content). It's off by default; toggling it refreshes the folder you're currently viewing immediately.
 
-Only a folder's direct contents are checked, not what's inside its subfolders: a folder that contains only other empty folders still counts as non-empty and stays visible.
+Subfolders are followed a few levels deep, so a folder containing only other empty folders is hidden too. Launcher support folders (names starting with `_`) are always kept.
+
+Emptiness means "has nothing in it", independently of the favorites and completed filters. With one of those filters on you can therefore still see a folder that turns out to hold nothing matching it — checking the filters here meant reading every ROM in every folder on each navigation, which was slow enough that folders started reappearing.
 
 ## Per-folder music
 Place a `bgm.bcstm` file directly inside a folder to give it its own background music. It uses the same DSP-ADPCM `.bcstm` format as theme music (see [Themes](Themes.md)) and supports looping. The music starts when you enter the folder and switches back to the theme music when you leave. Each folder is checked independently — subfolders do not inherit their parent's music.

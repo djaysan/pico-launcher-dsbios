@@ -1,9 +1,9 @@
 #include "common.h"
 #include <vector>
+#include <string.h>
 #include "fat/Directory.h"
 #include "FileInfo.h"
 #include "FileType/Folder/FolderFileType.h"
-#include "services/gamedata/IGameDataService.h"
 #include "SdFolderFactory.h"
 
 std::unique_ptr<SdFolder> SdFolderFactory::CreateFromPath(const char* path) const
@@ -56,13 +56,15 @@ namespace
     constexpr int kMaxDepth = 4;
 }
 
-bool SdFolderFactory::HasVisibleContent(const char* path, bool favoritesOnly, bool completedOnly,
-    const IGameDataService* gameDataService, int& readBudget) const
+bool SdFolderFactory::HasVisibleContent(const char* path, int& readBudget) const
 {
     // an earlier sibling folder in this navigation may have already spent
     // the whole shared budget - fail open without opening anything
     if (readBudget <= 0)
+    {
+        LOG_ERROR("Empty-folder probe out of budget at '%s', showing it\n", path);
         return true;
+    }
 
     const char* baseName = strrchr(path, '/');
     baseName = baseName ? baseName + 1 : path;
@@ -78,13 +80,13 @@ bool SdFolderFactory::HasVisibleContent(const char* path, bool favoritesOnly, bo
     // shared by reference across the whole recursion below, so every level
     // reuses this one instance instead of stacking its own - see kMaxDepth
     FILINFO fileInfo;
+    int folderBudget = kPerFolderReadBudget;
     return HasVisibleContentBounded(pathBuffer, sizeof(pathBuffer), pathLength,
-        favoritesOnly, completedOnly, gameDataService, fileInfo, readBudget, kMaxDepth);
+        fileInfo, readBudget, folderBudget, kMaxDepth);
 }
 
 bool SdFolderFactory::HasVisibleContentBounded(char* pathBuffer, size_t pathBufferSize, size_t pathLength,
-    bool favoritesOnly, bool completedOnly, const IGameDataService* gameDataService,
-    FILINFO& fileInfo, int& readBudget, int depth) const
+    FILINFO& fileInfo, int& readBudget, int& folderBudget, int depth) const
 {
     // guard before opening too, not just inside the loop below - otherwise an
     // already-exhausted budget still pays for one real Directory::Open() per
@@ -98,11 +100,19 @@ bool SdFolderFactory::HasVisibleContentBounded(char* pathBuffer, size_t pathBuff
 
     while (true)
     {
-        if (readBudget-- <= 0)
-            return true; // fail open: budget exhausted, assume non-empty
+        // the shared budget bounds the whole navigation; the per-folder one stops
+        // a single pathological folder from starving every sibling after it
+        if (readBudget-- <= 0 || folderBudget-- <= 0)
+        {
+            LOG_ERROR("Empty-folder probe out of budget in '%s', showing it\n", pathBuffer);
+            return true; // fail open: assume non-empty
+        }
 
         if (directory.Read(&fileInfo) != FR_OK)
+        {
+            LOG_ERROR("Empty-folder probe couldn't read '%s', showing it\n", pathBuffer);
             return true;
+        }
 
         if (fileInfo.fname[0] == 0)
             return false;
@@ -116,17 +126,6 @@ bool SdFolderFactory::HasVisibleContentBounded(char* pathBuffer, size_t pathBuff
             : _fileTypeProvider->GetFileType(fileInfo.fname)->GetClassification();
         if (classification == FileTypeClassification::Unknown)
             continue;
-
-        // mirrors SdFolder::FilterAndSort exactly: favorites/completed only
-        // ever exclude non-folder entries
-        if (!isFolder && gameDataService && (favoritesOnly || completedOnly))
-        {
-            const auto* entry = gameDataService->GetEntry(fileInfo.fname);
-            if (favoritesOnly && (!entry || !entry->favorite))
-                continue;
-            if (completedOnly && (!entry || !entry->completed))
-                continue;
-        }
 
         // a subfolder only counts if IT has visible content too, so a chain
         // of nested empty folders is fully hidden, not just its outer layer.
@@ -153,8 +152,7 @@ bool SdFolderFactory::HasVisibleContentBounded(char* pathBuffer, size_t pathBuff
             pathBuffer[pathLength] = '/';
             memcpy(pathBuffer + pathLength + 1, fileInfo.fname, nameLength + 1);
             bool childHasContent = HasVisibleContentBounded(pathBuffer, pathBufferSize,
-                pathLength + 1 + nameLength, favoritesOnly, completedOnly, gameDataService,
-                fileInfo, readBudget, depth - 1);
+                pathLength + 1 + nameLength, fileInfo, readBudget, folderBudget, depth - 1);
             pathBuffer[pathLength] = 0;
             if (!childHasContent)
                 continue;

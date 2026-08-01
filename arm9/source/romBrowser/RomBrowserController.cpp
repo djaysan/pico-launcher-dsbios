@@ -457,12 +457,27 @@ void RomBrowserController::HandleNavigateTrigger()
                 FileInfo* file = files[i];
                 if (file->GetFileType()->GetClassification() == FileTypeClassification::Folder)
                 {
-                    // mirror the favorites/completed filters exactly like
-                    // FilterAndSort does, or a folder full of non-matching
-                    // games would wrongly count as non-empty
+                    // Entries the listing always drops are not worth a single
+                    // read: FilterAndSort discards dot-named and hidden ones
+                    // unconditionally. On a card that has been in a Mac this is
+                    // most of the cost (.Spotlight-V100 alone is a deep tree of
+                    // files nobody ever sees) and it changes between sessions,
+                    // which made the whole feature look random.
+                    if (file->GetFileName()[0] == '.' || file->IsHidden())
+                        continue;
+                    // Deliberately NOT filter-aware. Emptiness means "has no
+                    // content at all", the same answer whatever the favorites or
+                    // completed filter is doing, for two reasons: a filter-aware
+                    // probe cannot stop at the first game it finds, so a folder
+                    // of 200 unmarked roms cost 200 reads and ate the whole
+                    // budget (every folder after it then failed open and came
+                    // back into view); and the cached answer would go stale the
+                    // moment a filter is toggled, since that only rebuilds the
+                    // view model - it does not reload the folder. The trade is
+                    // that with a filter on, a listed folder may turn out to
+                    // hold nothing that matches.
                     file->SetEmptyFolder(!sdFolderFactory.HasVisibleContent(
-                        file->GetFileName(), _favoritesFilter, _completedFilter, _gameDataService,
-                        readBudget));
+                        file->GetFileName(), readBudget));
                 }
             }
         }

@@ -16,10 +16,12 @@ public:
     /// @brief When true only folders and completed games are kept.
     ///        Requires gameDataService.
     bool completedOnly = false;
-    /// @brief When true, folders with no visible entries of their own are
-    ///        dropped. Relies on FileInfo::IsEmptyFolder() already being
-    ///        populated (see SdFolderFactory::HasVisibleContent) - this flag
-    ///        itself does no SD access.
+    /// @brief When true, folders with no visible content are dropped. Relies
+    ///        on FileInfo::IsEmptyFolder() already being populated (see
+    ///        SdFolderFactory::HasVisibleContent) - this flag itself does no SD
+    ///        access. That answer ignores favoritesOnly/completedOnly on
+    ///        purpose, so it stays valid when a filter is toggled without
+    ///        reloading the folder.
     bool hideEmptyFolders = false;
     const IGameDataService* gameDataService = nullptr;
 
