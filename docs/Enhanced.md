@@ -6,6 +6,7 @@ These controls are available in the rom browser, on top of the standard ones (se
 
 | Input | Action |
 |---|---|
+| L / R | Jump to the previous or next initial (see [Jumping by initial](#jumping-by-initial)) |
 | X (short press) | Toggle favorite for the highlighted game |
 | X (hold ~half a second) | Toggle completed for the highlighted game |
 | SELECT | Launch a random game from the current folder |
@@ -17,6 +18,25 @@ These controls are available in the rom browser, on top of the standard ones (se
 | Folder button (display settings) | Toggle hiding empty folders |
 | Clock button (app bar) | Open the recently played panel |
 | Trash button (app bar) | Delete the highlighted game (X confirms, A or B cancels) |
+
+## Jumping by initial
+In a folder with hundreds of games, paging through the list a screen at a time takes a
+while. L and R now jump to where the previous or next initial starts, so crossing a large
+folder takes a few presses instead of dozens.
+
+R moves to the first game filed under the next initial. L moves to the top of the current
+initial, and again to the top of the one before it, so getting back to the start of a long
+run of games sharing an initial does not need a detour.
+
+As you jump, the game count on the top screen briefly shows the initial you landed on, then
+settles back to the count, so it stays easy to see where you are without watching the list.
+
+Folders and games are stepped through separately, since folders are always listed first.
+Games are grouped by the first character of their file name, which is what the list is
+sorted by, so the jump always follows the order on screen. This means a game whose file
+name starts with an article or a number is filed under that, not under its title.
+
+L and R keep paging in the cheats, favorites and recently played lists.
 
 ## Game count
 The top-left of the top screen shows how many games the current folder contains (e.g. `12 games`). Only games are counted, not folders or other files.

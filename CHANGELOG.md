@@ -2,6 +2,15 @@
 
 ## Enhanced fork
 
+### [Unreleased]
+
+#### Added
+- L and R jump to the previous or next initial in the game list, so a folder with hundreds
+  of games can be crossed in a few presses. They keep paging in the cheats, favorites and
+  recently played lists.
+- While jumping by initial, the top-screen game count briefly shows the letter you land on,
+  so it stays easy to see where you are, then settles back to the count.
+
 ### [enhanced-v1.5.0]
 
 #### Fixed
