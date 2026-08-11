@@ -54,6 +54,14 @@ public:
 
     void Update() override;
 
+    void NotifyBigStepJump() override { _bigStepJumpPending = true; }
+    bool ConsumeBigStepJump() override
+    {
+        bool pending = _bigStepJumpPending;
+        _bigStepJumpPending = false;
+        return pending;
+    }
+
     const SdFolder& GetSdFolder() const override { return *_sdFolder; }
 
     const RomBrowserStateMachine& GetStateMachine() const override { return _stateMachine; }
@@ -92,6 +100,7 @@ private:
     TaskQueueBase* _bgTaskQueue;
     bool _favoritesFilter = false;
     bool _completedFilter = false;
+    bool _bigStepJumpPending = false;
     TCHAR _triggerGameCode[8];
 
     void FormatNowDateTime(TCHAR* buffer, u32 bufferLength) const;

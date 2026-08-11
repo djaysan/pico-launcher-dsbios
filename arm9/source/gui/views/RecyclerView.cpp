@@ -319,6 +319,20 @@ bool RecyclerView::HandleInput(const InputProvider& inputProvider, FocusManager&
     {
         int direction = inputProvider.Triggered(InputKey::L) ? 1 : -1;
         int selected = _selectedItem->itemIdx;
+
+        // Let the adapter offer something better than a page, such as the next
+        // initial in a folder sorted by name.
+        int bigStep = _adapter->GetBigStepTarget(selected, -direction);
+        if (bigStep >= 0)
+        {
+            _adapter->OnBigStepJump();
+            EnsureVisible(bigStep, false);
+            focusManager.Unfocus();
+            SetSelectedItem(bigStep);
+            focusManager.Focus(_selectedItem->view);
+            return true;
+        }
+
         if (_mode == Mode::HorizontalList || _mode == Mode::HorizontalGrid)
         {
             int visibleColumns = _width / (_itemWidth + _xSpacing);

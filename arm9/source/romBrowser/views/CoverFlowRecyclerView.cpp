@@ -116,7 +116,15 @@ bool CoverFlowRecyclerView::HandleInput(const InputProvider& inputProvider, Focu
     if (_itemCount != 0 && inputProvider.Triggered(InputKey::L | InputKey::R))
     {
         int direction = inputProvider.Triggered(InputKey::L) ? -1 : 1;
-        int selected = std::clamp(_selectedItem->itemIdx + 10 * direction, 0, (int)_itemCount - 1);
+
+        // Let the adapter offer something better than a fixed step, such as the
+        // next initial in a folder sorted by name.
+        int bigStep = _adapter->GetBigStepTarget(_selectedItem->itemIdx, direction);
+        if (bigStep >= 0)
+            _adapter->OnBigStepJump();
+        int selected = bigStep >= 0
+            ? bigStep
+            : std::clamp(_selectedItem->itemIdx + 10 * direction, 0, (int)_itemCount - 1);
 
         focusManager.Unfocus();
         SetSelectedItem(selected, false);

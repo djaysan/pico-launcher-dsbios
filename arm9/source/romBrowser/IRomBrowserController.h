@@ -59,6 +59,13 @@ public:
 
     virtual void Update() = 0;
 
+    /// @brief Records that the last list move was a big jump by L/R, so the
+    ///        letter chip shows for those and not for a d-pad step.
+    virtual void NotifyBigStepJump() = 0;
+    /// @brief Returns whether a big jump has happened since the last call, and
+    ///        clears the flag.
+    virtual bool ConsumeBigStepJump() = 0;
+
     virtual const SdFolder& GetSdFolder() const = 0;
 
     virtual const RomBrowserStateMachine& GetStateMachine() const = 0;

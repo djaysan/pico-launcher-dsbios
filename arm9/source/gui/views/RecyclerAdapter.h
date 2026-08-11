@@ -33,4 +33,17 @@ public:
     /// @param view The view to release.
     /// @param index The item index that was bound to the view.
     virtual void ReleaseView(SharedPtr<View> view, int index) const = 0;
+
+    /// @brief Returns the item to jump to when the user asks for a big step
+    ///        through the list, or -1 when this adapter has nothing smarter to
+    ///        offer than paging.
+    /// @param fromIdx The item the selection is on.
+    /// @param direction 1 to move towards the end of the list, -1 towards the start.
+    /// @return The item to select, or -1 to fall back to paging.
+    virtual int GetBigStepTarget(int fromIdx, int direction) const { return -1; }
+
+    /// @brief Called by the view right after it performs a GetBigStepTarget jump,
+    ///        so an adapter can react to it. Const like GetBigStepTarget: it does
+    ///        not change the adapter, only forwards elsewhere. Default does nothing.
+    virtual void OnBigStepJump() const { }
 };

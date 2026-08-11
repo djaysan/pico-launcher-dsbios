@@ -15,6 +15,16 @@ public:
     u32 GetItemCount() const override;
     void BindView(SharedPtr<View> view, int index) const override;
 
+    /// @brief Jumps to where the next initial starts, so a long folder can be
+    ///        crossed in a few presses instead of a page at a time. Only when
+    ///        the list is sorted by name, since that is the order the jump
+    ///        follows. Otherwise paging is left in place.
+    int GetBigStepTarget(int fromIdx, int direction) const override;
+
+    /// @brief Tells the controller an L/R jump happened, so the top screen shows
+    ///        the letter chip for it (and not for plain d-pad moves).
+    void OnBigStepJump() const override;
+
     void SetIconFrameCounter(u32 iconFrameCounter)
     {
         _iconFrameCounter = iconFrameCounter;
