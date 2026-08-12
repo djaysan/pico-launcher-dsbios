@@ -101,6 +101,10 @@ private:
     VramState _vramStateBeforeMakeBottomScreenView;
     VramState _vramStateAfterMakeBottomScreenView;
     bool _changeDisplayMode = false;
+    // Set when a navigation started from a panel (recents/favorites/delete), so
+    // the folder that loads takes focus onto its game instead of leaving it on
+    // the app-bar button that opened the panel. Consumed at FolderLoadDone.
+    bool _focusListAfterFolderLoad = false;
 
     ChipView::VramToken _chipViewVram;
     IconButton2DView::VramToken _iconButtonViewVram;

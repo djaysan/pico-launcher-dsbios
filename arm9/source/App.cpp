@@ -438,7 +438,15 @@ void App::HandleNavigateTrigger()
     auto previousState = _romBrowserController.GetStateMachine().GetPreviousState();
     if (previousState == RomBrowserState::Recents || previousState == RomBrowserState::Favorites ||
         previousState == RomBrowserState::DeleteConfirm)
+    {
         _dialogPresenter.CloseDialog();
+        // Focus stays on the app-bar button while the sheet closes (the presenter
+        // restores it) - never null, so input is never lost. Once the folder is
+        // loaded we move focus to the game instead, so the next A launches it and
+        // does not reopen the panel. Nulling focus here (across the close+load
+        // window) is what froze the launcher, so we flag it for later instead.
+        _focusListAfterFolderLoad = true;
+    }
     if (!_romBrowserBottomScreenView->IsAppBarFocused(_focusManager))
         _focusManager.Unfocus();
 }
@@ -458,8 +466,13 @@ void App::HandleFolderLoadDoneTrigger()
         &_theme->GetMaterialColorScheme());
     _romBrowserTopScreenView->InitVram(_subVramContext);
     _romBrowserBottomScreenView->RomBrowserViewModelInvalidated(_mainVramContext);
-    if (!_focusManager.GetCurrentFocus())
+    // Normally focus is null here (the navigated-from list row was destroyed) and
+    // this puts it on the newly loaded folder. After a panel navigation focus is
+    // still on the app-bar button, so the flag makes us move it onto the game too
+    // - a straight app-bar -> list handoff, never through null.
+    if (_focusListAfterFolderLoad || !_focusManager.GetCurrentFocus())
         _romBrowserBottomScreenView->Focus(_focusManager);
+    _focusListAfterFolderLoad = false;
 }
 
 void App::HandleChangeDisplayModeTrigger(RomBrowserState newState)
