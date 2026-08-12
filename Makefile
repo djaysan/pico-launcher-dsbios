@@ -13,6 +13,10 @@ export LIBTWL           ?= $(shell pwd)/libs/libtwl
 NAME		:= 	LAUNCHER
 
 GAME_TITLE	:= Pico Launcher
+# Second banner line, so this fork identifies itself: visible under the title in
+# the DS boot banner, and read by companion tools (PicoDex) to detect the fork
+# from _picoboot.nds without the launcher ever having to run.
+GAME_SUBTITLE	:= Enhanced
 GAME_AUTHOR	:= LNH team
 GAME_ICON	:= icon.bmp
 
