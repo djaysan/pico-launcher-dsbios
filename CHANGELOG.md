@@ -10,6 +10,10 @@
   recently played lists.
 - While jumping by initial, the top-screen game count briefly shows the letter you land on,
   so it stays easy to see where you are, then settles back to the count.
+- The cheat list wraps around at both ends, so the bottom of a long cheat database is one
+  press up from the top. A sub-category's back button still comes first.
+- The cheats sheet shows `X: all off` next to the cheat description while cheats are
+  listed. Disabling every cheat with X was already supported, it was just invisible.
 
 ### [enhanced-v1.5.0]
 

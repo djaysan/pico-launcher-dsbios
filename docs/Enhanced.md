@@ -79,6 +79,18 @@ The trash button in the app bar deletes the highlighted game. A confirmation she
 
 Deleting a game also deletes its save file (same name with a `.sav` extension, next to the ROM) and removes the game's entry from `gamedata.json`. Note that saves are matched by name without the extension: if `Game.gba` and `Game.nds` sit in the same folder, they share `Game.sav`, and deleting either game deletes it.
 
+## Cheats
+The cheat list wraps around at both ends: pressing up on the first entry jumps to the last
+one, and pressing down on the last entry comes back to the first, so the bottom of a long
+cheat database is one press away from the top. Inside a sub-category, pressing up from the
+first entry still moves to the back button, as before; the wrap happens where there is
+nothing above the list to move to.
+
+The sheet also shows a small `X: all off` hint next to the cheat description while cheats
+are listed. Pressing X disables every cheat at once — the launcher supported this already,
+but nothing on screen said so. Handy to make sure no code is active before going online or
+starting a speedrun.
+
 ## Screen brightness (DS Lite)
 The display settings sheet (gear button in the app bar) has a **Light** row with the DS Lite's four backlight levels. Tapping a level applies it immediately, and the choice is remembered and restored on every boot — it also stays active inside the game you launch, until the console powers off.
 
