@@ -68,6 +68,19 @@ public:
         _yPadding = y;
     }
 
+    /// @brief Makes up from the first item wrap to the last and down from the
+    ///        last wrap to the first (vertical modes). The wrap only happens
+    ///        when no surrounding view claims the focus first, so a view above
+    ///        the list (like the cheats sheet's up button) keeps winning.
+    ///        Off by default: the rom browser keeps its edge behavior.
+    ///        Meant for single-column lists: a vertical grid would wrap from
+    ///        every edge-row cell straight to the absolute first or last item,
+    ///        dropping the column.
+    void SetWrapAround(bool wrapAround)
+    {
+        _wrapAround = wrapAround;
+    }
+
     void SetItemSpacing(int x, int y)
     {
         _xSpacing = x;
@@ -106,6 +119,7 @@ private:
     Point _penDownPosition = Point(0, 0);
     bool _hasScrollStarted = false;
     int _penDownScrollOffset = 0;
+    bool _wrapAround = false;
 
     RecyclerView(int x, int y, int width, int height, Mode mode);
 

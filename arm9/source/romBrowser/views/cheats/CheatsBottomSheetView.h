@@ -38,6 +38,7 @@ private:
     SharedPtr<Label2DView> _titleLabel;
     SharedPtr<Label2DView> _secondaryLabel;
     SharedPtr<Label2DView> _descriptionLabel;
+    SharedPtr<Label2DView> _promptsLabel;
     SharedPtr<RecyclerView> _cheatListRecycler;
     SharedPtr<CheatsAdapter> _cheatsAdapter;
     SharedPtr<IconButton2DView> _upButton;

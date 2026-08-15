@@ -279,7 +279,20 @@ SharedPtr<View> RecyclerView::MoveFocusVertical(const SharedPtr<View>& currentFo
         (_selectedItem->itemIdx < _columns && direction == FocusMoveDirection::Up) ||
         (_selectedItem->itemIdx / _columns >= (int)(_itemCount - 1) / _columns && direction == FocusMoveDirection::Down))
     {
-        return View::MoveFocus(currentFocus, direction, this);
+        auto outside = View::MoveFocus(currentFocus, direction, this);
+        if (outside || !_wrapAround || _itemCount < 2 ||
+            (direction != FocusMoveDirection::Up && direction != FocusMoveDirection::Down))
+        {
+            return outside;
+        }
+
+        // Nothing around the list wanted the focus: wrap to the other end.
+        // EnsureVisible without animation, like the initial jump does - the
+        // other end is usually a whole screen away.
+        int idx = direction == FocusMoveDirection::Up ? (int)_itemCount - 1 : 0;
+        EnsureVisible(idx, false);
+        SetSelectedItem(idx);
+        return _selectedItem != nullptr ? _selectedItem->view : SharedFromThis();
     }
 
     if (direction == FocusMoveDirection::Up)
