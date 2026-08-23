@@ -21,7 +21,6 @@
 #include "themes/IFontRepository.h"
 #include "../Theme/IRomBrowserViewFactory.h"
 #include "smallHeartIconFilled.h"
-#include "checkIcon.h"
 #include "stripChipBg.h"
 #include "RomBrowserTopScreenView.h"
 
@@ -71,7 +70,7 @@ RomBrowserTopScreenView::RomBrowserTopScreenView(
     _gameDataService = _viewModel->GetRomBrowserController()->GetGameDataService();
     _materialColorScheme = materialColorScheme;
     // launch info for the selected game ("3x 16/07"), packed right to left in
-    // the top strip with the completed check + favorite heart; Draw() positions
+    // the top strip with the favorite heart; Draw() positions
     // it so the cluster's chip is sized to its content
     _launchInfoLabel = Label2DView::CreateShared(96, 16, 15, fontRepository->GetFont(FontType::Medium10));
     _launchInfoLabel->SetHorizontalAlignment(Alignment::End);
@@ -91,9 +90,6 @@ void RomBrowserTopScreenView::InitVram(const VramContext& vramContext)
         _heartVramOffset = objVramManager->Alloc(smallHeartIconFilledTilesLen);
         dma_ntrCopy32(3, smallHeartIconFilledTiles,
             objVramManager->GetVramAddress(_heartVramOffset), smallHeartIconFilledTilesLen);
-        _checkVramOffset = objVramManager->Alloc(checkIconTilesLen);
-        dma_ntrCopy32(3, checkIconTiles,
-            objVramManager->GetVramAddress(_checkVramOffset), checkIconTilesLen);
         _chipVramOffset = objVramManager->Alloc(stripChipBgTilesLen);
         dma_ntrCopy32(3, stripChipBgTiles,
             objVramManager->GetVramAddress(_chipVramOffset), stripChipBgTilesLen);
@@ -164,7 +160,6 @@ void RomBrowserTopScreenView::Update()
     if (selectedItem != _lastGameDataItem || gameDataVersion != _lastGameDataVersion)
     {
         _selectedFavorite = false;
-        _selectedCompleted = false;
         char info[24];
         info[0] = 0;
         if (selectedItem >= 0)
@@ -179,7 +174,6 @@ void RomBrowserTopScreenView::Update()
             if (entry)
             {
                 _selectedFavorite = entry->favorite;
-                _selectedCompleted = entry->completed;
                 if (entry->launchCount > 0)
                 {
                     if (entry->playMinutes >= 60)
@@ -267,21 +261,17 @@ void RomBrowserTopScreenView::Draw(GraphicsContext& graphicsContext)
     // widths follow the currently displayed string (updated at vblank), so the
     // chips always match the text on screen
     u32 gameCountWidth = _gameCountLabel ? _gameCountLabel->GetStringWidth() : 0;
-    // a hidden launch info suppresses its text, heart and check together
+    // a hidden launch info suppresses its text and heart together
     bool showFavorite = _selectedFavorite && !_launchInfoHidden;
-    bool showCompleted = _selectedCompleted && !_launchInfoHidden;
     u32 launchInfoWidth = _launchInfoHidden ? 0 : _launchInfoLabel->GetStringWidth();
     int clusterWidth = 0;
     if (launchInfoWidth > 0)
         clusterWidth += launchInfoWidth + 2;
-    if (showCompleted)
-        clusterWidth += 16 + 2;
     if (showFavorite)
         clusterWidth += 16 + 2;
     if (clusterWidth > 0)
         clusterWidth -= 2;
     int heartX = 0;
-    int checkX = 0;
     if (gameCountWidth > 0 || clusterWidth > 0)
     {
         // both chips share one palette row (SimplePaletteManager doesn't dedup)
@@ -301,11 +291,6 @@ void RomBrowserTopScreenView::Draw(GraphicsContext& graphicsContext)
                 _launchInfoLabel->SetPosition(x + (int)launchInfoWidth - 96, _launchInfoPosition.y + 2);
                 x += launchInfoWidth + 2;
             }
-            if (showCompleted)
-            {
-                checkX = x;
-                x += 16 + 2;
-            }
             if (showFavorite)
                 heartX = x;
             DrawChip(graphicsContext, chipX, _launchInfoPosition.y, chipWidth, chipPaletteRow);
@@ -320,16 +305,6 @@ void RomBrowserTopScreenView::Draw(GraphicsContext& graphicsContext)
         u32 paletteRow = graphicsContext.GetPaletteManager().AllocRow(
             GradientPalette(_materialColorScheme->surfaceBright, _materialColorScheme->primary), 1, 17);
         OamBuilder::OamWithSize<16, 16>(heartX, _launchInfoPosition.y + 1, _heartVramOffset >> 7)
-            .WithPalette16(paletteRow)
-            .WithPriority(graphicsContext.GetPriority())
-            .Build(oams[0]);
-    }
-    if (showCompleted)
-    {
-        auto oams = graphicsContext.GetOamManager().AllocOams(1);
-        u32 paletteRow = graphicsContext.GetPaletteManager().AllocRow(
-            GradientPalette(_materialColorScheme->surfaceBright, Rgb<8, 8, 8>(67, 160, 71)), 1, 17);
-        OamBuilder::OamWithSize<16, 16>(checkX, _launchInfoPosition.y + 1, _checkVramOffset >> 7)
             .WithPalette16(paletteRow)
             .WithPriority(graphicsContext.GetPriority())
             .Build(oams[0]);

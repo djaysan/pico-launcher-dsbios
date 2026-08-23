@@ -18,7 +18,7 @@ public:
 
     void ToggleFavorite() override { }
 
-    void ToggleCompleted() override { }
+    void RequestDelete() override { }
 
     void SetIndex(int index) override
     {

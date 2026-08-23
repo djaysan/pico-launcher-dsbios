@@ -5,7 +5,6 @@
 #include "backIcon.h"
 #include "settingsIcon.h"
 #include "heartIcon.h"
-#include "checkIcon.h"
 #include "recentIcon.h"
 #include "guidesIcon.h"
 #include "hGridIcon.h"
@@ -22,7 +21,7 @@ RomBrowserAppBarView::RomBrowserAppBarView(
     const IRomBrowserViewFactory* romBrowserViewFactory)
     : _viewModel(viewModel)
 {
-    _appBarView = displayMode.CreateAppBarView(romBrowserViewFactory, 1, 5);
+    _appBarView = displayMode.CreateAppBarView(romBrowserViewFactory, 1, 4);
     AddChildTail(_appBarView.GetPointer());
 
     _appBarView->SetButtonAction(APP_BAR_BUTTON_BACK, [] (IconButtonView* sender, void* arg)
@@ -42,10 +41,6 @@ RomBrowserAppBarView::RomBrowserAppBarView(
     {
         ((RomBrowserAppBarViewModel*)arg)->ShowFavorites();
     });
-    _appBarView->SetButtonAction(APP_BAR_BUTTON_COMPLETED, [] (IconButtonView* sender, void* arg)
-    {
-        ((RomBrowserAppBarViewModel*)arg)->ToggleCompletedFilter();
-    }, _viewModel);
     _appBarView->SetButtonAction(APP_BAR_BUTTON_GUIDES, [] (IconButtonView* sender, void* arg)
     {
         ((RomBrowserAppBarViewModel*)arg)->LaunchGuideForSelected();
@@ -63,11 +58,6 @@ void RomBrowserAppBarView::Update()
         _appBarView->SetButtonIconColorOverride(APP_BAR_BUTTON_FAVORITE, Rgb<8, 8, 8>(214, 40, 57));
     else
         _appBarView->ClearButtonIconColorOverride(APP_BAR_BUTTON_FAVORITE);
-    // and the check whether the completed filter is
-    if (_viewModel->IsCompletedFilterEnabled())
-        _appBarView->SetButtonIconColorOverride(APP_BAR_BUTTON_COMPLETED, Rgb<8, 8, 8>(67, 160, 71));
-    else
-        _appBarView->ClearButtonIconColorOverride(APP_BAR_BUTTON_COMPLETED);
     // guides is never dimmed: with no guide for the highlighted entry the
     // reader opens its own list, so the button always leads somewhere
     ViewContainer::Update();
@@ -91,10 +81,6 @@ void RomBrowserAppBarView::InitVram(const VramContext& vramContext)
         u32 heartIconVramOffset = objVramManager->Alloc(heartIconTilesLen);
         dma_ntrCopy32(3, heartIconTiles, objVramManager->GetVramAddress(heartIconVramOffset), heartIconTilesLen);
         _appBarView->SetButtonIcon(APP_BAR_BUTTON_FAVORITE, heartIconVramOffset);
-
-        u32 checkIconVramOffset = objVramManager->Alloc(checkIconTilesLen);
-        dma_ntrCopy32(3, checkIconTiles, objVramManager->GetVramAddress(checkIconVramOffset), checkIconTilesLen);
-        _appBarView->SetButtonIcon(APP_BAR_BUTTON_COMPLETED, checkIconVramOffset);
 
         u32 recentIconVramOffset = objVramManager->Alloc(recentIconTilesLen);
         dma_ntrCopy32(3, recentIconTiles, objVramManager->GetVramAddress(recentIconVramOffset), recentIconTilesLen);

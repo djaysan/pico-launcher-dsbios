@@ -39,7 +39,7 @@ bool RomBrowserItemInputHandler::HandleInput(const InputProvider& inputProvider,
     {
         if (++_xHeldFrames >= LONG_PRESS_FRAMES)
         {
-            _viewModel->ToggleCompleted();
+            _viewModel->RequestDelete();
             _xHeldFrames = 0; // consumed; the release must not toggle favorite
             return true;
         }

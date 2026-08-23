@@ -34,16 +34,21 @@ void RomBrowserItemViewModel::ToggleFavorite()
     }
 }
 
-void RomBrowserItemViewModel::ToggleCompleted()
+void RomBrowserItemViewModel::RequestDelete()
 {
-    if (_index >= 0)
+    if (_index < 0)
+        return;
+    // The long press happens on THIS item, but RequestDeleteSelected works on
+    // the browser's selection. They track each other, so this guard should
+    // never fire - but deleting a rom is the one action in here that cannot be
+    // undone, so it refuses rather than assumes. CanDeleteSelected then keeps
+    // folders and support files out of it.
+    const auto& viewModel = _romBrowserController->GetRomBrowserViewModel();
+    if (!viewModel.IsValid() || viewModel->GetSelectedItem() != _index)
+        return;
+    if (_romBrowserController->CanDeleteSelected())
     {
-        auto& fileInfoManager = _romBrowserController->GetRomBrowserViewModel()->GetFileInfoManager();
-        const auto& item = fileInfoManager.GetItem(_index);
-        if (item.GetFileType()->GetClassification() == FileTypeClassification::Game)
-        {
-            _romBrowserController->ToggleCompleted(item, GetGameCode(fileInfoManager));
-        }
+        _romBrowserController->RequestDeleteSelected();
     }
 }
 

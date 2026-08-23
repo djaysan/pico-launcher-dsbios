@@ -13,7 +13,7 @@ public:
     void Activate() override;
     void ShowGameInfo() override;
     void ToggleFavorite() override;
-    void ToggleCompleted() override;
+    void RequestDelete() override;
 
     void SetIndex(int index) override
     {
