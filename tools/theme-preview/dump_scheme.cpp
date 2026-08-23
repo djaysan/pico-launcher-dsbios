@@ -36,8 +36,9 @@ int main(int argc, char** argv)
     // surface tones are hardcoded to 22/24, which is a mid dark grey. Pushing
     // them near 0 is the code change a true black theme would need.
     bool black = std::strcmp(argv[2], "black") == 0;
-    double tSurface = black ? 4.0 : 24.0;
-    double tCard = black ? 8.0 : 22.0;
+    double tBackground = black ? 0.0 : 10.0;
+    double tSurface = black ? 16.0 : 24.0;
+    double tCard = black ? 12.0 : 22.0;
     const char* name = argc > 3 ? argv[3] : "";
 
     Argb seed = ArgbFromRgb((rgb >> 16) & 0xFF, (rgb >> 8) & 0xFF, rgb & 0xFF);
@@ -51,7 +52,7 @@ int main(int argc, char** argv)
         {"surfaceContainerHighest", core.neutral().get(dark ? tCard : 90.0)},
         {"onSurface",               s.on_surface},
         {"onSurfaceVariant",        s.on_surface_variant},
-        {"inverseOnSurface",        dark ? core.neutral().get(10.0) : s.inverse_on_surface},
+        {"inverseOnSurface",        dark ? core.neutral().get(tBackground) : s.inverse_on_surface},
         {"outline",                 s.outline},
         {"primary",                 s.primary},
         {"onPrimary",               s.on_primary},

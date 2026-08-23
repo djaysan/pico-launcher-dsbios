@@ -46,35 +46,33 @@ def font(sz):
     return ImageFont.load_default()
 
 def mock(c):
-    """One bottom screen: side app bar, a grid of game cells, a selected cell."""
-    im = Image.new('RGB', (W, H), rgb(c['surfaceBright']))
+    """One bottom screen, using the colours the launcher actually uses.
+
+    The background is inverseOnSurface (GFX_PLTT_BG_MAIN[0]) - NOT surfaceBright,
+    which is only the icon cell face. MaterialIconGridItemView blends the cell
+    between inverseOnSurface as back and surfaceBright as front, swapping the
+    front for mainIconBg while focused.
+    """
+    bg = rgb(c['inverseOnSurface'])
+    im = Image.new('RGB', (W, H), bg)
     d = ImageDraw.Draw(im)
     f = font(9)
 
-    # left app bar with its buttons
-    d.rectangle([0, 0, 33, H - 1], fill=rgb(c['surfaceContainerHighest']))
+    # app bar down the left, icons only - it sits straight on the background
     for i, y in enumerate((13, 44, 79, 111, 144, 175)):
-        sel = i == 4                       # the guides button, tinted like a filter
+        sel = i == 4
         col = rgb(c['primary']) if sel else rgb(c['onSurfaceVariant'])
         d.ellipse([11, y - 6, 23, y + 6], outline=col, width=2)
 
-    # game grid
+    # icon cells
     for r in range(3):
         for col in range(4):
-            x = 44 + col * 51
-            y = 16 + r * 58
-            selected = (r == 0 and col == 1)
-            box = [x, y, x + 42, y + 42]
-            d.rounded_rectangle(box, 6, fill=rgb(c['mainIconBg']),
-                                outline=rgb(c['primary']) if selected else None,
-                                width=2 if selected else 0)
-            d.rounded_rectangle([x + 9, y + 9, x + 33, y + 33], 3,
-                                fill=rgb(c['surfaceBright']))
+            x, y = 44 + col * 51, 16 + r * 58
+            focused = (r == 0 and col == 1)
+            face = rgb(c['mainIconBg']) if focused else rgb(c['surfaceBright'])
+            d.rounded_rectangle([x, y, x + 42, y + 42], 6, fill=face)
+            d.rounded_rectangle([x + 9, y + 9, x + 33, y + 33], 3, fill=bg)
             d.text((x, y + 45), 'Game', font=f, fill=rgb(c['onSurfaceVariant']))
-
-    # count pill, the launcher's top-left chip
-    d.rounded_rectangle([44, 172, 104, 186], 7, fill=rgb(c['secondaryContainer']))
-    d.text((52, 175), '478 games', font=f, fill=rgb(c['onSecondaryContainer']))
     return im
 
 def main():
