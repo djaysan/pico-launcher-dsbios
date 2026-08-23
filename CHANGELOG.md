@@ -15,6 +15,11 @@
 - The cheats sheet shows `X: all off` next to the cheat description while cheats are
   listed. Disabling every cheat with X was already supported, it was just invisible.
 
+#### Fixed
+- The brightness setting now works on a DSi. The backlight is owned by the MCU there, not
+  by the SPI power-management chip, so every write went to a register that accepted it and
+  read back changed without driving the panel. Tested on a DSi and a DS Lite.
+
 ### [enhanced-v1.5.0]
 
 #### Fixed

@@ -91,10 +91,12 @@ are listed. Pressing X disables every cheat at once — the launcher supported t
 but nothing on screen said so. Handy to make sure no code is active before going online or
 starting a speedrun.
 
-## Screen brightness (DS Lite)
-The display settings sheet (gear button in the app bar) has a **Light** row with the DS Lite's four backlight levels. Tapping a level applies it immediately, and the choice is remembered and restored on every boot — it also stays active inside the game you launch, until the console powers off.
+## Screen brightness (DS Lite and DSi)
+The display settings sheet (gear button in the app bar) has a **Light** row with four backlight levels. Tapping a level applies it immediately, and the choice is remembered and restored on every boot — it also stays active inside the game you launch, until the console powers off.
 
-Until you pick a level the launcher leaves the firmware's brightness untouched. The original DS has no brightness levels (the setting does nothing there), and the DSi manages brightness through its own system menu.
+Until you pick a level the launcher leaves the firmware's brightness untouched. The original DS has no brightness levels, so the setting does nothing there.
+
+On a DSi the backlight is driven through the MCU rather than the DS Lite's power-management chip, so the levels map onto the top four of the MCU's five.
 
 ## Hide empty folders
 The display settings sheet has a folder toggle that hides folders containing no visible games, homebrew or media of their own (banner, BGM and other system files don't count as content). It's off by default; toggling it refreshes the folder you're currently viewing immediately.

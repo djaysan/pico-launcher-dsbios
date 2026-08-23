@@ -68,6 +68,17 @@ static void applyPendingBacklight()
     u8 pending = mem_swapByte(0, &sPendingBacklight);
     if (pending != 0)
     {
+        // On a DSi the backlight belongs to the MCU over i2c, NOT the spi pmic.
+        // The pmic register still accepts a write there and reads it back
+        // changed, it just does not drive the panel - which is why this looked
+        // like it worked and did nothing. The MCU has five levels (0..4); map
+        // our four onto 1..4 so the lowest is not the near-off one.
+        if (isDSiMode())
+        {
+            mcu_writeReg(MCU_REG_BACKLIGHT, pending);
+            return;
+        }
+
         u8 backlight = pmic_readRegister(PMIC_REG_BACKLIGHT);
         // DS Lite only, where bits 4-7 of the backlight register read back
         // as 4. On the original DS registers 4..7F are MIRRORS of 0..3, so
