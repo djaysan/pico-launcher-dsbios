@@ -20,8 +20,7 @@ Everything upstream Pico Launcher offers (display modes, [covers](docs/Covers.md
 - **Game count** of the current folder on the top screen
 - **Random game launch** with the SELECT button
 - **Favorites** — press X on a game; a heart shows on the top screen
-- **Completed games** — hold X on a game; a green check shows on the top screen
-- **Favorites and completed filters** — heart and check buttons in the app bar, tinted while active
+- **Favorites filter** — heart button in the app bar, tinted while active
 - **Recently played panel** — clock button in the app bar; tapping an entry jumps to the game
 - **Statistics panel** — press START for totals and most-played games
 - **Per-game launch tracking** — launch count and last-played date on the top screen
@@ -30,7 +29,7 @@ Everything upstream Pico Launcher offers (display modes, [covers](docs/Covers.md
 - **Brightness control** — set the backlight level from display settings (DS Lite and DSi)
 - **Per-folder background music** — drop a `bgm.bcstm` inside a folder
 - **Time-of-day theme backgrounds** — optional night variants shown from 20:00 to 6:59
-- **Per-file game data** — favorites, completed marks and play stats belong to the ROM file, so two copies of a game never share them
+- **Per-file game data** — favorites and play stats belong to the ROM file, so two copies of a game never share them
 
 See [Enhanced features](docs/Enhanced.md) for details on each feature.
 

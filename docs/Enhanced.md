@@ -8,16 +8,15 @@ These controls are available in the rom browser, on top of the standard ones (se
 |---|---|
 | L / R | Jump to the previous or next initial (see [Jumping by initial](#jumping-by-initial)) |
 | X (short press) | Toggle favorite for the highlighted game |
-| X (hold ~half a second) | Toggle completed for the highlighted game |
+| X (hold ~half a second) | Ask to delete the highlighted game (X confirms, A or B cancels) |
 | SELECT | Launch a random game from the current folder |
 | START | Open the statistics panel |
 | Heart button (app bar) | Toggle the favorites filter (the heart turns red while active) |
 | Heart button (hold ~half a second) | Open the favorites panel: all favorites from every folder |
-| Check button (app bar) | Toggle the completed filter (the check turns green while active) |
 | Light row (display settings) | Set the DS Lite backlight level (4 levels) |
 | Folder button (display settings) | Toggle hiding empty folders |
 | Clock button (app bar) | Open the recently played panel |
-| Trash button (app bar) | Delete the highlighted game (X confirms, A or B cancels) |
+| Guides button (app bar) | Open the guide for the highlighted game |
 
 ## Jumping by initial
 In a folder with hundreds of games, paging through the list a screen at a time takes a
@@ -49,11 +48,8 @@ Hold the heart button in the app bar for about half a second to open a panel lis
 
 Favorites marked before this feature existed appear in the panel after you toggle them again or launch them once (the panel needs the game's stored path). An entry whose file has moved or is gone still appears, but selecting it does nothing instead of jumping to the card root; re-mark or launch the game from its new location to update it.
 
-## Completed games
-Hold X on a highlighted game for about half a second to mark it as completed (hold again to unmark). Completed games show a small green check on the top screen when highlighted, next to the heart. Like favorites, the mark belongs to the ROM file.
-
-## Favorites and completed filters
-The heart button in the app bar filters the browser down to favorites; the heart is drawn red while the filter is active. The check button next to it filters down to completed games and turns green while active. With both filters on, only games that are favorite *and* completed remain. The filters apply per folder — folders themselves always stay visible.
+## Favorites filter
+The heart button in the app bar filters the browser down to favorites; the heart is drawn red while the filter is active. The filter applies per folder — folders themselves always stay visible.
 
 Marks, play counts and play time all belong to the ROM file, so what the top screen shows and what the filter matches are always the same thing (see [GameData.md](GameData.md)). Two copies of a game are marked separately, and a ROM hack no longer inherits its base game's mark. Renaming a ROM outside the launcher starts it over, and games whose file name is longer than 96 bytes cannot be marked at all (accented characters count double).
 
@@ -72,10 +68,10 @@ Play time is approximate: a session starts when a game is launched and ends the 
 The clock button in the app bar opens a list of up to 20 recently played games, most recent first, each with the date and time it was last played. Tap an entry (or highlight it and press A) to jump to that game's folder with the game preselected. Press B to close the panel.
 
 ## Statistics
-Press START to open a summary panel: how many games you have played, favorited and completed, total launches and total play time, your top 3 most launched games, and the last game you played. Press B or START to close it.
+Press START to open a summary panel: how many games you have played and favorited, total launches and total play time, your top 3 most launched games, and the last game you played. Press B or START to close it.
 
 ## Deleting games
-The trash button in the app bar deletes the highlighted game. A confirmation sheet opens first: press **X** to confirm, or A or B to cancel. Only games can be deleted, not folders.
+Holding **X** on a highlighted game deletes it. A confirmation sheet opens first: press **X** to confirm, or A or B to cancel. Only games can be deleted, not folders.
 
 Deleting a game also deletes its save file (same name with a `.sav` extension, next to the ROM) and removes the game's entry from `gamedata.json`. Note that saves are matched by name without the extension: if `Game.gba` and `Game.nds` sit in the same folder, they share `Game.sav`, and deleting either game deletes it.
 
@@ -103,7 +99,7 @@ The display settings sheet has a folder toggle that hides folders containing no 
 
 Subfolders are followed a few levels deep, so a folder containing only other empty folders is hidden too. Launcher support folders (names starting with `_`) are always kept.
 
-Emptiness means "has nothing in it", independently of the favorites and completed filters. With one of those filters on you can therefore still see a folder that turns out to hold nothing matching it — checking the filters here meant reading every ROM in every folder on each navigation, which was slow enough that folders started reappearing.
+Emptiness means "has nothing in it", independently of the favorites filter. With the filter on you can therefore still see a folder that turns out to hold nothing matching it — checking the filter here meant reading every ROM in every folder on each navigation, which was slow enough that folders started reappearing.
 
 ## Per-folder music
 Place a `bgm.bcstm` file directly inside a folder to give it its own background music. It uses the same DSP-ADPCM `.bcstm` format as theme music (see [Themes](Themes.md)) and supports looping. The music starts when you enter the folder and switches back to the theme music when you leave. Each folder is checked independently — subfolders do not inherit their parent's music.
@@ -116,7 +112,7 @@ Custom themes can provide night variants of their backgrounds: place `topbg_nigh
 `tools/make_night_bg.py` can generate night variants from a theme's existing backgrounds — see [Tools.md](Tools.md).
 
 ## Data storage
-Favorites, completed marks, launch counts, play time and the recents list are all stored in a single file, `/_pico/gamedata.json`, written by the launcher itself. Saves are atomic, and if the file ever fails to parse the launcher refuses to overwrite it rather than starting over. Deleting the file resets all favorites and statistics.
+Favorites, launch counts, play time and the recents list are all stored in a single file, `/_pico/gamedata.json`, written by the launcher itself. Saves are atomic, and if the file ever fails to parse the launcher refuses to overwrite it rather than starting over. Deleting the file resets all favorites and statistics.
 
 **Each entry belongs to one ROM file, identified by its file name.** That single rule explains most surprises:
 

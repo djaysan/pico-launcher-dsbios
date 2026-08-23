@@ -15,6 +15,13 @@
 - The cheats sheet shows `X: all off` next to the cheat description while cheats are
   listed. Disabling every cheat with X was already supported, it was just invisible.
 
+#### Removed
+- The completed mark is gone: the check on the top screen, the app bar's completed
+  filter, and the long press that set it. That press now asks to delete the
+  highlighted game instead, using the same confirmation the trash button used.
+  `gamedata.json` keeps its `completed` field so the format is unchanged for
+  tools that read it; nothing writes it any more.
+
 #### Fixed
 - The brightness setting now works on a DSi. The backlight is owned by the MCU there, not
   by the SPI power-management chip, so every write went to a register that accepted it and

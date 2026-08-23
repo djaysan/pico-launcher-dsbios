@@ -18,7 +18,10 @@ struct GameDataEntry
     ///        until the next launcher boot, so it is an approximation.
     u32 playMinutes = 0;
     bool favorite = false;
-    /// @brief Marked as finished by the user (long-press X in the browser).
+    /// @brief Marked as finished. No longer written or shown: the check mark
+    ///        was dropped and long-press X now asks to delete instead. Kept so
+    ///        the json format is unchanged for tools that read it (PicoDex),
+    ///        and so existing marks are ignored rather than erased.
     bool completed = false;
     /// @brief "YYYY-MM-DD HH:MM", empty when never launched. Lexicographic
     ///        order equals chronological order.
