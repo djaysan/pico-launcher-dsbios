@@ -12,14 +12,16 @@ std::unique_ptr<ITheme> ThemeFactory::CreateFromThemeInfo(const ThemeInfo* theme
             return std::make_unique<MaterialTheme>(
                 themeInfo->GetFolderName(),
                 themeInfo->GetPrimaryColor(),
-                themeInfo->GetIsDarkTheme());
+                themeInfo->GetIsDarkTheme(),
+                themeInfo->GetIsPureBlack());
         }
         case ThemeType::Custom:
         {
             return std::make_unique<CustomTheme>(
                 themeInfo->GetFolderName(),
                 themeInfo->GetPrimaryColor(),
-                themeInfo->GetIsDarkTheme());
+                themeInfo->GetIsDarkTheme(),
+                themeInfo->GetIsPureBlack());
         }
         default:
         {

@@ -14,13 +14,13 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 DUMP = os.environ.get('DUMP_SCHEME', os.path.join(HERE, 'dump_scheme'))
 
 # name, seed, mode
+# The four themes shipped in theme-remaster/out/. Keep in sync with their
+# theme.json files - seed is primaryColor, mode is darkTheme/pureBlack.
 CANDIDATES = [
-    ('black + guides yellow',  'FFC93C', 'black'),
-    ('rml-dark (current)',     'FFC93C', 'dark'),
-    ('retromod cleaner',       '17130E', 'dark'),
-    ('rml-light (current)',    'FFC93C', 'light'),
-    ('real light - cool grey', '5A6672', 'light'),
-    ('real light - neutral',   '6E7580', 'light'),
+    ('RML Black',    'FFC93C', 'black'),
+    ('RML Dark',     'FFC93C', 'dark'),
+    ('RML Light',    'FFC93C', 'light'),
+    ('RML Daylight', '5A6672', 'light'),
 ]
 
 W, H, SCALE = 256, 192, 2
@@ -83,7 +83,7 @@ def main():
         cards.append((name, seed, mode, mock(scheme(seed, mode, name)['colors'])))
 
     cw, ch = W * SCALE, H * SCALE + 30
-    cols = 3
+    cols = 2
     rows = (len(cards) + cols - 1) // cols
     sheet = Image.new('RGB', (PAD * 2 + cols * cw + (cols - 1) * GAP,
                               PAD * 2 + rows * ch + (rows - 1) * GAP), (28, 28, 30))

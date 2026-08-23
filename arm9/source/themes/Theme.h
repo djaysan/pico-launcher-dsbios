@@ -11,7 +11,8 @@ public:
     const MaterialColorScheme& GetMaterialColorScheme() const override { return _materialColorScheme; }
 
 protected:
-    Theme(const TCHAR* folderName, const Rgb<8, 8, 8>& primaryColor, bool darkMode);
+    Theme(const TCHAR* folderName, const Rgb<8, 8, 8>& primaryColor, bool darkMode,
+        bool pureBlack = false);
 
     MaterialColorScheme _materialColorScheme;
 

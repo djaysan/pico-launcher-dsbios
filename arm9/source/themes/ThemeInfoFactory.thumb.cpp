@@ -20,6 +20,7 @@
 #define KEY_COLOR_G         "g"
 #define KEY_COLOR_B         "b"
 #define KEY_DARK_THEME      "darkTheme"
+#define KEY_PURE_BLACK      "pureBlack"
 
 static bool tryParseThemeType(const char* themeTypeString, ThemeType& themeType)
 {
@@ -64,7 +65,8 @@ static std::unique_ptr<ThemeInfo> fromJson(const TCHAR* folderName, const JsonDo
         json[KEY_DESCRIPTION] | "",
         json[KEY_AUTHOR] | "",
         parseColor(json[KEY_PRIMARY_COLOR], Rgb<8, 8, 8>(0xFF, 0xFF, 0xFF)),
-        json[KEY_DARK_THEME] | false
+        json[KEY_DARK_THEME] | false,
+        json[KEY_PURE_BLACK] | false
     );
 }
 

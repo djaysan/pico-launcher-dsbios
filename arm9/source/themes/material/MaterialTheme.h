@@ -15,8 +15,9 @@ class MaterialTheme : public Theme
     MaterialRomBrowserViewFactory _romBrowserViewFactory;
     DefaultFontRepository _fontRepository;
 public:
-    MaterialTheme(const TCHAR* folderName, const Rgb<8, 8, 8>& primaryColor, bool darkMode)
-        : Theme(folderName, primaryColor, darkMode)
+    MaterialTheme(const TCHAR* folderName, const Rgb<8, 8, 8>& primaryColor, bool darkMode,
+        bool pureBlack = false)
+        : Theme(folderName, primaryColor, darkMode, pureBlack)
         , _themeFileIconFactory(&_materialColorScheme, &_fontRepository)
         , _romBrowserViewFactory(&_materialColorScheme, &_fontRepository) { }
 

@@ -19,8 +19,13 @@ static Rgb888 MaterialArgbToRgb888(material_color_utilities::Argb color)
 }
 
 void MaterialColorSchemeFactory::FromPrimaryColor(const Rgb<8, 8, 8>& primaryColor,
-    bool darkTheme, MaterialColorScheme& materialColorScheme)
+    bool darkTheme, MaterialColorScheme& materialColorScheme, bool pureBlack)
 {
+    // Dark surface tones. The defaults are what material specifies; pureBlack
+    // trades that for an actually black background, which the seed colour
+    // cannot reach because the neutral palette's chroma is clamped either way.
+    const double surfaceTone = pureBlack ? 4.0 : 24.0;
+    const double containerTone = pureBlack ? 8.0 : 22.0;
     auto materialPrimaryColor = Rgb888ToMaterialArgb(primaryColor);
     auto corePalette = material_color_utilities::CorePalette::Of(materialPrimaryColor);
     auto scheme = darkTheme
@@ -38,10 +43,10 @@ void MaterialColorSchemeFactory::FromPrimaryColor(const Rgb<8, 8, 8>& primaryCol
     materialColorScheme.inverseOnSurface = MaterialArgbToRgb888(darkTheme ? corePalette.neutral().get(10.0) : scheme.inverse_on_surface);
     materialColorScheme.onSurface = MaterialArgbToRgb888(scheme.on_surface);
     materialColorScheme.onSurfaceVariant = MaterialArgbToRgb888(scheme.on_surface_variant);
-    materialColorScheme.surfaceBright = MaterialArgbToRgb888(corePalette.neutral().get(darkTheme ? 24.0 : 98.0));
+    materialColorScheme.surfaceBright = MaterialArgbToRgb888(corePalette.neutral().get(darkTheme ? surfaceTone : 98.0));
     materialColorScheme.mainIconBg = MaterialArgbToRgb888(corePalette.secondary().get(darkTheme ? 42.0 : 78.0));
     // materialColorScheme.surfaceContainerLow = MaterialArgbToRgb888(corePalette.neutral().get(darkTheme ? 10.0 : 96.0));
-    materialColorScheme.surfaceContainerHighest = MaterialArgbToRgb888(corePalette.neutral().get(darkTheme ? 22.0 : 90.0));
+    materialColorScheme.surfaceContainerHighest = MaterialArgbToRgb888(corePalette.neutral().get(darkTheme ? containerTone : 90.0));
     materialColorScheme.scrim = MaterialArgbToRgb888(corePalette.neutral().get(darkTheme ? 70.0 : 30.0));
     materialColorScheme.outline = MaterialArgbToRgb888(scheme.outline);
 }
