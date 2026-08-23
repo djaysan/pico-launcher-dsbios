@@ -1,5 +1,12 @@
 # Pico Launcher Enhanced
 
+> [!NOTE]
+> This is an **altered version** of [Pico Launcher Enhanced](https://github.com/rasalopa/pico-launcher-enhanced)
+> by rasalopa, modified by RetroModLab. It is not the original software and the
+> original authors are not responsible for it. Changes: the app bar's delete button
+> is a guides button that opens the guide reader on the highlighted game's guide,
+> and the brightness setting drives the MCU on a DSi so it works there too.
+
 A feature fork of [Pico Launcher](https://github.com/LNH-team/pico-launcher) by the LNH team, adding library features inspired by modern consoles — favorites, play stats, recently played, and more — while staying fully compatible with stock SD cards: it is a drop-in `_picoboot.nds` replacement, and all upstream features remain intact.
 
 ![Horizontal display mode with custom theme](docs/images/HorizontalCustom.png)
@@ -19,7 +26,7 @@ Everything upstream Pico Launcher offers (display modes, [covers](docs/Covers.md
 - **Statistics panel** — press START for totals and most-played games
 - **Per-game launch tracking** — launch count and last-played date on the top screen
 - **Approximate play time** — per game and in the statistics panel
-- **Game deletion** — trash button with confirmation; removes the ROM and its save
+- **Guides** — book button in the app bar; opens the guide reader on the highlighted game's guide (replaces upstream's game deletion)
 - **Brightness control** — set the backlight level from display settings (DS Lite and DSi)
 - **Per-folder background music** — drop a `bgm.bcstm` inside a folder
 - **Time-of-day theme backgrounds** — optional night variants shown from 20:00 to 6:59
