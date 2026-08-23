@@ -7,7 +7,7 @@
 #include "heartIcon.h"
 #include "checkIcon.h"
 #include "recentIcon.h"
-#include "trashIcon.h"
+#include "guidesIcon.h"
 #include "hGridIcon.h"
 #include "vGridIcon.h"
 #include "bannerListIcon.h"
@@ -46,9 +46,9 @@ RomBrowserAppBarView::RomBrowserAppBarView(
     {
         ((RomBrowserAppBarViewModel*)arg)->ToggleCompletedFilter();
     }, _viewModel);
-    _appBarView->SetButtonAction(APP_BAR_BUTTON_DELETE, [] (IconButtonView* sender, void* arg)
+    _appBarView->SetButtonAction(APP_BAR_BUTTON_GUIDES, [] (IconButtonView* sender, void* arg)
     {
-        ((RomBrowserAppBarViewModel*)arg)->RequestDeleteSelected();
+        ((RomBrowserAppBarViewModel*)arg)->LaunchGuideForSelected();
     }, _viewModel);
     _appBarView->SetButtonAction(APP_BAR_BUTTON_DISPLAY_SETTINGS, [] (IconButtonView* sender, void* arg)
     {
@@ -68,9 +68,8 @@ void RomBrowserAppBarView::Update()
         _appBarView->SetButtonIconColorOverride(APP_BAR_BUTTON_COMPLETED, Rgb<8, 8, 8>(67, 160, 71));
     else
         _appBarView->ClearButtonIconColorOverride(APP_BAR_BUTTON_COMPLETED);
-    // folders and support files cannot be deleted, so the button is dimmed
-    // instead of looking available and doing nothing
-    _appBarView->SetButtonEnabled(APP_BAR_BUTTON_DELETE, _viewModel->CanDeleteSelected());
+    // guides is never dimmed: with no guide for the highlighted entry the
+    // reader opens its own list, so the button always leads somewhere
     ViewContainer::Update();
 }
 
@@ -101,9 +100,9 @@ void RomBrowserAppBarView::InitVram(const VramContext& vramContext)
         dma_ntrCopy32(3, recentIconTiles, objVramManager->GetVramAddress(recentIconVramOffset), recentIconTilesLen);
         _appBarView->SetButtonIcon(APP_BAR_BUTTON_RECENT, recentIconVramOffset);
 
-        u32 trashIconVramOffset = objVramManager->Alloc(trashIconTilesLen);
-        dma_ntrCopy32(3, trashIconTiles, objVramManager->GetVramAddress(trashIconVramOffset), trashIconTilesLen);
-        _appBarView->SetButtonIcon(APP_BAR_BUTTON_DELETE, trashIconVramOffset);
+        u32 guidesIconVramOffset = objVramManager->Alloc(guidesIconTilesLen);
+        dma_ntrCopy32(3, guidesIconTiles, objVramManager->GetVramAddress(guidesIconVramOffset), guidesIconTilesLen);
+        _appBarView->SetButtonIcon(APP_BAR_BUTTON_GUIDES, guidesIconVramOffset);
 
         // u32 settingsIconVramOffset = objVramManager->Alloc(settingsIconTilesLen);
         // dma_ntrCopy32(3, settingsIconTiles, objVramManager->GetVramAddress(settingsIconVramOffset), settingsIconTilesLen);

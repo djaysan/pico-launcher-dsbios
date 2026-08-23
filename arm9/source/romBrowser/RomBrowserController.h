@@ -28,6 +28,7 @@ public:
     void NavigateToPath(const TCHAR* name) override;
     void LaunchFile(const FileInfo& fileInfo, const char* gameCode) override;
     void LaunchRandomGame() override;
+    void LaunchGuideForSelected() override;
     void ToggleFavorite(const FileInfo& fileInfo, const char* gameCode) override;
     void ToggleCompleted(const FileInfo& fileInfo, const char* gameCode) override;
     void ToggleFavoritesFilter() override;
@@ -107,6 +108,10 @@ private:
     /// @brief Full path of a file in the current folder (f_getcwd + name).
     void BuildCurrentFolderFilePath(const char* fileName,
         TCHAR* buffer, u32 bufferLength) const;
+    TCHAR _guidePath[256];
+    /// @brief Set when the pending Launch trigger is a guide, not a game.
+    bool _launchGuide = false;
+
     TCHAR _deleteRomFileName[256];
     TCHAR _deleteSaveFileName[256];
     bool _deleteHasSave = false;
@@ -140,5 +145,7 @@ private:
     void HandleGotoSettingsScreenTrigger();
     void UpdateLastUsedFilepath();
     void SetPicoLoaderParams() const;
+    void SetGuideReaderParams() const;
+    const char* GetGuideReaderPath() const;
     void LoadCheats() const;
 };

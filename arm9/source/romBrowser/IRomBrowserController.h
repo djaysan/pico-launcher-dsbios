@@ -25,6 +25,9 @@ public:
     ///        it loaded, or nullptr; it keys the game's persisted data.
     virtual void LaunchFile(const FileInfo& fileInfo, const char* gameCode = nullptr) = 0;
     virtual void LaunchRandomGame() = 0;
+    /// @brief Launches the guide reader on the guide for the highlighted entry,
+    ///        or on its own guide list when that entry has none.
+    virtual void LaunchGuideForSelected() = 0;
     virtual void ToggleFavorite(const FileInfo& fileInfo, const char* gameCode = nullptr) = 0;
     virtual void ToggleCompleted(const FileInfo& fileInfo, const char* gameCode = nullptr) = 0;
     virtual void ToggleFavoritesFilter() = 0;

@@ -38,11 +38,6 @@ public:
         return _romBrowserController->IsCompletedFilterEnabled();
     }
 
-    bool CanDeleteSelected() const
-    {
-        return _romBrowserController->CanDeleteSelected();
-    }
-
     void ShowRecents()
     {
         _romBrowserController->ShowRecents();
@@ -53,9 +48,9 @@ public:
         _romBrowserController->ShowFavorites();
     }
 
-    void RequestDeleteSelected()
+    void LaunchGuideForSelected()
     {
-        _romBrowserController->RequestDeleteSelected();
+        _romBrowserController->LaunchGuideForSelected();
     }
 
     constexpr RomBrowserLayout GetRomBrowserLayout() const
