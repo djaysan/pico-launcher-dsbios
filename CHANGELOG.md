@@ -5,6 +5,19 @@
 ### [Unreleased]
 
 #### Added
+- Guides are read **inside the launcher**. The guides button used to reboot the console into
+  a separate reader and reboot back out of it; it now opens the guide with the browser
+  untouched underneath, instantly back when you press B. The guides list sits on the bottom
+  screen and the guide itself on the top one, so picking stays a touch-screen job and the
+  d-pad drives the reading.
+- UP and DOWN scroll the guide one line at a time; L and R move a screenful. The header above
+  the list shows which guide is open and how far into it you are.
+- The list is every `.txt` in `/guides`, so a guide can be read for any game, not just the one
+  you were on. B steps back to the list, again to close.
+- Reading position is remembered per game and restored when the guide is reopened. It is
+  stored as `guideOffset` in `gamedata.json` — see [GameData.md](docs/GameData.md).
+- Guides are streamed a screenful at a time rather than loaded whole, so the largest ones (well
+  past a megabyte, on a machine with four) open as fast as the smallest.
 - L and R jump to the previous or next initial in the game list, so a folder with hundreds
   of games can be crossed in a few presses. They keep paging in the cheats, favorites and
   recently played lists.

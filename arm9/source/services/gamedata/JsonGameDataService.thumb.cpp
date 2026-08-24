@@ -21,6 +21,7 @@
 #define KEY_PLAY_MINUTES      "playMinutes"
 #define KEY_LAST_PLAYED       "lastPlayed"
 #define KEY_PATH              "path"
+#define KEY_GUIDE_OFFSET      "guideOffset"
 #define KEY_SESSION_GAME      "sessionGame"
 #define KEY_SESSION_GAME_CODE "sessionGameCode"
 #define KEY_SESSION_START     "sessionStart"
@@ -265,6 +266,15 @@ bool JsonGameDataService::CloseOpenSession(const char* nowDateTime)
     return true;
 }
 
+void JsonGameDataService::SetGuideOffset(const char* fileName, u32 offset)
+{
+    auto* entry = GetOrCreateEntry(fileName, nullptr);
+    if (!entry || entry->guideOffset == offset)
+        return;
+    entry->guideOffset = offset;
+    _version++;
+}
+
 void JsonGameDataService::RemoveEntry(const char* fileName)
 {
     GameDataEntry* entry = Find(fileName);
@@ -296,7 +306,8 @@ void JsonGameDataService::SaveAsync(TaskQueueBase* ioTaskQueue)
     {
         const auto& entry = _entries[i];
         // entries reset back to all-default state are pruned on write
-        if (!entry.favorite && !entry.completed && entry.launchCount == 0 && entry.playMinutes == 0)
+        if (!entry.favorite && !entry.completed && entry.launchCount == 0 && entry.playMinutes == 0 &&
+            entry.guideOffset == 0)
             continue;
         auto game = games[entry.fileName.GetString()].to<JsonObject>();
         if (entry.gameCode.GetString()[0] != 0)
@@ -313,6 +324,8 @@ void JsonGameDataService::SaveAsync(TaskQueueBase* ioTaskQueue)
             game[KEY_LAST_PLAYED] = entry.lastPlayed.GetString();
         if (entry.path.GetString()[0] != 0)
             game[KEY_PATH] = entry.path.GetString();
+        if (entry.guideOffset > 0)
+            game[KEY_GUIDE_OFFSET] = entry.guideOffset;
     }
     if (_sessionStart.GetString()[0] != 0)
     {
@@ -464,6 +477,7 @@ void JsonGameDataService::Load()
         entry->playMinutes = item.value()[KEY_PLAY_MINUTES] | 0u;
         entry->lastPlayed = item.value()[KEY_LAST_PLAYED] | "";
         entry->path = item.value()[KEY_PATH] | "";
+        entry->guideOffset = item.value()[KEY_GUIDE_OFFSET] | 0u;
     }
     _sessionGameFileName = json[KEY_SESSION_GAME] | "";
     _sessionGameCode = json[KEY_SESSION_GAME_CODE] | "";

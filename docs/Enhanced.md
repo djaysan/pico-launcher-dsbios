@@ -16,7 +16,7 @@ These controls are available in the rom browser, on top of the standard ones (se
 | Light row (display settings) | Set the DS Lite backlight level (4 levels) |
 | Folder button (display settings) | Toggle hiding empty folders |
 | Clock button (app bar) | Open the recently played panel |
-| Guides button (app bar) | Open the guide for the highlighted game |
+| Guides button (app bar) | Read the guide for the highlighted game (see [Guides](#guides)) |
 
 ## Jumping by initial
 In a folder with hundreds of games, paging through the list a screen at a time takes a
@@ -87,6 +87,46 @@ are listed. Pressing X disables every cheat at once — the launcher supported t
 but nothing on screen said so. Handy to make sure no code is active before going online or
 starting a speedrun.
 
+## Guides
+Put plain text walkthroughs in a `/guides` folder at the root of the card, named after the ROM
+they belong to: `Chrono Trigger.nds` is documented by `/guides/Chrono Trigger.txt`. The guides
+button in the app bar then opens that guide **inside the launcher** — no reboot, and the browser
+is exactly where you left it when you come back.
+
+**The list is on the bottom screen and the guide is on the top one.** Picking is a touch-screen
+job, reading is not, so the list stays put while you read and the d-pad drives the guide.
+
+| Input | Action |
+|---|---|
+| Guides button (app bar) | Open the highlighted game's guide, and the guides list with it |
+| A (on a list row) | Read that guide |
+| UP / DOWN | Scroll the guide **one line** at a time |
+| L / R | A screenful at a time, with one line of overlap |
+| B | Step back to the list; again to close |
+
+The header above the list shows which guide you are reading and how far into it you are.
+
+If the highlighted game has no guide, the list opens with nothing loaded and the top screen says
+so — pick any guide from the list and it opens. The list is every `.txt` in `/guides`, so a guide
+can be read for any game, not just the one you were on.
+
+**Reading position is remembered per game.** Opening a guide again picks up on the line you left
+it on, and the position is saved when you leave the guide or switch to another. It is stored as a
+byte offset in `gamedata.json` (see [Game Data](GameData.md)), so it survives a different font or
+wrap width and does not drift. A guide read from the list whose game is not in the folder you are
+browsing has nowhere to store a position, so that one is remembered only until you close it.
+
+Guides are streamed a screenful at a time, never loaded whole: the largest ones run past a
+megabyte and the DS has four in total. A 1.4 MB guide opens as fast as a small one, and scrolling
+back up costs no memory — wrapping only depends on where a line starts, so the line above the
+screen is worked out rather than remembered.
+
+While a guide is up, the top screen drops the theme background so the text sits on a flat page.
+The browser gets its own top screen back untouched when you close the list.
+
+The `.txt` file association is untouched — opening a text file straight from the browser still
+launches whatever reader it names (see [File Associations](FileAssociations.md)).
+
 ## Screen brightness (DS Lite and DSi)
 The display settings sheet (gear button in the app bar) has a **Light** row with four backlight levels. Tapping a level applies it immediately, and the choice is remembered and restored on every boot — it also stays active inside the game you launch, until the console powers off.
 
@@ -123,6 +163,7 @@ Favorites, launch counts, play time and the recents list are all stored in a sin
 | A ROM hack does not inherit the base game's marks | Same reason — different files, even though they share an internal game code |
 | Two copies with the *same* file name share one entry | The name is the identity, so same name means same entry. Deleting one through the launcher removes the entry both were using |
 | Pressing X does nothing on some game | Its file name is longer than 96 bytes, which cannot be stored (accented characters count as two). The launcher logs it |
+| A guide reopened at the start after the game was renamed | The reading position is stored on the game's entry, so it follows the file name like every other mark |
 | A favorite is missing from the favorites panel | The panel only lists entries with a stored path. Marks made before that existed get one the next time you launch or re-mark the game. Entries whose file has moved or is gone are still listed, but selecting them does nothing |
 
 Earlier versions identified a game by its internal game code instead, which made a ROM hack and its base game share one entry, and could leave the browser filter and the top screen disagreeing about the same game.

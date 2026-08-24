@@ -48,9 +48,9 @@ public:
         _romBrowserController->ShowFavorites();
     }
 
-    void LaunchGuideForSelected()
+    void ShowGuides()
     {
-        _romBrowserController->LaunchGuideForSelected();
+        _romBrowserController->ShowGuides();
     }
 
     constexpr RomBrowserLayout GetRomBrowserLayout() const

@@ -14,7 +14,8 @@ Regular users never need to edit this file. Deleting it simply resets all favori
       "launchCount": 12,
       "playMinutes": 340,
       "lastPlayed": "2026-07-16 21:03",
-      "path": "/Games/nds/Some Game.nds"
+      "path": "/Games/nds/Some Game.nds",
+      "guideOffset": 20480
     },
     "tetris.gb": {
       "launchCount": 2,
@@ -40,8 +41,9 @@ Each key in `games` is a file name (not a path). All keys inside an entry are op
 | `playMinutes` | number | > 0 | Accumulated play time in minutes (approximate — see below). |
 | `lastPlayed` | string | non-empty | `"YYYY-MM-DD HH:MM"`, 24-hour clock. Lexicographic order equals chronological order, so tools can sort these as plain strings. |
 | `path` | string | non-empty | Full path of the file at its last launch. Used by the recently played panel to navigate back to the game. |
+| `guideOffset` | number | > 0 | Where reading stopped in this game's guide (`/guides/<file name minus extension>.txt`), as a **byte offset into the guide file**. A byte offset rather than a page or line number on purpose: pages move with the font, the wrap width and how many screens carry text, bytes do not. Written when the reader is closed with B. |
 
-An entry whose `favorite` and `completed` are both false and whose `launchCount` and `playMinutes` are both 0 is pruned on the next write. Deleting a game through the launcher also removes its entry.
+An entry whose `favorite` and `completed` are both false and whose `launchCount`, `playMinutes` and `guideOffset` are all 0 is pruned on the next write. Deleting a game through the launcher also removes its entry.
 
 ## Session keys (root level)
 While a play session is open, the root object holds:

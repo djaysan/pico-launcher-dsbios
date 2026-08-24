@@ -43,7 +43,7 @@ RomBrowserAppBarView::RomBrowserAppBarView(
     });
     _appBarView->SetButtonAction(APP_BAR_BUTTON_GUIDES, [] (IconButtonView* sender, void* arg)
     {
-        ((RomBrowserAppBarViewModel*)arg)->LaunchGuideForSelected();
+        ((RomBrowserAppBarViewModel*)arg)->ShowGuides();
     }, _viewModel);
     _appBarView->SetButtonAction(APP_BAR_BUTTON_DISPLAY_SETTINGS, [] (IconButtonView* sender, void* arg)
     {
@@ -59,7 +59,8 @@ void RomBrowserAppBarView::Update()
     else
         _appBarView->ClearButtonIconColorOverride(APP_BAR_BUTTON_FAVORITE);
     // guides is never dimmed: with no guide for the highlighted entry the
-    // reader opens its own list, so the button always leads somewhere
+    // sheet still lists every guide on the card, so the button always leads
+    // somewhere
     ViewContainer::Update();
 }
 

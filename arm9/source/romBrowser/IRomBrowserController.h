@@ -25,9 +25,19 @@ public:
     ///        it loaded, or nullptr; it keys the game's persisted data.
     virtual void LaunchFile(const FileInfo& fileInfo, const char* gameCode = nullptr) = 0;
     virtual void LaunchRandomGame() = 0;
-    /// @brief Launches the guide reader on the guide for the highlighted entry,
-    ///        or on its own guide list when that entry has none.
-    virtual void LaunchGuideForSelected() = 0;
+    /// @brief The guides button: opens the reader straight on the highlighted
+    ///        entry's guide, or the guides list when it has none.
+    virtual void ShowGuides() = 0;
+    virtual void HideGuides() = 0;
+    /// @brief Points the guide path at one file inside the guides folder.
+    virtual void SetGuidePath(const char* guideFileName) = 0;
+    /// @brief Path of the guide being read, or of the highlighted entry's own
+    ///        guide before one is picked; empty when it has none.
+    virtual const char* GetGuidePath() const = 0;
+    /// @brief Stored reading position for the guide at GetGuidePath, or 0.
+    virtual u32 GetGuideReadOffset() const = 0;
+    /// @brief Stores the reading position for the guide at GetGuidePath.
+    virtual void SetGuideReadOffset(u32 offset) = 0;
     virtual void ToggleFavorite(const FileInfo& fileInfo, const char* gameCode = nullptr) = 0;
     virtual void ToggleCompleted(const FileInfo& fileInfo, const char* gameCode = nullptr) = 0;
     virtual void ToggleFavoritesFilter() = 0;

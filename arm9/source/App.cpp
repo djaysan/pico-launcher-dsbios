@@ -24,6 +24,8 @@
 #include "romBrowser/views/recents/RecentsBottomSheetView.h"
 #include "romBrowser/views/statistics/StatisticsBottomSheetView.h"
 #include "romBrowser/views/deleteconfirm/DeleteConfirmBottomSheetView.h"
+#include "romBrowser/views/guides/GuidesBottomSheetView.h"
+#include "romBrowser/views/guides/GuideReaderTopScreenView.h"
 #include "romBrowser/views/DisplaySettingsBottomSheetView.h"
 #include "bgm/AudioStreamPlayer.h"
 #include "bgm/BgmService.h"
@@ -317,6 +319,16 @@ void App::HandleTrigger(RomBrowserStateTrigger trigger, RomBrowserState newState
             HandleHideDeleteConfirmTrigger();
             break;
         }
+        case RomBrowserStateTrigger::ShowGuides:
+        {
+            HandleShowGuidesTrigger();
+            break;
+        }
+        case RomBrowserStateTrigger::HideGuides:
+        {
+            HandleHideGuidesTrigger();
+            break;
+        }
         case RomBrowserStateTrigger::Navigate:
         {
             HandleNavigateTrigger();
@@ -432,6 +444,71 @@ void App::HandleHideDeleteConfirmTrigger()
         _romBrowserBottomScreenView->Focus(_focusManager);
 }
 
+void App::HandleShowGuidesTrigger()
+{
+    // Guides are picked on the bottom screen and read on the top one, so this
+    // brings up both halves at once: the list as a sheet, the reader in place
+    // of the browser's top screen view.
+    auto readerViewModel = SharedPtr<GuideReaderViewModel>::MakeShared(
+        &_romBrowserController,
+        _theme->GetFontRepository()->GetFont(GuideReaderTopScreenView::kFontType),
+        GuideReaderTopScreenView::kLineWidth);
+
+    // The highlighted game's own guide opens straight away; anything else waits
+    // for a pick from the list.
+    const char* autoOpen = _romBrowserController.HasGuideForSelected()
+        ? GuidesViewModel::GuideFileNameFromPath(_romBrowserController.GetGuidePath())
+        : nullptr;
+
+    auto guidesViewModel = SharedPtr<GuidesViewModel>::MakeShared(
+        &_romBrowserController, _romBrowserController.GetGuidePath());
+    auto guidesDialog = GuidesBottomSheetView::CreateShared(
+        std::move(guidesViewModel), readerViewModel, &_theme->GetMaterialColorScheme(),
+        _theme->GetFontRepository(), &_focusManager, autoOpen);
+    _dialogPresenter.ShowDialog(std::move(guidesDialog));
+
+    // Sub obj vram is one 16 KB bank and nine lines of text is all of it, so the
+    // browser's top view has to go. Rebuilding it on the way out is what a
+    // folder load already does.
+    _romBrowserTopScreenView.Reset();
+    // Only the SUB obj stack: that is all the top screen owns. A full
+    // RestoreVramState would also wind the texture stack back under the cover
+    // art the browser's bottom screen is still holding, which is only safe when
+    // that view is rebuilt in the same breath (a folder load).
+    _subObjVram.SetState(_vramStateAfterMakeBottomScreenView._subObjVramState);
+    _guideReaderTopScreenView = GuideReaderTopScreenView::CreateShared(
+        std::move(readerViewModel), &_theme->GetMaterialColorScheme(), _theme->GetFontRepository());
+    _guideReaderTopScreenView->InitVram(_subVramContext);
+}
+
+// Hands the top screen back to the browser. Rebuilding that view is exactly
+// what a folder load does, so it costs no more than navigating a folder.
+void App::RestoreBrowserTopScreenView()
+{
+    if (!_guideReaderTopScreenView)
+        return;
+    _guideReaderTopScreenView.Reset();
+    _subObjVram.SetState(_vramStateAfterMakeBottomScreenView._subObjVramState);
+    auto displayMode = RomBrowserDisplayModeFactory().GetRomBrowserDisplayMode(
+        _romBrowserController.GetRomBrowserDisplaySettings().layout);
+    _romBrowserTopScreenView = RomBrowserTopScreenView::CreateShared(
+        _romBrowserController.GetRomBrowserViewModel(),
+        displayMode,
+        _theme->GetThemeFileIconFactory(),
+        _theme->GetRomBrowserViewFactory(),
+        _theme->GetFontRepository(),
+        &_theme->GetMaterialColorScheme());
+    _romBrowserTopScreenView->InitVram(_subVramContext);
+}
+
+void App::HandleHideGuidesTrigger()
+{
+    RestoreBrowserTopScreenView();
+    _dialogPresenter.CloseDialog();
+    if (!_dialogPresenter.GetOldFocus())
+        _romBrowserBottomScreenView->Focus(_focusManager);
+}
+
 void App::HandleNavigateTrigger()
 {
     // navigation can also start from inside the recents/favorites/delete sheets
@@ -533,7 +610,11 @@ void App::Update()
     _dialogPresenter.Update();
 
     _romBrowserBottomScreenView->Update();
-    if (isRomBrowserVisible)
+    if (_guideReaderTopScreenView)
+    {
+        _guideReaderTopScreenView->Update();
+    }
+    else if (isRomBrowserVisible)
     {
         _romBrowserTopScreenView->Update();
         _romBrowserController.GetRomBrowserViewModel()->SetIconFrameCounter(
@@ -573,7 +654,11 @@ void App::Draw()
     if (_bottomBackground)
         _bottomBackground->Draw(mainGraphicsContext);
 
-    if (!_changeDisplayMode && _romBrowserBottomScreenViewModel.IsRomBrowserVisible())
+    if (_guideReaderTopScreenView)
+    {
+        _guideReaderTopScreenView->Draw(subGraphicsContext);
+    }
+    else if (!_changeDisplayMode && _romBrowserBottomScreenViewModel.IsRomBrowserVisible())
     {
         _romBrowserTopScreenView->Draw(subGraphicsContext);
     }
@@ -616,7 +701,11 @@ void App::VBlank()
 
     _dialogPresenter.VBlank();
 
-    if (_romBrowserBottomScreenViewModel.IsRomBrowserVisible())
+    if (_guideReaderTopScreenView)
+    {
+        _guideReaderTopScreenView->VBlank();
+    }
+    else if (_romBrowserBottomScreenViewModel.IsRomBrowserVisible())
     {
         _romBrowserTopScreenView->VBlank();
     }

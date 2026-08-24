@@ -29,4 +29,9 @@ struct GameDataEntry
     /// @brief Full path of the file at its last launch, empty when never
     ///        launched. Used by the recents list to navigate back to it.
     String<char, 256> path;
+    /// @brief Byte offset into this game's guide where reading stopped, 0 when
+    ///        it was never opened. A BYTE offset, not a page number: pages move
+    ///        with the font, the wrap width and the number of screens, bytes
+    ///        do not, so a stored position survives all of those changing.
+    u32 guideOffset = 0;
 };

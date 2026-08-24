@@ -15,6 +15,7 @@
 #include "core/mini-printf.h"
 #include "rtcIpc.h"
 #include "backlightIpc.h"
+#include "viewModels/GuidesViewModel.h"
 #include "RomBrowserController.h"
 
 RomBrowserController::RomBrowserController(
@@ -82,9 +83,9 @@ void RomBrowserController::LaunchRandomGame()
 
 // The guide for the highlighted game is "<rom name minus extension>.txt" in
 // /guides, the layout the .txt file association already reads. Only the path is
-// built here (string work, main thread); the existence check and the handover
-// happen on the io thread with the rest of the launch flow.
-void RomBrowserController::LaunchGuideForSelected()
+// built here (string work, main thread); whether that file exists is decided
+// where the guide is actually opened.
+void RomBrowserController::ShowGuides()
 {
     _guidePath[0] = 0;
     if (_romBrowserViewModel.IsValid())
@@ -102,7 +103,7 @@ void RomBrowserController::LaunchGuideForSelected()
                 // no volume id, so this resolves against whatever drive is
                 // mounted (fat: on a flashcard, sd: on the dsi) and stays a
                 // valid path for the reader's own libfat as well
-                StringUtil::Copy(_guidePath, "/guides/", sizeof(_guidePath) / sizeof(_guidePath[0]));
+                StringUtil::Copy(_guidePath, GUIDES_FOLDER_PATH "/", sizeof(_guidePath) / sizeof(_guidePath[0]));
                 strlcat(_guidePath, item.GetFileName(), sizeof(_guidePath));
                 TCHAR* dot = strrchr(_guidePath, '.');
                 if (dot)
@@ -113,9 +114,91 @@ void RomBrowserController::LaunchGuideForSelected()
             }
         }
     }
-    _launchGuide = true;
-    // same trigger as a game launch, so input freezes exactly as it does there
-    _stateMachine.Fire(RomBrowserStateTrigger::Launch);
+    // One stat, on a deliberate button press, to choose between opening the
+    // guide and offering the list. Both of those read /guides anyway.
+    FILINFO fileInfo;
+    _selectedHasGuide = _guidePath[0] != 0 && f_stat(_guidePath, &fileInfo) == FR_OK;
+    _stateMachine.Fire(RomBrowserStateTrigger::ShowGuides);
+}
+
+void RomBrowserController::HideGuides()
+{
+    _stateMachine.Fire(RomBrowserStateTrigger::HideGuides);
+}
+
+// Built in a local first: the caller's name can be a pointer INTO _guidePath
+// (the sheet opens the highlighted game's own guide by its file name, which it
+// took from this very buffer), and writing the prefix would eat it mid-call.
+void RomBrowserController::SetGuidePath(const char* guideFileName)
+{
+    TCHAR path[sizeof(_guidePath) / sizeof(_guidePath[0])];
+    StringUtil::Copy(path, GUIDES_FOLDER_PATH "/", sizeof(path) / sizeof(path[0]));
+    strlcat(path, guideFileName, sizeof(path));
+    StringUtil::Copy(_guidePath, path, sizeof(_guidePath) / sizeof(_guidePath[0]));
+}
+
+// Case-insensitive compare of the first \p length characters.
+static bool equalsIgnoreCaseN(const char* a, const char* b, u32 length)
+{
+    for (u32 i = 0; i < length; i++)
+    {
+        char ca = a[i], cb = b[i];
+        if (ca >= 'A' && ca <= 'Z') ca += 'a' - 'A';
+        if (cb >= 'A' && cb <= 'Z') cb += 'a' - 'A';
+        if (ca != cb || ca == 0)
+            return false;
+    }
+    return true;
+}
+
+// A guide is "<rom name minus extension>.txt", so the game it belongs to is the
+// file in this folder with the same base name. That covers the highlighted
+// game (its guide is built from its own name) and any other guide picked from
+// the list whose game is in the same folder. A guide with no game here keeps
+// its position for the session only - there is no rom file name to key an
+// entry by, and inventing one would collide with a real game later.
+const char* RomBrowserController::ResolveGuideGameFileName() const
+{
+    if (_guidePath[0] == 0 || !_sdFolder)
+        return nullptr;
+    const char* slash = strrchr(_guidePath, '/');
+    const char* guideName = slash ? slash + 1 : _guidePath;
+    const char* guideDot = strrchr(guideName, '.');
+    u32 baseLength = guideDot ? (u32)(guideDot - guideName) : strlen(guideName);
+    if (baseLength == 0)
+        return nullptr;
+
+    const FileInfo* const* files = _sdFolder->GetFiles();
+    for (int i = 0; i < _sdFolder->GetFileCount(); i++)
+    {
+        const FileInfo* file = files[i];
+        if (file->GetFileType()->GetClassification() != FileTypeClassification::Game)
+            continue;
+        const char* name = file->GetFileName();
+        const char* dot = strrchr(name, '.');
+        u32 nameLength = dot ? (u32)(dot - name) : strlen(name);
+        if (nameLength == baseLength && equalsIgnoreCaseN(name, guideName, baseLength))
+            return name;
+    }
+    return nullptr;
+}
+
+u32 RomBrowserController::GetGuideReadOffset() const
+{
+    const char* fileName = ResolveGuideGameFileName();
+    if (!fileName)
+        return 0;
+    const auto* entry = _gameDataService->GetEntry(fileName);
+    return entry ? entry->guideOffset : 0;
+}
+
+void RomBrowserController::SetGuideReadOffset(u32 offset)
+{
+    const char* fileName = ResolveGuideGameFileName();
+    if (!fileName)
+        return;
+    _gameDataService->SetGuideOffset(fileName, offset);
+    _gameDataService->SaveAsync(_ioTaskQueue);
 }
 
 void RomBrowserController::BuildCurrentFolderFilePath(const char* fileName,
@@ -604,18 +687,6 @@ void RomBrowserController::BackfillFavoritePaths()
 void RomBrowserController::HandleLaunchTrigger()
 {
     LOG_DEBUG("RomBrowserStateTrigger::Launch\n");
-    if (_launchGuide)
-    {
-        _launchGuide = false;
-        // no play stats and no cheats for the reader: it is a tool, not a game
-        _ioTaskQueue->Enqueue([this] (const vu8& cancelRequested)
-        {
-            UpdateLastUsedFilepath();
-            SetGuideReaderParams();
-            return TaskResult<void>::Completed();
-        });
-        return;
-    }
     char lastPlayed[20];
     FormatNowDateTime(lastPlayed, sizeof(lastPlayed));
     // full path into a local buffer: _navigatePath belongs to the navigation
@@ -673,38 +744,6 @@ void RomBrowserController::SetPicoLoaderParams() const
     {
         LOG_FATAL("Failed to set launch parameters.\n");
     }
-}
-
-// The .txt association already names the reader on any card that has one, so
-// the button follows it rather than keeping a second copy of the path.
-const char* RomBrowserController::GetGuideReaderPath() const
-{
-    const auto& appSettings = _appSettingsService->GetAppSettings();
-    for (u32 i = 0; i < appSettings.numberOfFileAssociations; i++)
-    {
-        if (!strcasecmp(appSettings.fileAssociations[i].extension.GetString(), "txt"))
-            return appSettings.fileAssociations[i].applicationPath.GetString();
-    }
-    return "/guide-reader.nds";
-}
-
-void RomBrowserController::SetGuideReaderParams() const
-{
-    auto loadParams = pload_getLoadParams();
-    loadParams->savePath[0] = 0;
-    loadParams->arguments[0] = 0;
-    loadParams->argumentsLength = 0;
-    StringUtil::Copy(loadParams->romPath, GetGuideReaderPath(), sizeof(loadParams->romPath));
-    FILINFO fileInfo;
-    if (_guidePath[0] != 0 && f_stat(_guidePath, &fileInfo) == FR_OK)
-    {
-        // argv[1]; with no argument the reader lists /guides itself, which is
-        // what a game with no guide written yet should get
-        u32 length = StringUtil::Copy(loadParams->arguments, _guidePath, sizeof(loadParams->arguments));
-        loadParams->argumentsLength = length + 1;
-    }
-    pload_setCheatData(nullptr);
-    gProcessManager.Goto<PicoLoaderProcess>();
 }
 
 void RomBrowserController::LoadCheats() const

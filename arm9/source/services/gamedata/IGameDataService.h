@@ -44,6 +44,10 @@ public:
     virtual void RecordLaunch(const char* fileName, const char* gameCode,
         const char* fullPath, const char* lastPlayedDateTime) = 0;
 
+    /// @brief Stores where reading stopped in this game's guide, as a byte
+    ///        offset into the guide file. By file name, like every other mark.
+    virtual void SetGuideOffset(const char* fileName, u32 offset) = 0;
+
     /// @brief Drops the entry for a deleted rom file. By file name, matching how
     ///        marks are stored.
     virtual void RemoveEntry(const char* fileName) = 0;

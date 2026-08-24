@@ -28,7 +28,15 @@ public:
     void NavigateToPath(const TCHAR* name) override;
     void LaunchFile(const FileInfo& fileInfo, const char* gameCode) override;
     void LaunchRandomGame() override;
-    void LaunchGuideForSelected() override;
+    void ShowGuides() override;
+    void HideGuides() override;
+    void SetGuidePath(const char* guideFileName) override;
+    const char* GetGuidePath() const override { return _guidePath; }
+    /// @brief Whether the highlighted entry has a guide of its own, so the
+    ///        sheet can open straight on it instead of waiting for a pick.
+    bool HasGuideForSelected() const { return _selectedHasGuide; }
+    u32 GetGuideReadOffset() const override;
+    void SetGuideReadOffset(u32 offset) override;
     void ToggleFavorite(const FileInfo& fileInfo, const char* gameCode) override;
     void ToggleCompleted(const FileInfo& fileInfo, const char* gameCode) override;
     void ToggleFavoritesFilter() override;
@@ -109,8 +117,11 @@ private:
     void BuildCurrentFolderFilePath(const char* fileName,
         TCHAR* buffer, u32 bufferLength) const;
     TCHAR _guidePath[256];
-    /// @brief Set when the pending Launch trigger is a guide, not a game.
-    bool _launchGuide = false;
+    /// @brief Set by ShowGuides: does the highlighted entry's own guide exist.
+    bool _selectedHasGuide = false;
+    /// @brief Game file in the current folder whose guide _guidePath is, or
+    ///        nullptr. Reading positions are stored on that game's entry.
+    const char* ResolveGuideGameFileName() const;
 
     TCHAR _deleteRomFileName[256];
     TCHAR _deleteSaveFileName[256];
@@ -145,7 +156,5 @@ private:
     void HandleGotoSettingsScreenTrigger();
     void UpdateLastUsedFilepath();
     void SetPicoLoaderParams() const;
-    void SetGuideReaderParams() const;
-    const char* GetGuideReaderPath() const;
     void LoadCheats() const;
 };

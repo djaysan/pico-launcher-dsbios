@@ -24,6 +24,7 @@
 #include "romBrowser/viewModels/DisplaySettingsViewModel.h"
 #include "romBrowser/views/RomBrowserBottomScreenView.h"
 #include "romBrowser/views/RomBrowserTopScreenView.h"
+#include "romBrowser/views/guides/GuideReaderTopScreenView.h"
 #include "romBrowser/views/IconButton2DView.h"
 #include "romBrowser/views/ChipView.h"
 #include "romBrowser/RomBrowserController.h"
@@ -87,6 +88,9 @@ private:
 
     SharedPtr<RomBrowserBottomScreenView> _romBrowserBottomScreenView;
     SharedPtr<RomBrowserTopScreenView> _romBrowserTopScreenView;
+    /// @brief Set while a guide is open: the reader takes the top screen over
+    ///        from the browser, because it needs all of the sub obj vram.
+    SharedPtr<GuideReaderTopScreenView> _guideReaderTopScreenView;
 
     RomBrowserController _romBrowserController;
 
@@ -131,6 +135,9 @@ private:
     void HandleHideStatisticsTrigger();
     void HandleShowDeleteConfirmTrigger();
     void HandleHideDeleteConfirmTrigger();
+    void HandleShowGuidesTrigger();
+    void HandleHideGuidesTrigger();
+    void RestoreBrowserTopScreenView();
     void HandleNavigateTrigger();
     void HandleFolderLoadDoneTrigger();
     void HandleChangeDisplayModeTrigger(RomBrowserState newState);
