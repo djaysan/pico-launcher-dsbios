@@ -1,0 +1,22 @@
+{
+    "type": "dsbios",
+    "name": "DS BIOS",
+    "description": "The Nintendo DS home screen, drawn in code. Layout by Lohkas.",
+    "author": "RetroModLab, after Lohkas",
+    "primaryColor": {
+        "r": 105,
+        "g": 130,
+        "b": 154
+    },
+    "darkTheme": false,
+    "colors": {
+        "inverseOnSurface": "#FBFBFB",
+        "surfaceBright": "#FBFBFB",
+        "onSurface": "#1A1A1A",
+        "onSurfaceVariant": "#5A5A5A",
+        "outline": "#101010",
+        "secondaryContainer": "#69829A",
+        "onSecondaryContainer": "#FFFFFF",
+        "primary": "#3E7AB8"
+    }
+}

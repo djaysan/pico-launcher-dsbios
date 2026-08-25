@@ -1,6 +1,7 @@
 #include "common.h"
 #include "material/MaterialTheme.h"
 #include "custom/CustomTheme.h"
+#include "dsbios/DsBiosTheme.h"
 #include "ThemeFactory.h"
 
 std::unique_ptr<ITheme> ThemeFactory::CreateFromThemeInfo(const ThemeInfo* themeInfo) const
@@ -13,7 +14,8 @@ std::unique_ptr<ITheme> ThemeFactory::CreateFromThemeInfo(const ThemeInfo* theme
                 themeInfo->GetFolderName(),
                 themeInfo->GetPrimaryColor(),
                 themeInfo->GetIsDarkTheme(),
-                themeInfo->GetIsPureBlack());
+                themeInfo->GetIsPureBlack(),
+                themeInfo->GetColorOverrides());
         }
         case ThemeType::Custom:
         {
@@ -21,7 +23,17 @@ std::unique_ptr<ITheme> ThemeFactory::CreateFromThemeInfo(const ThemeInfo* theme
                 themeInfo->GetFolderName(),
                 themeInfo->GetPrimaryColor(),
                 themeInfo->GetIsDarkTheme(),
-                themeInfo->GetIsPureBlack());
+                themeInfo->GetIsPureBlack(),
+                themeInfo->GetColorOverrides());
+        }
+        case ThemeType::DsBios:
+        {
+            return std::make_unique<DsBiosTheme>(
+                themeInfo->GetFolderName(),
+                themeInfo->GetPrimaryColor(),
+                themeInfo->GetIsDarkTheme(),
+                themeInfo->GetIsPureBlack(),
+                themeInfo->GetColorOverrides());
         }
         default:
         {

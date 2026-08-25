@@ -5,13 +5,16 @@
 > by rasalopa, modified by RetroModLab. It is not the original software and the
 > original authors are not responsible for it. Changes: the app bar's delete button
 > is a guides button that opens the guide reader on the highlighted game's guide,
-> and the brightness setting drives the MCU on a DSi so it works there too.
+> the brightness setting drives the MCU on a DSi so it works there too, themes can
+> pin individual Material colors, and there is a new `dsbios` theme type that draws
+> the Nintendo DS home screen in code.
 
 A feature fork of [Pico Launcher](https://github.com/LNH-team/pico-launcher) by the LNH team, adding library features inspired by modern consoles — favorites, play stats, recently played, and more — while staying fully compatible with stock SD cards: it is a drop-in `_picoboot.nds` replacement, and all upstream features remain intact.
 
 ![Horizontal display mode with custom theme](docs/images/HorizontalCustom.png)
 ![Banner list display mode](docs/images/List.png)
 ![Coverflow display mode](docs/images/Coverflow.png)
+![DS BIOS theme](docs/images/DsBios.png)
 
 ## Features
 
@@ -29,6 +32,8 @@ Everything upstream Pico Launcher offers (display modes, [covers](docs/Covers.md
 - **Brightness control** — set the backlight level from display settings (DS Lite and DSi)
 - **Per-folder background music** — drop a `bgm.bcstm` inside a folder
 - **Time-of-day theme backgrounds** — optional night variants shown from 20:00 to 6:59
+- **DS BIOS theme type** — an analog clock, month calendar and status bar drawn in code, so the DS home screen look is a theme rather than a fork
+- **Themeable Material roles** — a `colors` block in `theme.json` pins exact colors instead of accepting everything the seed derives
 - **Per-file game data** — favorites and play stats belong to the ROM file, so two copies of a game never share them
 
 See [Enhanced features](docs/Enhanced.md) for details on each feature.
@@ -115,6 +120,12 @@ This project is licensed under the Zlib license. For details, see `LICENSE.txt`.
 
 Additional licenses may apply to the project. For details, see the `license` directory.
 
+## Credits
+
+- The **LNH team** for [Pico Launcher](https://github.com/LNH-team/pico-launcher), the launcher all of this is built on, and for the Material and Raspberry themes it ships with.
+- **[rasalopa](https://github.com/rasalopa/pico-launcher-enhanced)** for the feature fork this one is based on — favorites, play stats, recently played and the rest of the library features.
+- **Lohkas** for the original DS BIOS theme. He built the look by hardcoding a modified launcher; the `dsbios` theme type here is a rebuild of it as a proper theme, so it keeps every feature above.
+
 ## Contributors
 - [@Gericom](https://github.com/Gericom)
 - [@XLuma](https://github.com/XLuma)
@@ -122,3 +133,9 @@ Additional licenses may apply to the project. For details, see the `license` dir
 - [@lifehackerhansol](https://github.com/lifehackerhansol)
 
 All credit for the launcher's foundation goes to the LNH team — this fork only builds on their excellent work.
+
+---
+
+This fork is free. If the DS BIOS theme put a clock back on your home screen, you can buy me a coffee:
+
+[<img src="https://storage.ko-fi.com/cdn/kofi2.png?v=6" alt="Buy Me a Coffee at ko-fi.com" height="36">](https://ko-fi.com/H2H81I6YY1)

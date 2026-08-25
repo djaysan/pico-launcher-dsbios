@@ -4,12 +4,18 @@ Using themes, the look and feel of Pico Launcher can be customized. Themes are p
 ## JSON file
 Each theme has a `theme.json` file with information about the theme.
 
-- **type** - Type of theme. Currently `material` and `custom` are supported. See below for information about each type.
+- **type** - Type of theme. Currently `material`, `custom` and `dsbios` are supported. See below for information about each type.
 - **name** - The name of the theme.
 - **description** - Description of the theme.
 - **author** - Author of the theme.
 - **primaryColor** - Material Design 3 primary color to use. `r`, `g` and `b` are provided in range 0-255.
 - **darkTheme** - When `true`, a dark Material Design 3 palette will be used.
+
+- **colors** - Optional. Overrides individual Material Design 3 roles, so a theme can pin exact colors instead of accepting everything the `primaryColor` seed derives. Any role left out keeps its derived value. Values are `"#RRGGBB"`; a malformed value is ignored rather than guessed at, so a typo leaves that role on its derived color instead of turning it black.
+
+  Roles: `primary`, `onPrimary`, `secondaryContainer`, `onSecondaryContainer`, `tertiary`, `onTertiary`, `tertiaryContainer`, `onTertiaryContainer`, `surfaceBright`, `inverseOnSurface`, `onSurface`, `onSurfaceVariant`, `mainIconBg`, `surfaceContainerHighest`, `scrim`, `outline`.
+
+  Note that `inverseOnSurface` is the background color, not `surfaceBright`.
 
 ### Example
 ```json
@@ -135,6 +141,23 @@ Blend colors are used to fake translucency. They should be set to an approximati
     }
 }
 ```
+
+## DS BIOS type
+![DS BIOS theme in coverflow mode](images/DsBios.png)
+
+The `dsbios` type draws the Nintendo DS home screen: an analog clock, a month calendar, a status bar carrying the console's user name, the time and the date, and a game title box holding the selected game's icon and banner.
+
+Everything is drawn in code at DS pixel scale from the theme's palette, so a `dsbios` theme ships **no bitmaps at all** — a `theme.json` is the entire theme. Use the `colors` block above to pin the palette; the defaults derive from `primaryColor` like any other type.
+
+The clock hands and the calendar come from the console's real-time clock, and the user name from the console's own system settings. The calendar grid is seven columns by five rows, as on the original; a month that needs a sixth week gives up its first row once the current day passes the fifth, so today is always on screen.
+
+In grid display modes the cover art replaces the clock panel entirely, as it does on Pico Launcher's other themes:
+
+![DS BIOS theme in a grid display mode](images/DsBiosGrid.png)
+
+Because the layout is drawn rather than painted, it is a theme and not a fork: favorites, play stats, recently played, cheats and guides all keep working underneath it.
+
+The look is a rebuild of [Lohkas](https://www.reddit.com/r/flashcarts/)'s DS BIOS theme, which achieved it by hardcoding a modified launcher build rather than as a theme.
 
 ## Background music
 All themes support background music by placing DSP-ADPCM encoded `.bcstm` files in a `bgm` folder inside the theme folder. Looping is supported. When multiple `.bcstm` files are provided, the background music will be selected at random each time Pico Launcher is started.

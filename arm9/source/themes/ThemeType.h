@@ -3,5 +3,6 @@
 enum class ThemeType
 {
     Material,
-    Custom
+    Custom,
+    DsBios
 };
