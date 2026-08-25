@@ -1,0 +1,27 @@
+{
+    "type": "material",
+    "name": "RML Black",
+    "description": "RetroModLab - true black, white accent.",
+    "author": "RetroModLab",
+    "primaryColor": { "r": 255, "g": 255, "b": 255 },
+    "darkTheme": true,
+    "pureBlack": true,
+    "colors": {
+        "inverseOnSurface": "#000000",
+        "surfaceBright": "#000000",
+        "surfaceContainerHighest": "#000000",
+        "mainIconBg": "#1C1C1C",
+        "secondaryContainer": "#1C1C1C",
+        "tertiaryContainer": "#1C1C1C",
+        "outline": "#FFFFFF",
+        "primary": "#FFFFFF",
+        "tertiary": "#FFFFFF",
+        "onSurface": "#999999",
+        "onSurfaceVariant": "#999999",
+        "scrim": "#999999",
+        "onSecondaryContainer": "#F5F5F7",
+        "onTertiaryContainer": "#F5F5F7",
+        "onPrimary": "#141416",
+        "onTertiary": "#141416"
+    }
+}

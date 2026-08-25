@@ -1,0 +1,12 @@
+{
+    "type": "material",
+    "name": "RML Daylight",
+    "description": "RetroModLab - white and light grey, cool neutral.",
+    "author": "RetroModLab",
+    "primaryColor": {
+        "r": 90,
+        "g": 102,
+        "b": 114
+    },
+    "darkTheme": false
+}

@@ -1,0 +1,12 @@
+{
+    "type": "material",
+    "name": "RML Light",
+    "description": "RetroModLab - Material seeded with the guides-site yellow.",
+    "author": "RetroModLab",
+    "primaryColor": {
+        "r": 255,
+        "g": 201,
+        "b": 60
+    },
+    "darkTheme": false
+}
