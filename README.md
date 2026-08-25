@@ -6,8 +6,10 @@
 > original authors are not responsible for it. Changes: the app bar's delete button
 > is a guides button that opens the guide reader on the highlighted game's guide,
 > the brightness setting drives the MCU on a DSi so it works there too, themes can
-> pin individual Material colors, and there is a new `dsbios` theme type that draws
-> the Nintendo DS home screen in code.
+> pin individual Material colors, there is a new `dsbios` theme type that draws
+> the Nintendo DS home screen in code, folders can be hidden from the DS itself,
+> and roms opened through a file association count as games rather than as
+> unknown files.
 
 A feature fork of [Pico Launcher](https://github.com/LNH-team/pico-launcher) by the LNH team, adding library features inspired by modern consoles — favorites, play stats, recently played, and more — while staying fully compatible with stock SD cards: it is a drop-in `_picoboot.nds` replacement, and all upstream features remain intact.
 
@@ -57,6 +59,8 @@ seed.
 
 Put plain text walkthroughs in a `/guides` folder at the root of the card, named
 after the ROM — `Chrono Trigger.nds` is documented by `/guides/Chrono Trigger.txt`.
+This works for every console you have set up a [file association](docs/FileAssociations.md)
+for, not just DS and GBA: `Castlevania.nes` reads `/guides/Castlevania.txt`.
 The book button in the app bar then opens that game's guide on the top screen,
 streamed a screenful at a time so a 1.4 MB walkthrough works on 4 MB of RAM. Your
 place is remembered per guide.
@@ -94,6 +98,8 @@ Everything upstream Pico Launcher offers (display modes, [covers](docs/Covers.md
 - **Time-of-day theme backgrounds** — optional night variants shown from 20:00 to 6:59
 - **DS BIOS theme type** — an analog clock, month calendar and status bar drawn in code, so the DS home screen look is a theme rather than a fork
 - **Themeable Material roles** — a `colors` block in `theme.json` pins exact colors instead of accepting everything the seed derives
+- **Hide a folder** — press Y on it and confirm; it drops out of the list without moving or deleting anything. **Y on that same confirmation unhides everything in the folder**, which is the only way back, since a hidden folder is no longer there to press Y on
+- **Emulated roms are games** — a rom opened through a file association (`.nes`, `.smc`, `.gb`, `.md` and the rest) now gets guides, favorites, play stats and the game count, instead of being treated as an unknown file
 - **Per-file game data** — favorites and play stats belong to the ROM file, so two copies of a game never share them
 
 See [Enhanced features](docs/Enhanced.md) for details on each feature.

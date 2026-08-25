@@ -18,6 +18,31 @@ static bool isGbaExtension(const char* extension)
         || !strcasecmp(extension, "agb");
 }
 
+// Extensions that are unambiguously a game rom for some console. Anything
+// else the user associates (the .txt that opens the guide reader) stays Misc.
+// Deliberately excludes catch-alls like "bin" - being wrong here would count
+// arbitrary files as games.
+static bool isRomExtension(const char* extension)
+{
+    static const char* kRomExtensions[] = {
+        "nes", "fds", "unf", "unif",              // nes / famicom
+        "smc", "sfc", "fig", "swc",               // snes
+        "gb", "gbc", "sgb",                       // game boy
+        "gg", "sms", "sg",                        // sega 8 bit
+        "md", "gen", "smd",                       // mega drive
+        "pce", "sgx",                             // pc engine
+        "ws", "wsc",                              // wonderswan
+        "ngp", "ngc",                             // neo geo pocket
+        "a26", "col", "int", "lnx", "vb",         // the rest
+    };
+    for (const char* romExtension : kRomExtensions)
+    {
+        if (!strcasecmp(extension, romExtension))
+            return true;
+    }
+    return false;
+}
+
 ExtensionFileTypeProvider::ExtensionFileTypeProvider(const AppSettings& appSettings)
     : _appSettings(appSettings)
 {
@@ -29,7 +54,10 @@ ExtensionFileTypeProvider::ExtensionFileTypeProvider(const AppSettings& appSetti
         {
             baseFileType = &GbaFileType::sInstance;
         }
-        _customFileTypes[i] = CustomFileType(&appSettings.fileAssociations[i], baseFileType);
+        _customFileTypes[i] = CustomFileType(&appSettings.fileAssociations[i], baseFileType,
+            isRomExtension(appSettings.fileAssociations[i].extension)
+                ? FileTypeClassification::Game
+                : FileTypeClassification::Misc);
     }
 }
 

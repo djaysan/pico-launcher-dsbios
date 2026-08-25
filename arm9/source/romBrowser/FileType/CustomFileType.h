@@ -13,10 +13,18 @@ public:
     explicit CustomFileType(const FileAssociation* fileAssociation)
         : CustomFileType(fileAssociation, nullptr) { }
 
-    CustomFileType(const FileAssociation* fileAssociation, const FileType* baseFileType)
+    /// @param classification Used only when there is no baseFileType. Rom
+    ///        extensions pass Game: guides, favorites, delete, the game count
+    ///        and the random pick ALL gate on Game, so a rom left as Misc gets
+    ///        none of them - which is why .gba worked (it has a built-in type)
+    ///        while .nes and .sfc did not. Non-rom associations (the .txt one
+    ///        that opens the guide reader) stay Misc so they are not counted
+    ///        or launched as games.
+    CustomFileType(const FileAssociation* fileAssociation, const FileType* baseFileType,
+        FileTypeClassification classification = FileTypeClassification::Misc)
         : FileType(
             baseFileType != nullptr ? baseFileType->GetShortName() : fileAssociation->extension.GetString(),
-            baseFileType != nullptr ? baseFileType->GetClassification() : FileTypeClassification::Misc)
+            baseFileType != nullptr ? baseFileType->GetClassification() : classification)
         , _fileAssociation(fileAssociation), _baseFileType(baseFileType) { }
 
     std::unique_ptr<FileIcon> CreateFileIcon(const TCHAR* fileName,
