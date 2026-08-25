@@ -442,14 +442,10 @@ void RomBrowserController::ConfirmDelete()
         {
             LOG_ERROR("Couldn't delete file (%d)\n", result);
         }
-        else
-        {
-            // delete the save unconditionally: its name is derived from the
-            // rom and f_unlink harmlessly returns FR_NO_FILE when there is
-            // none. Do NOT gate on a main-thread existence check — SD access
-            // from that thread is unreliable and used to skip this.
-            f_unlink(_deleteSaveFileName);
-        }
+        // The rom, and ONLY the rom. Upstream deleted "<name>.sav" alongside
+        // it. A save is hours of somebody's life and cannot be re-downloaded,
+        // so it stays on the card even when its rom does not - the sheet says
+        // so, and _deleteSaveFileName now exists only to name it there.
         _deleteCompleted = true;
         return TaskResult<void>::Completed();
     });

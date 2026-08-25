@@ -43,7 +43,7 @@ DeleteConfirmBottomSheetView::DeleteConfirmBottomSheetView(SharedPtr<DeleteConfi
     else if (_viewModel->HasSave())
     {
         char text[280];
-        mini_snprintf(text, sizeof(text), "The save %s is also deleted", _viewModel->GetSaveFileName());
+        mini_snprintf(text, sizeof(text), "The save %s is kept", _viewModel->GetSaveFileName());
         _saveLabel->SetEllipsisStyle(LabelView::EllipsisStyle::Ellipsis);
         _saveLabel->SetText(text);
     }

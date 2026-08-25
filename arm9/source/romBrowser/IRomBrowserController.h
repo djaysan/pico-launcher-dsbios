@@ -77,8 +77,9 @@ public:
     ///        _triggerFileInfo: the launch flows overwrite that one, and a
     ///        delete must never act on anything but the file the user saw.
     virtual const char* GetDeleteRomFileName() const = 0;
-    /// @brief Save file that will be deleted along with the game, empty when
-    ///        there is none. Valid while the delete confirmation is shown.
+    /// @brief Save file belonging to the game being deleted, empty when there
+    ///        is none. Shown so the user knows it is KEPT - saves are never
+    ///        deleted. Valid while the delete confirmation is shown.
     virtual const char* GetDeleteSaveFileName() const = 0;
     virtual void GotoSettingsScreen() = 0;
 
