@@ -18,7 +18,7 @@ A feature fork of [Pico Launcher](https://github.com/LNH-team/pico-launcher) by 
 
 ## Download
 
-**[Download PicoLauncher-DSBIOS.zip](https://github.com/djaysan/pico-launcher-enhanced/releases/latest/download/PicoLauncher-DSBIOS.zip)**
+**[Download PicoLauncher-DSBIOS.zip](https://github.com/djaysan/pico-launcher-dsbios/releases/latest/download/PicoLauncher-DSBIOS.zip)**
 
 Unzip it and copy the two items to the **root of your SD card**:
 
