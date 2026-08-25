@@ -2,7 +2,7 @@
 #include "../Theme.h"
 #include "../DefaultFontRepository.h"
 #include "DsBiosMainBackground.h"
-#include "romBrowser/Theme/Material/MaterialThemeFileIconFactory.h"
+#include "romBrowser/Theme/DsBios/DsBiosThemeFileIconFactory.h"
 #include "romBrowser/Theme/DsBios/DsBiosRomBrowserViewFactory.h"
 #include "../custom/CustomThemeInfo.h"
 #include "DsBiosSubBackground.h"
@@ -52,7 +52,7 @@ public:
 
 private:
     DefaultFontRepository _fontRepository;
-    MaterialThemeFileIconFactory _themeFileIconFactory;
+    DsBiosThemeFileIconFactory _themeFileIconFactory;
     CustomThemeInfo _customThemeInfo;
     DsBiosRomBrowserViewFactory _romBrowserViewFactory;
 

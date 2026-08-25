@@ -17,6 +17,10 @@
         "outline": "#101010",
         "secondaryContainer": "#69829A",
         "onSecondaryContainer": "#FFFFFF",
-        "primary": "#3E7AB8"
+        "primary": "#3E7AB8",
+        "tertiary": "#69829A",
+        "onTertiary": "#FFFFFF",
+        "tertiaryContainer": "#69829A",
+        "onTertiaryContainer": "#FFFFFF"
     }
 }
