@@ -3,6 +3,7 @@
 #include <algorithm>
 #include "core/StringUtil.h"
 #include "GuidesViewModel.h"
+#include "GuideText.h"
 #include "GuideReaderViewModel.h"
 
 GuideReaderViewModel::GuideReaderViewModel(IRomBrowserController* romBrowserController,
@@ -68,6 +69,41 @@ void GuideReaderViewModel::Open(const char* guideFileName)
     LayoutView();
 }
 
+// Guides are hard wrapped to a width no DS screen has, so honouring every
+// newline leaves a short orphan under every full line. A newline between two
+// lines that both read as plain prose is a soft wrap and becomes a space.
+//
+// The decision must not depend on WHERE the current display line started, or
+// scrolling back would wrap differently from scrolling forward. It only looks at
+// the source line ending here and the one after it, both found in the chunk.
+bool GuideReaderViewModel::JoinsNextLine(const unsigned char* text, unsigned chunkLength,
+    unsigned lineEnd) const
+{
+    unsigned start = lineEnd;
+    while (start > 0 && text[start - 1] != '\n')
+        start--;
+    if (start == 0 && lineEnd > 0 && text[0] != '\n')
+    {
+        // the line began before this buffer, so the answer would depend on where
+        // the read started. kLookBack exists to stop that happening; refusing to
+        // join is the safe answer if it ever does.
+        if (lineEnd >= kLookBack)
+            return false;
+    }
+    if (!GuideText::IsFlowedProse(text + start, lineEnd - start))
+        return false;
+
+    unsigned nextStart = lineEnd + 1;           // past the newline
+    if (nextStart >= chunkLength)
+        return false;
+    unsigned nextEnd = nextStart;
+    while (nextEnd < chunkLength && text[nextEnd] != '\n')
+        nextEnd++;
+    if (nextEnd >= chunkLength)
+        return false;                           // truncated: do not guess
+    return GuideText::IsFlowedProse(text + nextStart, nextEnd - nextStart);
+}
+
 void GuideReaderViewModel::SavePosition()
 {
     // Written when the guide is left or swapped, not on every scroll:
@@ -94,9 +130,12 @@ u32 GuideReaderViewModel::WrapLines(u32 offset, u32 maxLines, LineSpan* spans, u
     if (!_isOpen || maxLines == 0)
         return 0;
 
-    if (_file.Seek(offset) != FR_OK)
+    // read from before the offset so the wrapper can always see the start of the
+    // source line it lands in - see kLookBack
+    _chunkStart = offset > kLookBack ? offset - kLookBack : 0;
+    if (_file.Seek(_chunkStart) != FR_OK)
     {
-        LOG_ERROR("Couldn't seek guide to %u\n", offset);
+        LOG_ERROR("Couldn't seek guide to %u\n", _chunkStart);
         return 0;
     }
     u32 bytesRead = 0;
@@ -107,7 +146,7 @@ u32 GuideReaderViewModel::WrapLines(u32 offset, u32 maxLines, LineSpan* spans, u
     }
 
     const u8* text = _chunk.get();
-    u32 pos = 0;
+    u32 pos = offset - _chunkStart;     // the look-back sits in front of it
     u32 lineCount = 0;
     while (lineCount < maxLines && pos < bytesRead)
     {
@@ -121,6 +160,22 @@ u32 GuideReaderViewModel::WrapLines(u32 offset, u32 maxLines, LineSpan* spans, u
             u8 c = text[pos];
             if (c == '\n')
             {
+                if (JoinsNextLine(text, bytesRead, pos))
+                {
+                    // a soft wrap in the source: read on as if it were a space
+                    u32 advance = GlyphAdvance(' ');
+                    if (x + advance > _lineWidth)
+                    {
+                        lineEnd = pos;
+                        pos++;
+                        broke = true;
+                        break;
+                    }
+                    x += advance;
+                    lastSpace = (int)pos;
+                    pos++;
+                    continue;
+                }
                 lineEnd = pos;
                 pos++;              // the newline belongs to this line
                 broke = true;
@@ -131,9 +186,23 @@ u32 GuideReaderViewModel::WrapLines(u32 offset, u32 maxLines, LineSpan* spans, u
                 pos++;              // \r and friends take no width
                 continue;
             }
-            u32 advance = GlyphAdvance(c == '\t' ? ' ' : c);
+            u32 posBeforeGlyph = pos;
+            u32 codePoint = c;
+            if (c == '\t')
+            {
+                codePoint = ' ';
+                pos++;
+            }
+            else
+            {
+                unsigned decodePos = pos;
+                codePoint = GuideText::Decode(text, bytesRead, decodePos);
+                pos = decodePos;
+            }
+            u32 advance = GlyphAdvance((u16)codePoint);
             if (x + advance > _lineWidth)
             {
+                pos = posBeforeGlyph;       // this glyph belongs to the next line
                 if (lastSpace >= (int)lineStart)
                 {
                     // break on the last space that fit, and swallow it
@@ -152,8 +221,7 @@ u32 GuideReaderViewModel::WrapLines(u32 offset, u32 maxLines, LineSpan* spans, u
             }
             x += advance;
             if (c == ' ')
-                lastSpace = (int)pos;
-            pos++;
+                lastSpace = (int)posBeforeGlyph;
         }
         if (!broke)
         {
@@ -161,11 +229,11 @@ u32 GuideReaderViewModel::WrapLines(u32 offset, u32 maxLines, LineSpan* spans, u
             // for a single screenful)
             lineEnd = pos;
         }
-        spans[lineCount].start = offset + lineStart;
-        spans[lineCount].end = offset + lineEnd;
+        spans[lineCount].start = _chunkStart + lineStart;
+        spans[lineCount].end = _chunkStart + lineEnd;
         lineCount++;
     }
-    nextOffset = offset + pos;
+    nextOffset = _chunkStart + pos;
     return lineCount;
 }
 
@@ -187,7 +255,7 @@ void GuideReaderViewModel::LayoutView()
     // starting at _topOffset, so the spans index straight into it
     for (u32 i = 0; i < count; i++)
     {
-        BuildLine(i, _chunk.get(), spans[i].start - _topOffset, spans[i].end - _topOffset);
+        BuildLine(i, _chunk.get(), spans[i].start - _chunkStart, spans[i].end - _chunkStart);
     }
     _lineCount = count;
     _nextViewOffset = next;
@@ -202,21 +270,34 @@ void GuideReaderViewModel::BuildLine(u32 lineIndex, const u8* text, u32 start, u
 {
     char16_t* out = _lines[lineIndex];
     u32 length = 0;
-    for (u32 i = start; i < end && length < kMaxLineLength; i++)
+    unsigned i = start;
+    while (i < end && length < kMaxLineLength)
     {
         u8 c = text[i];
-        if (c == '\t')
-            c = ' ';
-        else if (c < 0x20)
-            continue;   // \r and any other control byte carries no glyph
-        out[length++] = (char16_t)c;
+        if (c == '\t' || c == '\n')
+        {
+            // a newline only reaches here when it was a soft wrap, and it reads
+            // as the space it stands in for
+            out[length++] = ' ';
+            i++;
+            continue;
+        }
+        if (c < 0x20)
+        {
+            i++;        // \r and any other control byte carries no glyph
+            continue;
+        }
+        // decoded the same way the widths were measured, or the two disagree
+        out[length++] = (char16_t)GuideText::Decode(text, end, i);
     }
     out[length] = 0;
 }
 
-// The line above \p offset, found rather than remembered: wrapping only depends
-// on where the SOURCE line starts, so rewinding to the previous newline and
-// wrapping forward from there reproduces the same breaks exactly.
+// The line above \p offset, found rather than remembered. Wrapping depends on
+// where the PARAGRAPH starts, not merely the source line: a soft newline is
+// swallowed, so rewinding to the last newline could land mid paragraph and wrap
+// differently from the way the reader arrived. So rewind past every newline that
+// the wrapper would have joined.
 u32 GuideReaderViewModel::PreviousLineStart(u32 offset)
 {
     if (!_isOpen || offset == 0)
@@ -237,11 +318,13 @@ u32 GuideReaderViewModel::PreviousLineStart(u32 offset)
         // above is not mistaken for the one that starts it
         for (u32 i = bytesRead; i > 0; i--)
         {
-            if (_chunk[i - 1] == '\n')
-            {
-                srcStart = scanStart + i;
-                break;
-            }
+            if (_chunk[i - 1] != '\n')
+                continue;
+            // a newline the wrapper joins is not a line start; keep going back
+            if (i - 1 >= kLookBack && JoinsNextLine(_chunk.get(), bytesRead, i - 1))
+                continue;   // a newline the wrapper joins is not a line start
+            srcStart = scanStart + i;
+            break;
         }
     }
 

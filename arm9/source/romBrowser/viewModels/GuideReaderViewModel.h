@@ -39,6 +39,7 @@ public:
 
     /// @brief Stores the reading position of the open guide, if any.
     void SavePosition();
+    bool JoinsNextLine(const unsigned char* text, unsigned chunkLength, unsigned lineEnd) const;
 
     /// @brief False until a guide has been opened, or when one could not be
     ///        read (deleted, or unreadable).
@@ -75,6 +76,12 @@ private:
     ///        than this wraps from an approximate start, which costs at most a
     ///        differently broken line while scrolling up through it.
     static constexpr u32 kBackScanSize = 4096;
+    // Every chunk is read with this much of the file BEFORE the offset in front
+    // of it, so the wrapper can always see the start of the source line it is
+    // standing in. Without it the join decision depends on where the read began,
+    // and scrolling back wraps differently from scrolling forward. Longer than
+    // any sane source line.
+    static constexpr u32 kLookBack = 1024;
 
     struct LineSpan
     {
@@ -92,6 +99,7 @@ private:
 
     /// @brief Byte offset of the first line on screen.
     u32 _topOffset = 0;
+    u32 _chunkStart = 0;
     /// @brief Byte offset of the second line on screen, which is where the top
     ///        goes when scrolling down one line.
     u32 _secondLineOffset = 0;
