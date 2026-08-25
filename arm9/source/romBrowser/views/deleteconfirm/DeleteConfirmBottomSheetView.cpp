@@ -27,20 +27,32 @@ DeleteConfirmBottomSheetView::DeleteConfirmBottomSheetView(SharedPtr<DeleteConfi
     , _hintLabel(Label2DView::CreateShared(LINE_WIDTH, 16, 40, fontRepository->GetFont(FontType::Medium7_5)))
     , _materialColorScheme(materialColorScheme)
 {
-    _titleLabel->SetText(u"Delete game?");
+    bool isHide = _viewModel->IsHide();
+    _showNote = isHide || _viewModel->HasSave();
+
+    _titleLabel->SetText(isHide ? u"Hide folder?" : u"Delete game?");
     _fileNameLabel->SetEllipsisStyle(LabelView::EllipsisStyle::Marquee);
     _fileNameLabel->SetText(_viewModel->GetFileName());
-    if (_viewModel->HasSave())
+    if (isHide)
+    {
+        // says plainly that nothing is lost: the folder is still on the card,
+        // and the way back is on this same sheet
+        _saveLabel->SetEllipsisStyle(LabelView::EllipsisStyle::Ellipsis);
+        _saveLabel->SetText("It stays on the card, just out of the list");
+    }
+    else if (_viewModel->HasSave())
     {
         char text[280];
         mini_snprintf(text, sizeof(text), "The save %s is also deleted", _viewModel->GetSaveFileName());
         _saveLabel->SetEllipsisStyle(LabelView::EllipsisStyle::Ellipsis);
         _saveLabel->SetText(text);
     }
-    _hintLabel->SetText("X: delete    A/B: cancel");
+    _hintLabel->SetText(isHide
+        ? "X: hide   Y: unhide all   A/B: cancel"
+        : "X: delete    A/B: cancel");
     AddChildTail(_titleLabel.GetPointer());
     AddChildTail(_fileNameLabel.GetPointer());
-    if (_viewModel->HasSave())
+    if (_showNote)
         AddChildTail(_saveLabel.GetPointer());
     AddChildTail(_hintLabel.GetPointer());
 }
@@ -69,7 +81,7 @@ void DeleteConfirmBottomSheetView::Draw(GraphicsContext& graphicsContext)
         _fileNameLabel->SetForegroundColor(_materialColorScheme->onSurface);
         _fileNameLabel->Draw(graphicsContext);
 
-        if (_viewModel->HasSave())
+        if (_showNote)
         {
             _saveLabel->SetBackgroundColor(backColor);
             _saveLabel->SetForegroundColor(_materialColorScheme->onSurfaceVariant);
@@ -94,6 +106,18 @@ bool DeleteConfirmBottomSheetView::HandleInput(const InputProvider& inputProvide
         {
             _confirmed = true;
             _viewModel->Confirm();
+        }
+        return true;
+    }
+    if (_viewModel->IsHide() && inputProvider.Triggered(InputKey::Y))
+    {
+        // the whole recovery path: hidden entries are gone from the list, so
+        // this sheet is the only place that can still reach them. Marked
+        // confirmed so Close() does not also fire a cancel.
+        if (!_confirmed)
+        {
+            _confirmed = true;
+            _viewModel->UnhideAll();
         }
         return true;
     }

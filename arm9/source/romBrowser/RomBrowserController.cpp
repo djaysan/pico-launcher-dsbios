@@ -318,6 +318,7 @@ void RomBrowserController::RequestDeleteSelected()
 {
     if (!CanDeleteSelected())
         return;
+    _confirmIsHide = false;
     int selectedItem = _romBrowserViewModel->GetSelectedItem();
     const auto& item = _romBrowserViewModel->GetFileInfoManager().GetItem(selectedItem);
 
@@ -340,6 +341,69 @@ void RomBrowserController::RequestDeleteSelected()
     _stateMachine.Fire(RomBrowserStateTrigger::ShowDeleteConfirm);
 }
 
+// folders only: a rom already has delete, and a folder is the one thing the
+// browser cannot delete, so hiding is what "get this out of my list" means for
+// it. Nothing is moved or removed - only the FAT hidden bit is set, so the
+// folder is still there from a computer.
+bool RomBrowserController::CanHideSelected() const
+{
+    if (!_romBrowserViewModel.IsValid())
+        return false;
+    int selectedItem = _romBrowserViewModel->GetSelectedItem();
+    if (selectedItem < 0)
+        return false;
+    const auto& item = _romBrowserViewModel->GetFileInfoManager().GetItem(selectedItem);
+    return item.GetFileType()->GetClassification() == FileTypeClassification::Folder;
+}
+
+void RomBrowserController::RequestHideSelected()
+{
+    if (!CanHideSelected())
+        return;
+    int selectedItem = _romBrowserViewModel->GetSelectedItem();
+    const auto& item = _romBrowserViewModel->GetFileInfoManager().GetItem(selectedItem);
+    // reuses the delete confirmation's buffer and sheet; _confirmIsHide is what
+    // keeps the two apart from here on
+    StringUtil::Copy(_deleteRomFileName, item.GetFileName(),
+        sizeof(_deleteRomFileName) / sizeof(_deleteRomFileName[0]));
+    _deleteHasSave = false;
+    _confirmIsHide = true;
+    _stateMachine.Fire(RomBrowserStateTrigger::ShowDeleteConfirm);
+}
+
+void RomBrowserController::UnhideAll()
+{
+    _ioTaskQueue->Enqueue([this] (const vu8& cancelRequested)
+    {
+        // _sdFolder holds hidden entries too - only FilterAndSort drops them -
+        // so the current folder is already in memory and needs no second read.
+        // Safe to touch from here: the folder is only swapped by a navigate,
+        // and the reload this queues lands behind us on this same queue.
+        if (_sdFolder)
+        {
+            for (int i = 0; i < _sdFolder->GetFileCount(); i++)
+            {
+                const FileInfo* file = _sdFolder->GetFiles()[i];
+                // AM_SYS entries were hidden by whatever formatted the card
+                // ("System Volume Information" and friends), not by the user -
+                // unhiding those would just add clutter nobody asked for. A
+                // dot-prefixed name stays hidden too: that is the name, not an
+                // attribute, and there is nothing to clear.
+                if (!file->IsHidden() || file->IsSystem())
+                    continue;
+                FRESULT result = f_chmod(file->GetFileName(), 0, AM_HID);
+                if (result != FR_OK)
+                {
+                    LOG_ERROR("Couldn't unhide '%s' (%d)\n", file->GetFileName(), result);
+                }
+            }
+        }
+        _deleteCompleted = true;
+        return TaskResult<void>::Completed();
+    });
+    _stateMachine.Fire(RomBrowserStateTrigger::HideDeleteConfirm);
+}
+
 void RomBrowserController::FormatNowDateTime(TCHAR* buffer, u32 bufferLength) const
 {
     rtc_datetime_t dateTime;
@@ -357,6 +421,20 @@ void RomBrowserController::CancelDelete()
 
 void RomBrowserController::ConfirmDelete()
 {
+    if (_confirmIsHide)
+    {
+        _ioTaskQueue->Enqueue([this] (const vu8& cancelRequested)
+        {
+            FRESULT result = f_chmod(_deleteRomFileName, AM_HID, AM_HID);
+            if (result != FR_OK)
+            {
+                LOG_ERROR("Couldn't hide folder (%d)\n", result);
+            }
+            _deleteCompleted = true;
+            return TaskResult<void>::Completed();
+        });
+        return;
+    }
     _ioTaskQueue->Enqueue([this] (const vu8& cancelRequested)
     {
         FRESULT result = f_unlink(_deleteRomFileName);
@@ -428,9 +506,14 @@ void RomBrowserController::Update()
     if (_deleteCompleted)
     {
         _deleteCompleted = false;
-        // the deleted game's favorite/stats entry goes with it
-        _gameDataService->RemoveEntry(_deleteRomFileName);
-        _gameDataService->SaveAsync(_ioTaskQueue);
+        if (!_confirmIsHide)
+        {
+            // the deleted game's favorite/stats entry goes with it. A hidden
+            // folder keeps everything: it is still on the card, and unhiding
+            // must bring it back exactly as it was.
+            _gameDataService->RemoveEntry(_deleteRomFileName);
+            _gameDataService->SaveAsync(_ioTaskQueue);
+        }
         // reload the current folder so the deleted file disappears
         NavigateToPath(".");
     }

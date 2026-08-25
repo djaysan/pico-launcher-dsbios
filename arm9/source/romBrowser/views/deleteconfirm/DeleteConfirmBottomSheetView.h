@@ -8,8 +8,11 @@ class MaterialColorScheme;
 class IFontRepository;
 
 /// @brief Confirmation sheet before deleting a game (and its save) from the
-///        SD card. X confirms; A and B cancel — A is the launch button and
-///        muscle memory must not delete games.
+///        SD card, and — in hide mode — before hiding a folder. X confirms;
+///        A and B cancel — A is the launch button and muscle memory must not
+///        delete games. In hide mode Y unhides everything in the folder, which
+///        is the only route back: a hidden folder is not in the list to press
+///        Y on a second time.
 class DeleteConfirmBottomSheetView : public BottomSheetView
 {
     SHARED_ONLY(DeleteConfirmBottomSheetView)
@@ -31,6 +34,9 @@ private:
     SharedPtr<Label2DView> _hintLabel;
     const MaterialColorScheme* _materialColorScheme;
     bool _confirmed = false;
+    /// @brief Whether the second line is used at all: the save warning when
+    ///        deleting, the "still on the card" note when hiding.
+    bool _showNote = false;
 
     DeleteConfirmBottomSheetView(SharedPtr<DeleteConfirmViewModel> viewModel,
         const MaterialColorScheme* materialColorScheme, const IFontRepository* fontRepository);

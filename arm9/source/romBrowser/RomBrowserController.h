@@ -55,6 +55,10 @@ public:
     void HideStatistics() override;
     bool CanDeleteSelected() const override;
     void RequestDeleteSelected() override;
+    bool CanHideSelected() const override;
+    void RequestHideSelected() override;
+    bool IsHideConfirm() const override { return _confirmIsHide; }
+    void UnhideAll() override;
     void CancelDelete() override;
     void ConfirmDelete() override;
     const char* GetDeleteRomFileName() const override { return _deleteRomFileName; }
@@ -126,6 +130,9 @@ private:
     TCHAR _deleteRomFileName[256];
     TCHAR _deleteSaveFileName[256];
     bool _deleteHasSave = false;
+    /// @brief The confirmation sheet is shared between delete and hide; this
+    ///        says which one the open sheet means.
+    bool _confirmIsHide = false;
     volatile bool _deleteCompleted = false;
 
     std::unique_ptr<SdFolder> _sdFolder;

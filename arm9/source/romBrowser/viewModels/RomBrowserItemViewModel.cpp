@@ -69,5 +69,15 @@ void RomBrowserItemViewModel::ShowGameInfo()
         {
             _romBrowserController->ShowGameInfo(item);
         }
+        else if (item.GetFileType()->GetClassification() == FileTypeClassification::Folder)
+        {
+            // Y is the entry's secondary action: game info on a rom, hide on a
+            // folder. RequestHideSelected acts on the browser's SELECTION, so a
+            // pooled view rebound to another entry must not fire - same reason
+            // RequestDelete guards this.
+            const auto& viewModel = _romBrowserController->GetRomBrowserViewModel();
+            if (viewModel.IsValid() && viewModel->GetSelectedItem() == _index)
+                _romBrowserController->RequestHideSelected();
+        }
     }
 }

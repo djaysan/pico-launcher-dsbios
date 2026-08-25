@@ -59,6 +59,18 @@ public:
     ///        than offering one that does nothing.
     virtual bool CanDeleteSelected() const = 0;
     virtual void RequestDeleteSelected() = 0;
+    /// @brief Whether the highlighted entry can be hidden: folders only. A rom
+    ///        already has delete, and hiding loose support files would only
+    ///        make the card harder to reason about from a computer.
+    virtual bool CanHideSelected() const = 0;
+    /// @brief Opens the same confirmation sheet as delete, in hide mode.
+    virtual void RequestHideSelected() = 0;
+    /// @brief Whether the open confirmation is hiding rather than deleting.
+    virtual bool IsHideConfirm() const = 0;
+    /// @brief Clears the hidden attribute on every entry of the current folder
+    ///        the user could have hidden. The only way back: a hidden folder is
+    ///        not in the list to press Y on again.
+    virtual void UnhideAll() = 0;
     virtual void CancelDelete() = 0;
     virtual void ConfirmDelete() = 0;
     /// @brief File that will be deleted. Deliberately a dedicated buffer, NOT
