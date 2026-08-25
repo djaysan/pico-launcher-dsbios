@@ -14,6 +14,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include "material/cam/cam.h"
 #include "material/palettes/core.h"
 #include "material/scheme/scheme.h"
 #include "material/utils/utils.h"
@@ -66,8 +67,11 @@ int main(int argc, char** argv)
         {"scrim",                   core.neutral().get(dark ? 70.0 : 30.0)},
     };
 
-    std::printf("{\"name\":\"%s\",\"seed\":\"%06X\",\"dark\":%s,\"colors\":{",
-        name, rgb, dark ? "true" : "false");
+    // hue/chroma are what the whole palette actually hangs off - a seed is
+    // only ever read as this pair (CorePalette::Of), so print them too
+    Cam cam = CamFromInt(seed);
+    std::printf("{\"name\":\"%s\",\"seed\":\"%06X\",\"dark\":%s,\"hue\":%.4f,\"chroma\":%.4f,\"colors\":{",
+        name, rgb, dark ? "true" : "false", cam.hue, cam.chroma);
     for (size_t i = 0; i < sizeof(fields) / sizeof(fields[0]); i++)
     {
         std::printf("%s\"%s\":\"%02X%02X%02X\"", i ? "," : "", fields[i].name,

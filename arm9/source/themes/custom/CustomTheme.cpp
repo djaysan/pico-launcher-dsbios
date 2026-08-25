@@ -9,6 +9,7 @@
 #include "gui/VramContext.h"
 #include "../material/MaterialColorSchemeFactory.h"
 #include "romBrowser/views/IconButton3DView.h"
+#include "../material/MaterialColorScheme.h"
 #include "CustomTheme.h"
 
 #define JSON_RESERVED_SIZE  4096
@@ -40,25 +41,35 @@
 #define KEY_ELEMENT_BLEND_COLOR     "blendColor"
 #define KEY_ELEMENT_HIDDEN          "hidden"
 
-static const CustomThemeInfo sDefaultCustomThemeInfo
+// Defaults come off the theme's own colour scheme, NOT from fixed near-black
+// values. They used to be hardcoded Rgb8(30,30,30) text on Rgb8(200,200,200),
+// which is invisible on any dark custom theme that does not override every text
+// element - the wallpaper themes render their banner list as black on black.
+// onSurface/inverseOnSurface give the right answer for light AND dark seeds.
+static CustomThemeInfo makeDefaultCustomThemeInfo(const MaterialColorScheme& scheme)
 {
-    .topIconInfo = CustomTopIconInfo(Point(24, 132), Rgb8(200, 200, 200)),
-    .topBannerTextLine0Info = CustomTopTextElementInfo(Point(70, 126), 176, Rgb8(30, 30, 30), Rgb8(200, 200, 200)),
-    .topBannerTextLine1Info = CustomTopTextElementInfo(Point(70, 141), 176, Rgb8(30, 30, 30), Rgb8(200, 200, 200)),
-    .topBannerTextLine2Info = CustomTopTextElementInfo(Point(70, 155), 176, Rgb8(30, 30, 30), Rgb8(200, 200, 200)),
-    .topFileNameTextInfo = CustomTopTextElementInfo(Point(18, 170), 220, Rgb8(30, 30, 30), Rgb8(200, 200, 200)),
-    .topCoverInfo = CustomTopCoverInfo(Point(75, 18)),
-    // top-left corner of the game count pill / top-right corner of the launch info pill
-    .topGameCountInfo = CustomTopStripElementInfo(Point(4, 2), false),
-    .topLaunchInfoInfo = CustomTopStripElementInfo(Point(252, 2), false),
+    const Rgb8& ink = scheme.onSurface;
+    const Rgb8& behind = scheme.inverseOnSurface;
+    return CustomThemeInfo
+    {
+        .topIconInfo = CustomTopIconInfo(Point(24, 132), Rgb8(200, 200, 200)),
+        .topBannerTextLine0Info = CustomTopTextElementInfo(Point(70, 126), 176, ink, behind),
+        .topBannerTextLine1Info = CustomTopTextElementInfo(Point(70, 141), 176, ink, behind),
+        .topBannerTextLine2Info = CustomTopTextElementInfo(Point(70, 155), 176, ink, behind),
+        .topFileNameTextInfo = CustomTopTextElementInfo(Point(18, 170), 220, ink, behind),
+        .topCoverInfo = CustomTopCoverInfo(Point(75, 18)),
+        // top-left corner of the game count pill / top-right corner of the launch info pill
+        .topGameCountInfo = CustomTopStripElementInfo(Point(4, 2), false),
+        .topLaunchInfoInfo = CustomTopStripElementInfo(Point(252, 2), false),
 
-    .gridIconInfo = CustomBottomIconInfo(Rgb8(200, 200, 200)),
+        .gridIconInfo = CustomBottomIconInfo(Rgb8(200, 200, 200)),
 
-    .bannerListIconInfo = CustomBottomIconInfo(Rgb8(200, 200, 200)),
-    .bannerListTextLine0Info = CustomBannerListTextElementInfo(Rgb8(30, 30, 30)),
-    .bannerListTextLine1Info = CustomBannerListTextElementInfo(Rgb8(30, 30, 30)),
-    .bannerListTextLine2Info = CustomBannerListTextElementInfo(Rgb8(30, 30, 30))
-};
+        .bannerListIconInfo = CustomBottomIconInfo(Rgb8(200, 200, 200)),
+        .bannerListTextLine0Info = CustomBannerListTextElementInfo(ink),
+        .bannerListTextLine1Info = CustomBannerListTextElementInfo(ink),
+        .bannerListTextLine2Info = CustomBannerListTextElementInfo(ink)
+    };
+}
 
 static CustomTopBackgroundType parseTopBackgroundType(const char* topBackgroundTypeString)
 {
@@ -172,41 +183,41 @@ static CustomTopTextElementInfo parseCustomTextElementInfo(
     );
 }
 
-static CustomThemeInfo parseCustomThemeInfo(const JsonDocument& json)
+static CustomThemeInfo parseCustomThemeInfo(const JsonDocument& json, const CustomThemeInfo& defaults)
 {
     return CustomThemeInfo
     {
-        .topIconInfo = parseCustomTopIconInfo(json[KEY_TOP_ICON], sDefaultCustomThemeInfo.topIconInfo),
+        .topIconInfo = parseCustomTopIconInfo(json[KEY_TOP_ICON], defaults.topIconInfo),
         .topBannerTextLine0Info = parseCustomTextElementInfo(
-            json[KEY_TOP_BANNER_TEXT_LINE_0], sDefaultCustomThemeInfo.topBannerTextLine0Info),
+            json[KEY_TOP_BANNER_TEXT_LINE_0], defaults.topBannerTextLine0Info),
         .topBannerTextLine1Info = parseCustomTextElementInfo(
-            json[KEY_TOP_BANNER_TEXT_LINE_1], sDefaultCustomThemeInfo.topBannerTextLine1Info),
+            json[KEY_TOP_BANNER_TEXT_LINE_1], defaults.topBannerTextLine1Info),
         .topBannerTextLine2Info = parseCustomTextElementInfo(
-            json[KEY_TOP_BANNER_TEXT_LINE_2], sDefaultCustomThemeInfo.topBannerTextLine2Info),
+            json[KEY_TOP_BANNER_TEXT_LINE_2], defaults.topBannerTextLine2Info),
         .topFileNameTextInfo = parseCustomTextElementInfo(
-            json[KEY_TOP_FILE_NAME_TEXT], sDefaultCustomThemeInfo.topFileNameTextInfo),
-        .topCoverInfo = parseCustomTopCoverInfo(json[KEY_TOP_COVER], sDefaultCustomThemeInfo.topCoverInfo),
+            json[KEY_TOP_FILE_NAME_TEXT], defaults.topFileNameTextInfo),
+        .topCoverInfo = parseCustomTopCoverInfo(json[KEY_TOP_COVER], defaults.topCoverInfo),
         .topGameCountInfo = parseCustomTopStripElementInfo(
-            json[KEY_TOP_GAME_COUNT], sDefaultCustomThemeInfo.topGameCountInfo),
+            json[KEY_TOP_GAME_COUNT], defaults.topGameCountInfo),
         .topLaunchInfoInfo = parseCustomTopStripElementInfo(
-            json[KEY_TOP_LAUNCH_INFO], sDefaultCustomThemeInfo.topLaunchInfoInfo),
+            json[KEY_TOP_LAUNCH_INFO], defaults.topLaunchInfoInfo),
 
-        .gridIconInfo = parseCustomBottomIconInfo(json[KEY_GRID_ICON], sDefaultCustomThemeInfo.gridIconInfo),
+        .gridIconInfo = parseCustomBottomIconInfo(json[KEY_GRID_ICON], defaults.gridIconInfo),
 
-        .bannerListIconInfo = parseCustomBottomIconInfo(json[KEY_BANNER_LIST_ICON], sDefaultCustomThemeInfo.bannerListIconInfo),
+        .bannerListIconInfo = parseCustomBottomIconInfo(json[KEY_BANNER_LIST_ICON], defaults.bannerListIconInfo),
         .bannerListTextLine0Info = parseCustomBannerListTextElementInfo(
-            json[KEY_BANNER_LIST_TEXT_LINE_0], sDefaultCustomThemeInfo.bannerListTextLine0Info),
+            json[KEY_BANNER_LIST_TEXT_LINE_0], defaults.bannerListTextLine0Info),
         .bannerListTextLine1Info = parseCustomBannerListTextElementInfo(
-            json[KEY_BANNER_LIST_TEXT_LINE_1], sDefaultCustomThemeInfo.bannerListTextLine1Info),
+            json[KEY_BANNER_LIST_TEXT_LINE_1], defaults.bannerListTextLine1Info),
         .bannerListTextLine2Info = parseCustomBannerListTextElementInfo(
-            json[KEY_BANNER_LIST_TEXT_LINE_2], sDefaultCustomThemeInfo.bannerListTextLine2Info)
+            json[KEY_BANNER_LIST_TEXT_LINE_2], defaults.bannerListTextLine2Info)
     };
 }
 
 CustomTheme::CustomTheme(const TCHAR* folderName, const Rgb<8, 8, 8>& primaryColor, bool darkMode,
-    bool pureBlack)
-    : Theme(folderName, primaryColor, darkMode, pureBlack)
-    , _customThemeInfo(sDefaultCustomThemeInfo)
+    bool pureBlack, const ThemeColorOverrides& colorOverrides)
+    : Theme(folderName, primaryColor, darkMode, pureBlack, colorOverrides)
+    , _customThemeInfo(makeDefaultCustomThemeInfo(_materialColorScheme))
     , _romBrowserViewFactory(&_customThemeInfo, &_materialColorScheme, &_fontRepository)
     , _themeFileIconFactory(&_materialColorScheme, &_fontRepository) { }
 
@@ -231,7 +242,7 @@ void CustomTheme::LoadRomBrowserResources(const VramContext& mainVramContext, co
         return;
 
     _topBackgroundType = parseTopBackgroundType(json["topBackgroundType"].as<const char*>());
-    _customThemeInfo = parseCustomThemeInfo(json);
+    _customThemeInfo = parseCustomThemeInfo(json, makeDefaultCustomThemeInfo(_materialColorScheme));
 
     mem_setVramDMapping(MEM_VRAM_D_LCDC);
     mem_setVramEMapping(MEM_VRAM_E_LCDC);

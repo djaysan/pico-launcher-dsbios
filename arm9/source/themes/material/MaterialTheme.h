@@ -16,8 +16,9 @@ class MaterialTheme : public Theme
     DefaultFontRepository _fontRepository;
 public:
     MaterialTheme(const TCHAR* folderName, const Rgb<8, 8, 8>& primaryColor, bool darkMode,
-        bool pureBlack = false)
-        : Theme(folderName, primaryColor, darkMode, pureBlack)
+        bool pureBlack = false,
+        const ThemeColorOverrides& colorOverrides = ThemeColorOverrides())
+        : Theme(folderName, primaryColor, darkMode, pureBlack, colorOverrides)
         , _themeFileIconFactory(&_materialColorScheme, &_fontRepository)
         , _romBrowserViewFactory(&_materialColorScheme, &_fontRepository) { }
 

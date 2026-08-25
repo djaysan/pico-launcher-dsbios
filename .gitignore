@@ -47,3 +47,8 @@ Thumbs.db
 *.elf
 *.a
 .vscode/
+
+# host-side theme preview tool build artifacts
+tools/theme-preview/__pycache__/
+tools/theme-preview/dump_table
+tools/theme-preview/dump_scheme

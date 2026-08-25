@@ -15,7 +15,8 @@ class CustomTheme : public Theme
 {
 public:
     CustomTheme(const TCHAR* folderName, const Rgb<8, 8, 8>& primaryColor, bool darkMode,
-        bool pureBlack = false);
+        bool pureBlack = false,
+        const ThemeColorOverrides& colorOverrides = ThemeColorOverrides());
 
     const IFontRepository* GetFontRepository() const override
     {

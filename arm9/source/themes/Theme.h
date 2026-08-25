@@ -2,6 +2,7 @@
 #include "fat/ff.h"
 #include "core/String.h"
 #include "ITheme.h"
+#include "ThemeColorOverrides.h"
 
 class Theme : public ITheme
 {
@@ -12,9 +13,12 @@ public:
 
 protected:
     Theme(const TCHAR* folderName, const Rgb<8, 8, 8>& primaryColor, bool darkMode,
-        bool pureBlack = false);
+        bool pureBlack = false,
+        const ThemeColorOverrides& colorOverrides = ThemeColorOverrides());
 
     MaterialColorScheme _materialColorScheme;
+
+    void ApplyColorOverrides(const ThemeColorOverrides& overrides);
 
 private:
     String<TCHAR, 64> _folderName;
