@@ -13,8 +13,51 @@ A feature fork of [Pico Launcher](https://github.com/LNH-team/pico-launcher) by 
 
 ![Horizontal display mode with custom theme](docs/images/HorizontalCustom.png)
 ![Banner list display mode](docs/images/List.png)
-![Coverflow display mode](docs/images/Coverflow.png)
 ![DS BIOS theme](docs/images/DsBios.png)
+![Coverflow display mode](docs/images/Coverflow.png)
+
+## Download
+
+**[Download PicoLauncher-DSBIOS.zip](https://github.com/djaysan/pico-launcher-enhanced/releases/latest/download/PicoLauncher-DSBIOS.zip)**
+
+Unzip it and copy the two items to the **root of your SD card**:
+
+```
+_picoboot.nds      replaces the launcher
+_pico/             adds the DS BIOS theme (merge with the folder already
+                   there - do not delete it)
+```
+
+Put the card back in the flashcart and turn the DS on. To switch to the theme:
+**gear → paintbrush → DS BIOS**.
+
+Your games, saves, covers and settings are untouched, and you can go back to the
+stock launcher any time by restoring the old `_picoboot.nds`.
+
+## Guides on the top screen
+
+![Guides](docs/images/Guides.png)
+
+Put plain text walkthroughs in a `/guides` folder at the root of the card, named
+after the ROM — `Chrono Trigger.nds` is documented by `/guides/Chrono Trigger.txt`.
+The book button in the app bar then opens that game's guide on the top screen,
+streamed a screenful at a time so a 1.4 MB walkthrough works on 4 MB of RAM. Your
+place is remembered per guide.
+
+### Getting the guides onto the card
+
+You do not have to hunt those files down one by one:
+
+**[guides.retromodlab.com/app](https://guides.retromodlab.com/app/)**
+
+It reads your ROM folder, matches it against 17,400 games across 100 platforms,
+and writes the walkthroughs straight onto the card with the right filenames.
+Nothing is uploaded and no guide content is hosted — it fetches from archive.org
+and writes to your card, in the browser. Needs Chrome or Edge, for the File
+System Access API.
+
+Reading guides in-game on other handhelds is a separate project:
+**[Guide Watch](https://github.com/djaysan/guide-watch)**.
 
 ## Features
 
