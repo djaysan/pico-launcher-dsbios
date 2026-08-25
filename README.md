@@ -34,15 +34,14 @@ stock launcher any time by restoring the old `_picoboot.nds`.
 
 ## Themes
 
-![The themes included](docs/images/Themes.png)
+![Six of the themes included](docs/images/Themes.png)
 
-Seven themes ship in `_pico/themes`. Switch between them with **gear → paintbrush**.
+Seven themes ship in `_pico/themes` — the six above, plus upstream's Raspberry. Switch between them with **gear → paintbrush**.
 
 | Theme | Type | |
 |---|---|---|
 | **DS BIOS** | `dsbios` | The Nintendo DS home screen, drawn in code |
 | **Material Design 3** | `material` | Upstream's default, by Gericom |
-| **Raspberry** | `custom` | Upstream's wallpaper theme, by Gericom |
 | **RML Light / Dark** | `material` | Seeded with the RetroModLab yellow |
 | **RML Black** | `material` | True black for an unlit screen, with a white accent |
 | **RML Daylight** | `material` | White and light grey, cool neutral |
