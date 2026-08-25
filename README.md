@@ -11,10 +11,8 @@
 
 A feature fork of [Pico Launcher](https://github.com/LNH-team/pico-launcher) by the LNH team, adding library features inspired by modern consoles — favorites, play stats, recently played, and more — while staying fully compatible with stock SD cards: it is a drop-in `_picoboot.nds` replacement, and all upstream features remain intact.
 
-![Horizontal display mode with custom theme](docs/images/HorizontalCustom.png)
-![Banner list display mode](docs/images/List.png)
-![DS BIOS theme](docs/images/DsBios.png)
-![Coverflow display mode](docs/images/Coverflow.png)
+![The DS BIOS theme: clock, calendar and status bar, with play time and a favourite on the game box](docs/images/DsBios.png)
+![The same theme in a grid layout, where the cover art takes the clock's place](docs/images/DsBiosGrid.png)
 
 ## Download
 
