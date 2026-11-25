@@ -18,7 +18,7 @@ int main()
     assert(DaysInMonth(2026, 1) == 31 && DaysInMonth(2026, 4) == 30);
     assert(DaysInMonth(2026, 0) == 0 && DaysInMonth(2026, 13) == 0);
 
-    // 0 = Sunday. Anchors: the reference capture Ludovic supplied shows 18 July
+    // 0 = Sunday. Anchors: the owner's reference capture shows 18 July
     // 2024 under Th, with the month opening on a Monday.
     assert(DayOfWeek(2024, 7, 18) == 4);
     assert(ColumnOfFirst(2024, 7) == 1);
